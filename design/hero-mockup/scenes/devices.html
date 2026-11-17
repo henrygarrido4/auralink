@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Hero mockup: laptop and phone</title>
+    <!--
+      The home hero's device composition: a silver laptop in three-quarter view and an upright
+      phone to its right, showing the sample site's desktop and mobile screenshots, on a
+      transparent background with soft grounding shadows. Rendered by ../render.mjs.
+      The devices are generic: no maker's logo, notch, or trade dress.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+      }
+    </script>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: transparent;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from 'three';
+      import {
+        contactShadow,
+        createRenderer,
+        loadTexture,
+        publish,
+        publishError,
+        readSize,
+        roomEnvironment,
+        roundedPlane,
+        roundedSlab,
+      } from './kit.js';
+
+      /** Composition. Angles in degrees; lengths in centimetres. */
+      const LAYOUT = {
+        cameraAzimuth: -34,
+        cameraElevation: 23,
+        cameraDistance: 120,
+        fov: 22,
+        laptopYaw: 0,
+        phone: { x: 21, z: -1, extraYaw: 12 },
+        /**
+         * Padding around the devices and their shadows, as fractions of the frame. Generous on
+         * purpose: render.mjs crops the result to its visible pixels.
+         */
+        margins: { left: 0.05, right: 0.05, top: 0.04, bottom: 0.1 },
+        /** How far the soft contact shadow spreads past a device's footprint, in cm. */
+        contactSpread: 2.5,
+      };
+      const LAPTOP = {
+        width: 30.4,
+        depth: 20.6,
+        thickness: 1.15,
+        lidHeight: 20.3,
+        lidThickness: 0.5,
+        /** Lid angle past upright. */
+        openAngle: 16,
+        display: { width: 28.6, height: 17.875, top: 0.87 },
+      };
+      // Exploration: `?layout={"phone":{"x":20,"z":0,"extraYaw":10}}` overrides LAYOUT keys.
+      const overrides = new URLSearchParams(location.search).get('layout');
+      if (overrides) Object.assign(LAYOUT, JSON.parse(overrides));
+      const PHONE = { width: 7.16, height: 14.76, depth: 0.8 };
+      const LEGEND_FONT =
+        'https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.0/files/inter-latin-500-normal.woff2';
+
+      try {
+        const { width, height } = readSize(2000, 1400);
+        const renderer = createRenderer({ width, height, transparent: true });
+        const scene = new THREE.Scene();
+        scene.environment = roomEnvironment(renderer);
+        scene.environmentIntensity = 1;
+
+        const legendFont = new FontFace('Legend', `url(${LEGEND_FONT})`, { weight: '500' });
+        document.fonts.add(await legendFont.load());
+        const [desktopScreen, mobileScreen] = await Promise.all([
+          loadTexture(renderer, '/out/screen-desktop.png'),
+          loadTexture(renderer, '/out/screen-mobile.png'),
+        ]);
+
+        const aluminium = new THREE.MeshPhysicalMaterial({
+          color: '#d3d5d8',
+          metalness: 1,
+          roughness: 0.34,
+        });
+        const blackGlass = new THREE.MeshPhysicalMaterial({
+          color: '#060607',
+          roughness: 0.1,
+          clearcoat: 1,
+          clearcoatRoughness: 0.06,
+        });
+        const keycap = new THREE.MeshStandardMaterial({ color: '#17171a', roughness: 0.62 });
+        const keyWell = new THREE.MeshStandardMaterial({ color: '#0b0b0c', roughness: 0.9 });
+        const darkMetal = new THREE.MeshStandardMaterial({
+          color: '#2a2b2e',
+          metalness: 0.7,
+          roughness: 0.42,
+        });
+        const graphite = new THREE.MeshPhysicalMaterial({
+          color: '#4a4b4f',
+          metalness: 1,
+          roughness: 0.3,
+        });
+
+        /** Glass sheen over a display: a faint diagonal highlight from the top left. */
+        const glare = (() => {
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          const ctx = canvas.getContext('2d');
+          const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+          gradient.addColorStop(0, 'rgba(255,255,255,0.10)');
+          gradient.addColorStop(0.42, 'rgba(255,255,255,0.025)');
+          gradient.addColorStop(0.43, 'rgba(255,255,255,0)');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, 512, 512);
+          const texture = new THREE.CanvasTexture(canvas);
+          return new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: true,
+            depthWrite: false,
+            toneMapped: false,
+          });
+        })();
+        const screenMaterial = (map) => new THREE.MeshBasicMaterial({ map, toneMapped: false });
+
+        /** Lays an XY-plane mesh flat on the XZ plane, facing up. */
+        const flat = (mesh) => {
+          mesh.rotation.x = -Math.PI / 2;
+          return mesh;
+        };
+
+        function buildKeyboard(T, back) {
+          const group = new THREE.Group();
+          const u = 1.9;
+          const gap = 0.27;
+          const keyHeight = 0.07;
+          const letters = (s) => [...s].map((c) => [c, 1]);
+          const rows = [
+            {
+              depth: 0.98,
+              keys: [['esc', 1.0357], ...Array.from({ length: 13 }, () => ['', 1.0357])],
+            },
+            { depth: 1.72, keys: [...letters('`1234567890-='), ['delete', 1.5]] },
+            { depth: 1.72, keys: [['tab', 1.5], ...letters('QWERTYUIOP[]\\')] },
+            { depth: 1.72, keys: [['caps lock', 1.8], ...letters("ASDFGHJKL;'"), ['return', 1.7]] },
+            { depth: 1.72, keys: [['shift', 2.3], ...letters('ZXCVBNM,./'), ['shift', 2.2]] },
+            {
+              depth: 1.72,
+              keys: [
+                ['fn', 1],
+                ['control', 1],
+                ['option', 1],
+                ['command', 1.25],
+                ['', 5],
+                ['command', 1.25],
+                ['option', 1],
+                ['◀', 1],
+                ['▲▼', 1],
+                ['▶', 1],
+              ],
+            },
+          ];
+          const kbWidth = 14.5 * u;
+          const kbDepth = rows.reduce((sum, row) => sum + row.depth, 0);
+
+          const PX = 120;
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(kbWidth * PX);
+          canvas.height = Math.round(kbDepth * PX);
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = 'rgba(236, 236, 238, 0.92)';
+          ctx.textBaseline = 'middle';
+
+          const geometries = new Map();
+          const addKey = (cx, cz, kw, kd, label) => {
+            const id = `${kw.toFixed(3)}x${kd.toFixed(3)}`;
+            if (!geometries.has(id)) {
+              geometries.set(
+                id,
+                roundedSlab({
+                  width: kw,
+                  height: kd,
+                  depth: keyHeight,
+                  radius: 0.17,
+                  fillet: 0.025,
+                  curveSegments: 12,
+                }),
+              );
+            }
+            const key = flat(new THREE.Mesh(geometries.get(id), keycap));
+            key.position.set(cx, T + keyHeight / 2 + 0.01, cz);
+            group.add(key);
+            const well = flat(new THREE.Mesh(roundedPlane(kw + 0.13, kd + 0.13, 0.23), keyWell));
+            well.position.set(cx, T + 0.002, cz);
+            group.add(well);
+
+            if (!label) return;
+            const px = (cx + kbWidth / 2) * PX;
+            const pz = (cz - back) * PX;
+            const word = label.length > 1 && !/[◀▶▲▼]/.test(label);
+            ctx.font = `500 ${word ? 0.25 * PX : 0.42 * PX}px Legend`;
+            if (word) {
+              ctx.textAlign = 'left';
+              ctx.fillText(label, px - kw * PX * 0.5 + 0.18 * PX, pz + kd * PX * 0.5 - 0.27 * PX);
+            } else {
+              ctx.textAlign = 'center';
+              ctx.fillText(label, px, pz + 0.02 * PX);
+            }
+          };
+
+          let z = back;
+          for (const row of rows) {
+            let x = -kbWidth / 2;
+            for (const [label, units] of row.keys) {
+              const w = units * u;
+              const cx = x + w / 2;
+              const cz = z + row.depth / 2;
+              if (label === '▲▼') {
+                const half = (row.depth - gap) / 2 - 0.04;
+                addKey(cx, z + gap / 2 + half / 2, w - gap, half, '▲');
+                addKey(cx, z + row.depth - gap / 2 - half / 2, w - gap, half, '▼');
+              } else if (label === '◀' || label === '▶') {
+                const half = (row.depth - gap) / 2 - 0.04;
+                addKey(cx, z + row.depth - gap / 2 - half / 2, w - gap, half, label);
+              } else {
+                addKey(cx, cz, w - gap, row.depth - gap, label);
+              }
+              x += w;
+            }
+            z += row.depth;
+          }
+
+          const legendTexture = new THREE.CanvasTexture(canvas);
+          legendTexture.colorSpace = THREE.SRGBColorSpace;
+          legendTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+          const legends = flat(
+            new THREE.Mesh(
+              new THREE.PlaneGeometry(kbWidth, kbDepth),
+              new THREE.MeshBasicMaterial({
+                map: legendTexture,
+                transparent: true,
+                depthWrite: false,
+                polygonOffset: true,
+                polygonOffsetFactor: -2,
+              }),
+            ),
+          );
+          legends.position.set(0, T + keyHeight + 0.013, back + kbDepth / 2);
+          group.add(legends);
+          return { group, depth: kbDepth };
+        }
+
+        function buildLaptop() {
+          const group = new THREE.Group();
+          const { width: W, depth: D, thickness: T, lidHeight: H, lidThickness } = LAPTOP;
+
+          const base = flat(
+            new THREE.Mesh(
+              roundedSlab({ width: W, height: D, depth: T, radius: 1.15, fillet: 0.36 }),
+              aluminium,
+            ),
+          );
+          base.position.y = T / 2;
+          group.add(base);
+
+          const keyboardBack = -D / 2 + 1.5;
+          const keyboard = buildKeyboard(T, keyboardBack);
+          group.add(keyboard.group);
+
+          // Trackpad: a glass-smooth panel framed by a thin chamfer line.
+          const padDepth = 7.6;
+          const padZ = keyboardBack + keyboard.depth + 1.0 + padDepth / 2;
+          const padEdge = flat(
+            new THREE.Mesh(
+              roundedPlane(12.74, padDepth + 0.14, 0.62),
+              new THREE.MeshStandardMaterial({ color: '#a9acb0', metalness: 1, roughness: 0.4 }),
+            ),
+          );
+          padEdge.position.set(0, T + 0.002, padZ);
+          const pad = flat(
+            new THREE.Mesh(
+              roundedPlane(12.6, padDepth, 0.55),
+              new THREE.MeshPhysicalMaterial({
+                color: '#e1e3e6',
+                metalness: 0.75,
+                roughness: 0.3,
+              }),
+            ),
+          );
+          pad.position.set(0, T + 0.004, padZ);
+          group.add(padEdge, pad);
+
+          // Ports on the left side.
+          for (const z of [-5.6, -4.1]) {
+            const port = new THREE.Mesh(
+              roundedPlane(0.88, 0.32, 0.15),
+              new THREE.MeshBasicMaterial({ color: '#141416' }),
+            );
+            port.rotation.y = -Math.PI / 2;
+            port.position.set(-W / 2 - 0.003, T / 2, z);
+            group.add(port);
+          }
+
+          // Hinge barrel along the back edge.
+          const hinge = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.4, 0.4, W - 5, 48).rotateZ(Math.PI / 2),
+            darkMetal,
+          );
+          hinge.position.set(0, T + 0.05, -D / 2 + 0.42);
+          group.add(hinge);
+
+          // Lid, pivoting on the hinge; its inner face is the lid's local z = 0.
+          const lid = new THREE.Group();
+          lid.position.set(0, T + 0.08, -D / 2 + 0.62);
+          lid.rotation.x = -THREE.MathUtils.degToRad(LAPTOP.openAngle);
+          const shell = new THREE.Mesh(
+            roundedSlab({ width: W, height: H, depth: lidThickness, radius: 0.95, fillet: 0.2 }),
+            aluminium,
+          );
+          shell.position.set(0, H / 2, -lidThickness / 2);
+          const bezel = new THREE.Mesh(roundedPlane(W - 0.32, H - 0.32, 0.8), blackGlass);
+          bezel.position.set(0, H / 2, 0.004);
+          const { width: dw, height: dh, top } = LAPTOP.display;
+          const displayY = H - 0.16 - top - dh / 2;
+          const display = new THREE.Mesh(
+            new THREE.PlaneGeometry(dw, dh),
+            screenMaterial(desktopScreen),
+          );
+          display.position.set(0, displayY, 0.008);
+          const sheen = new THREE.Mesh(new THREE.PlaneGeometry(dw, dh), glare);
+          sheen.position.set(0, displayY, 0.012);
+          const webcam = new THREE.Mesh(
+            new THREE.CircleGeometry(0.11, 32),
+            new THREE.MeshPhysicalMaterial({ color: '#1c1d22', roughness: 0.15, clearcoat: 1 }),
+          );
+          webcam.position.set(0, H - 0.16 - top / 2, 0.01);
+          lid.add(shell, bezel, display, sheen, webcam);
+          group.add(lid);
+
+          return group;
+        }
+
+        function buildPhone() {
+          const group = new THREE.Group();
+          const { width: W, height: H, depth: D } = PHONE;
+          const body = new THREE.Mesh(
+            roundedSlab({ width: W, height: H, depth: D, radius: 1.16, fillet: 0.22 }),
+            graphite,
+          );
+          const front = new THREE.Mesh(roundedPlane(W - 0.24, H - 0.24, 1.04), blackGlass);
+          front.position.z = D / 2 + 0.002;
+          const display = new THREE.Mesh(
+            roundedPlane(6.62, 14.32, 0.9),
+            screenMaterial(mobileScreen),
+          );
+          display.position.z = D / 2 + 0.005;
+          const sheen = new THREE.Mesh(roundedPlane(6.62, 14.32, 0.9), glare);
+          sheen.position.z = D / 2 + 0.009;
+          const lens = new THREE.Mesh(
+            new THREE.CircleGeometry(0.16, 40),
+            new THREE.MeshPhysicalMaterial({ color: '#050506', roughness: 0.1, clearcoat: 1 }),
+          );
+          lens.position.set(0, 14.32 / 2 - 0.46, D / 2 + 0.007);
+          group.add(body, front, display, sheen, lens);
+
+          // Side buttons: volume on the left, power on the right.
+          const button = (length) =>
+            new THREE.Mesh(
+              roundedSlab({
+                width: 0.3,
+                height: length,
+                depth: 0.3,
+                radius: 0.14,
+                fillet: 0.05,
+                curveSegments: 12,
+              }),
+              graphite,
+            );
+          for (const [x, y, length] of [
+            [-W / 2 - 0.02, 3.0, 1.15],
+            [-W / 2 - 0.02, 1.5, 1.15],
+            [W / 2 + 0.02, 2.2, 1.8],
+          ]) {
+            const b = button(length);
+            b.rotation.y = Math.PI / 2;
+            b.position.set(x, y, 0);
+            group.add(b);
+          }
+          return group;
+        }
+
+        const laptop = buildLaptop();
+        laptop.rotation.y = THREE.MathUtils.degToRad(LAYOUT.laptopYaw);
+        scene.add(laptop);
+
+        // A near plane far from the eye keeps depth precise where the floor planes meet.
+        const camera = new THREE.PerspectiveCamera(LAYOUT.fov, width / height, 40, 400);
+        const target = new THREE.Vector3(3, 8, 0);
+        const az = THREE.MathUtils.degToRad(LAYOUT.cameraAzimuth);
+        const el = THREE.MathUtils.degToRad(LAYOUT.cameraElevation);
+        camera.position
+          .set(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el))
+          .multiplyScalar(LAYOUT.cameraDistance)
+          .add(target);
+        camera.lookAt(target);
+
+        const phone = buildPhone();
+        phone.position.set(LAYOUT.phone.x, PHONE.height / 2, LAYOUT.phone.z);
+        phone.rotation.y =
+          Math.atan2(camera.position.x - LAYOUT.phone.x, camera.position.z - LAYOUT.phone.z) +
+          THREE.MathUtils.degToRad(LAYOUT.phone.extraYaw);
+        scene.add(phone);
+
+        for (const device of [laptop, phone]) {
+          device.traverse((child) => {
+            if (child.isMesh) child.castShadow = true;
+          });
+        }
+
+        // Soft key light from the upper left and behind, so shadows fall to the right and front.
+        const key = new THREE.DirectionalLight('#ffffff', 1.5);
+        key.position.set(-30, 96, -18);
+        key.castShadow = true;
+        key.shadow.mapSize.set(1024, 1024);
+        key.shadow.radius = 26;
+        key.shadow.blurSamples = 32;
+        key.shadow.bias = -0.0006;
+        Object.assign(key.shadow.camera, {
+          left: -48,
+          right: 48,
+          top: 48,
+          bottom: -48,
+          near: 1,
+          far: 260,
+        });
+        scene.add(key, key.target);
+
+        const ground = new THREE.Mesh(
+          new THREE.PlaneGeometry(600, 600).rotateX(-Math.PI / 2),
+          // No depth write: the contact shadow planes sit a hair above this one.
+          new THREE.ShadowMaterial({ color: '#000000', opacity: 0.26, depthWrite: false }),
+        );
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Two contact layers: a broad soft spread, and a tight dark line where the devices touch down.
+        const softContact = contactShadow(renderer, scene, {
+          size: 120,
+          resolution: 1024,
+          height: 6,
+          darkness: 1.1,
+          blur: 3.2,
+        });
+        softContact.group.children[0].material.opacity = 0.5;
+        const tightContact = contactShadow(renderer, scene, {
+          size: 120,
+          resolution: 2048,
+          height: 1.2,
+          darkness: 1.6,
+          blur: 0.9,
+        });
+        tightContact.group.children[0].material.opacity = 0.9;
+
+        // Frame the devices and the shadow they cast, with the margins above.
+        scene.updateMatrixWorld(true);
+        camera.updateMatrixWorld();
+        const lightDirection = key.target.position.clone().sub(key.position).normalize();
+        const bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
+        const point = new THREE.Vector3();
+        const include = (p) => {
+          point.copy(p).project(camera);
+          bounds.minX = Math.min(bounds.minX, point.x);
+          bounds.maxX = Math.max(bounds.maxX, point.x);
+          bounds.minY = Math.min(bounds.minY, point.y);
+          bounds.maxY = Math.max(bounds.maxY, point.y);
+        };
+        const world = new THREE.Vector3();
+        for (const device of [laptop, phone]) {
+          const box = new THREE.Box3().setFromObject(device);
+          const spread = LAYOUT.contactSpread;
+          for (const x of [box.min.x - spread, box.max.x + spread]) {
+            for (const z of [box.min.z - spread, box.max.z + spread]) include(world.set(x, 0, z));
+          }
+          device.traverse((child) => {
+            if (!child.isMesh) return;
+            const position = child.geometry.attributes.position;
+            for (let i = 0; i < position.count; i += 3) {
+              world.fromBufferAttribute(position, i).applyMatrix4(child.matrixWorld);
+              include(world);
+              include(world.clone().addScaledVector(lightDirection, -world.y / lightDirection.y));
+            }
+          });
+        }
+        const { left, right, top, bottom } = LAYOUT.margins;
+        const zoom = Math.min(
+          (2 * (1 - left - right)) / (bounds.maxX - bounds.minX),
+          (2 * (1 - top - bottom)) / (bounds.maxY - bounds.minY),
+        );
+        const centreX = ((bounds.minX + bounds.maxX) / 2) * zoom - (left - right);
+        const centreY = ((bounds.minY + bounds.maxY) / 2) * zoom - (bottom - top);
+        camera.zoom = zoom;
+        camera.setViewOffset(
+          width,
+          height,
+          (centreX * width) / 2,
+          (-centreY * height) / 2,
+          width,
+          height,
+        );
+        camera.updateProjectionMatrix();
+        window.__bounds = { ...bounds, zoom };
+
+        softContact.update([ground, tightContact.group]);
+        tightContact.update([ground, softContact.group]);
+        renderer.render(scene, camera);
+        publish(renderer);
+      } catch (error) {
+        publishError(error);
+      }
+    </script>
+  </body>
+</html>

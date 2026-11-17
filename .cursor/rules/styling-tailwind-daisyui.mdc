@@ -1,0 +1,55 @@
+---
+description: Tailwind CSS 4, daisyUI 5, design tokens, the light-only colour scheme, and Inspira UI usage rules
+globs: src/styles/**,src/**/*.css,src/**/*.astro,src/**/*.vue
+alwaysApply: false
+---
+
+# Styling: Tailwind CSS 4 + daisyUI 5 + Inspira UI
+
+Docs: https://tailwindcss.com/docs/theme , https://daisyui.com/docs/config/ , https://docs.astro.build/en/guides/styling/ , https://inspira-ui.com/docs/en/getting-started/installation
+
+## One stylesheet, CSS-first configuration
+
+- `src/styles/global.css` is the only global stylesheet and is imported once in `BaseLayout.astro`. It holds `@import 'tailwindcss'`, `@import 'tw-animate-css'`, the daisyUI `@plugin` block, the Inspira backgrounds plugin, `@theme` tokens, and `@layer base` resets.
+- There is no `tailwind.config.js`. Configure Tailwind in CSS: `@theme` for tokens that should become utilities, `@utility` for custom utilities, `@layer components` only for patterns repeated in many places that daisyUI does not cover.
+- Add a design token to `@theme` once; never hard-code brand hex values in markup.
+
+## daisyUI usage
+
+- Use daisyUI components for foundations: `btn`, `card`, `badge`, `navbar`, `footer`, `drawer`, `collapse`, `modal`, `input`, `textarea`, `select`, `checkbox`, `alert`, `breadcrumbs`, `steps`, `tabs`. For rendered Markdown, write article styles in an Astro component or add `@tailwindcss/typography` (`prose`) only when long-form article styling is built; it is not installed yet, so record the decision in `docs/architecture.md`.
+- Use daisyUI semantic colors (`bg-base-100`, `text-base-content`, `bg-primary`, `text-primary-content`, `border-base-300`) rather than raw palette colors, so every color comes from the theme.
+- Light only (owner's decision, 2026-11-17): the site renders in daisyUI's `light` theme whatever the visitor's device or browser prefers. Do not add a dark theme, `--prefersdark`, `prefers-color-scheme` queries, `dark:` classes, or a theme toggle without a new decision; the smoke suite fails if the page changes under a dark preference.
+- How light-only holds, all four together: daisyUI loads only `light --default`; `BaseLayout.astro` sets `data-theme="light"` on `<html>` and `<meta name="color-scheme" content="only light">`; `global.css` sets `color-scheme: only light` on `:root`, unlayered so it beats the plain `light` daisyUI's theme sets in the base layer (with plain `light`, Chromium's forced dark mode, Chrome's "Darken websites", still recolours the page); and Tailwind's `dark:` variant is bound to `[data-theme=dark]`, which nothing sets.
+- Primary calls to action render through `src/components/ui/Button.astro`: a pill-shaped `btn btn-primary` with the lit finish from the `btn-lit` utility in `global.css` (gradient, four shadows, flipped on press). Apply `btn-lit` by hand only where an Astro component cannot be used, such as inside a Vue island. `variant="secondary"` gives the neutral outline (`btn-outline btn-neutral`) for the next-best action beside a primary one. On light backgrounds give these buttons a near-black focus ring (`focus-visible:outline-neutral`): daisyUI's ring takes the button colour, and the yellow is 1.4:1 there.
+- daisyUI's `aura` (border light) always carries the `aura-lap` utility, which limits it to one lap on appearance and to hover or keyboard focus afterwards; a bare `aura` circles forever and breaks the five-second motion limit. Show at most one aura per view. Its light takes the surrounding text colour, so set a `text-*` colour on the parent when the surface is light.
+- Brand palette: only the owner decides brand colours. Decided so far: primary `#f7db15` (2026-11-17), the colour of every primary call to action, with the `neutral` near-black as its label (white on it is 1.4:1). Each decided colour goes in the `@plugin 'daisyui/theme' { name: 'light'; default: true; ... }` block in `global.css`: daisyUI merges a block named after a built-in theme into that theme's tokens, so `data-theme="light"`, the smoke test, and the light-only setup stay as they are. Record each colour in the "Brand colours" row of `docs/architecture.md`; every colour not yet decided stays at daisyUI's `light` value.
+
+## Markup rules
+
+- Mobile-first: write base styles for small screens, then `md:` and `lg:` overrides.
+- No inline `style=""` except for truly dynamic values; no `!important` in markup.
+- Keep class lists readable: layout, spacing, typography, color, state. Extract a component when the same combination appears three times.
+- Spacing and sizing come from the Tailwind scale; arbitrary values (`w-[437px]`) need a comment explaining why.
+- Focus styles must stay visible: never add `outline-none` without a replacement `focus-visible:` style.
+
+## Inspira UI
+
+- Inspira components are copied into `src/components/inspira/` from the official docs, keeping their file names, then adapted. They import `cn` from `@/lib/utils`. Installed support packages: `@vueuse/core`, `motion-v`, `tw-animate-css`, `@inspira-ui/plugins` (background utilities loaded via `src/styles/inspira-backgrounds.mjs`).
+- Some components depend on additional pieces (shadcn-vue primitives, `reka-ui`, icons). Read the component's import list before copying; add a dependency only when the component is approved, and note it in `docs/architecture.md`.
+- Use effects purposefully: at most one or two per page, on hero backgrounds, section dividers, or interactive cards. Never animate body text, navigation, or form controls. Every effect must respect `prefers-reduced-motion` (global CSS already shortens animations; also skip JS-driven loops when reduced motion is on).
+- Effects must not shift layout or block interaction. Hydrate with `client:visible` or `client:idle`, and keep each effect's JavaScript small enough that Lighthouse performance stays above 90 on mobile.
+
+## Fonts and icons
+
+- Default to system fonts via the `--font-sans` token. If a brand web font is adopted, self-host it in `src/assets/fonts/` or use Astro's font support, with `font-display: swap`, and document the choice.
+- Icons are not installed yet. Prefer inline SVG for the handful of icons a marketing site needs; if an icon set is adopted, choose one package and document it.
+
+## Responsive QA
+
+- Check every layout change at 360, 390, 768, 1024, 1440, and 1920 px with `npx playwright test tests/e2e/layout.spec.ts --project=desktop-chromium`, then inspect the screenshots it writes to `reports/screenshots/`. Procedure: `.cursor/skills/responsive-qa/SKILL.md`.
+- Prevent overflow at the source: `min-w-0` on flex children, `break-words` for long strings, `max-w-*` containers, fluid images (`w-full h-auto` with explicit dimensions), responsive grids. Never hide overflow to mask a layout bug.
+- Mobile projects in Playwright are emulations; physical-device checks are a separate, manual step before launch.
+
+## Checks for this area
+
+`npx prettier --check <files>`, `npm run build` (Tailwind errors surface at build), `npm run test:e2e` (axe catches contrast and focus regressions).

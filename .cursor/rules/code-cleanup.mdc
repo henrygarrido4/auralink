@@ -1,0 +1,33 @@
+---
+description: Behaviour-preserving cleanup standards for Astro, Vue, TypeScript, CSS, and content files
+alwaysApply: false
+---
+
+# Code cleanup rule
+
+Apply when the task is cleanup, refactoring, de-bloating, or readability work. Procedure: `@.cursor/skills/code-cleanup/SKILL.md`. Subagent: `@.cursor/agents/astro-cleanup.md`.
+
+## Primary goal
+
+Improve readability and maintainability without changing rendered output, behaviour, URLs, metadata, or content meaning.
+
+## Strict constraints
+
+- Preserve rendered HTML, class behaviour, hydration directives, props, emitted events, routes, and metadata unless explicitly asked to change them.
+- Small, scoped, low-risk edits. No broad rewrites, no speculative abstractions, no "while I'm here" edits in unrelated files.
+- Remove dead code, unused imports and variables, duplicated markup, stale comments, and leftover debug output when you can verify they are unused.
+- Reuse existing components, utilities, tokens, and daisyUI classes before adding new ones.
+- No inline `style=""`, no new `<style>` blocks, no new dependencies, no schema changes during cleanup.
+- Content files: fix formatting and front matter consistency only; never rewrite copy or alter facts in a cleanup task.
+- Instruction files (`.cursor/`, `docs/`, `AGENTS.md`, `CLAUDE.md`): keep references valid; run `npm run check:workflow` after touching them.
+
+## Validation
+
+- Lint and format only the files you changed: `npx eslint <files>`, `npx prettier --check <files>`.
+- Run `npm run check` when TypeScript or props changed, `npm run check:vue` for `.vue` files.
+- Run `npm run test:e2e` when a layout, page, or island was touched; compare that the same routes build.
+- Do not run repo-wide `lint:fix` or `format` during cleanup unless explicitly requested.
+
+## Output expectations
+
+Report what changed, what was intentionally left unchanged, and any risky areas that need human review.

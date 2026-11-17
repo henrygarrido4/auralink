@@ -1,0 +1,36 @@
+{
+  "$comment": "Budgets enforced by scripts/perf-audit.mjs (Lighthouse 13 no longer ships --budget-path). Scores are 0-1, metrics are milliseconds except cumulative-layout-shift, resource sizes are transferred kilobytes. Initial values are regression budgets for the starter baseline; raise them only with a note in docs/performance.md.",
+  "scores": {
+    "mobile": { "performance": 0.9, "accessibility": 1, "best-practices": 0.95, "seo": 1 },
+    "desktop": { "performance": 0.95, "accessibility": 1, "best-practices": 0.95, "seo": 1 }
+  },
+  "metrics": {
+    "mobile": {
+      "first-contentful-paint": 1800,
+      "largest-contentful-paint": 2500,
+      "speed-index": 3400,
+      "total-blocking-time": 200,
+      "cumulative-layout-shift": 0.1,
+      "interactive": 3800
+    },
+    "desktop": {
+      "first-contentful-paint": 1000,
+      "largest-contentful-paint": 1200,
+      "speed-index": 1300,
+      "total-blocking-time": 150,
+      "cumulative-layout-shift": 0.1,
+      "interactive": 2000
+    }
+  },
+  "resources": {
+    "transferKB": {
+      "total": 500,
+      "document": 40,
+      "script": 120,
+      "stylesheet": 60,
+      "image": 250,
+      "font": 100
+    },
+    "requests": { "total": 30, "third-party": 0 }
+  }
+}

@@ -1,0 +1,98 @@
+---
+import { Picture } from 'astro:assets';
+import devices from '@/assets/hero/laptop-phone.webp';
+import Button from '@/components/ui/Button.astro';
+import PencilUnderline from '@/components/ui/PencilUnderline.astro';
+import { primaryCta } from '@/data/site';
+
+/**
+ * Home page hero: positioning copy beside the laptop-and-phone image. The image is rendered from
+ * the editable sources in design/hero-mockup/ (see its README). The only motion is the pencil
+ * underline under "brings them back"; the buttons change colour at once, without transitions.
+ */
+interface Props {
+  /** Target of the "About us" button. */
+  aboutHref: string;
+}
+
+const { aboutHref } = Astro.props;
+
+/**
+ * Hover and focus change colour at once (no transition, no movement). The focus ring is the
+ * near-black neutral: daisyUI's own ring takes the button colour, and yellow on this background
+ * is 1.4:1.
+ */
+const buttonClass =
+  'transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral';
+---
+
+<section aria-labelledby="hero-title" class="relative isolate bg-base-200">
+  <div class="mx-auto flex max-w-7xl flex-col gap-12 px-6 pt-12 pb-20 sm:pt-16 sm:pb-24 lg:flex-row lg:items-center lg:px-8 lg:pb-28">
+    {/* Copy takes about 45% of the row and the image 55%; flex-shrink absorbs the gap. */}
+    <div class="min-w-0 lg:basis-9/20">
+      <p class="text-sm font-bold tracking-[0.16em] text-base-content/70 uppercase">
+        Web design + lifecycle email
+      </p>
+      {/*
+       * Font size is 10.5% of the copy column's width, so "brings them back." always fits on its
+       * line: the widest fallback font measured needs 8.6em for it. The column's width is written
+       * in viewport units: 100vw - 3rem when stacked; 45% of (100vw - 4rem), less its share of the
+       * 3rem gap, from lg; fixed from 1280px, hence the 3.45rem cap. Change these with the paddings,
+       * gap, or basis above. (Container units would track the column by themselves, but restyling
+       * after layout starts transitions on load, which the reduced-motion test catches.)
+       * The bottom padding holds the underline, which hangs below the last line.
+       */}
+      <h1
+        id="hero-title"
+        class="mt-5 pb-[0.3em] text-[clamp(2rem,calc(10.5vw-5px),3.5rem)] leading-[1.05] font-bold tracking-tight text-base-content lg:text-[clamp(2rem,calc(4.725vw-5.3px),3.45rem)]"
+      >
+        {/* One span per line; the explicit spaces keep the words apart in the heading's text. */}
+        <span class="block">Websites that</span> <span class="block">win customers.</span>{' '}
+        <span class="block">Email that</span>{' '}
+        <span class="block">
+          <span class="relative">
+            <PencilUnderline />
+            brings them back
+          </span>
+          .
+        </span>
+      </h1>
+      <p class="mt-4 max-w-xl text-lg leading-relaxed text-base-content/80 sm:text-xl">
+        Custom websites and email journeys that help people find you, choose you, and come back.
+      </p>
+      <div class="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <Button href={primaryCta.href} size="lg" class={buttonClass}>
+          {primaryCta.label}
+        </Button>
+        <Button href={aboutHref} size="lg" variant="secondary" class={buttonClass}>
+          About us
+        </Button>
+      </div>
+    </div>
+
+    <div class="mx-auto w-full max-w-2xl min-w-0 lg:mx-0 lg:max-w-none lg:basis-11/20">
+      <Picture
+        src={devices}
+        alt="Laptop and phone showing the same sample shop website on desktop and mobile"
+        formats={['avif']}
+        fallbackFormat="webp"
+        widths={[480, 640, 800, 1024, 1280, 1600]}
+        sizes="(min-width: 1280px) 643px, (min-width: 1024px) calc(55vw - 62px), (min-width: 720px) 672px, calc(100vw - 48px)"
+        loading="eager"
+        fetchpriority="high"
+        class="h-auto w-full"
+      />
+    </div>
+  </div>
+
+  {/* Curved lower edge: the next section's background rises under the devices. */}
+  <svg
+    class="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-12 w-full fill-base-100 sm:h-16 lg:h-24"
+    viewBox="0 0 1440 96"
+    preserveAspectRatio="none"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M0 96V66C260 96 640 104 1010 78C1200 64 1340 38 1440 6V96Z"></path>
+  </svg>
+</section>

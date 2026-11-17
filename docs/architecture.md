@@ -1,0 +1,152 @@
+# Architecture
+
+The Auralink Studio website is a statically generated Astro site. Every page is rendered to HTML at build time, served by Netlify from `dist/`, and enhanced with small Vue islands only where interaction is required. There is no application backend, database, or authentication.
+
+## Decisions
+
+| Decision             | Choice                                                                                                       | Reason                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Output mode          | Astro static output, no adapter                                                                              | A marketing site needs no on-demand rendering. Netlify serves `dist/` directly; `@astrojs/netlify` is only required for server rendering or edge middleware (Astro Netlify guide).                                                                                                                                                                                                                                                             |
+| Hosting and forms    | Netlify, Netlify Forms                                                                                       | Preferred direction from the owner. Static forms need no backend. See `netlify.toml` and `.cursor/rules/forms-netlify.mdc`.                                                                                                                                                                                                                                                                                                                    |
+| Styling              | Tailwind CSS 4 through `@tailwindcss/vite`, daisyUI 5                                                        | CSS-first configuration in `src/styles/global.css`; daisyUI provides accessible component foundations and themes. No `tailwind.config.js`.                                                                                                                                                                                                                                                                                                     |
+| Interactivity        | Vue 3 `<script setup>` islands via `@astrojs/vue`                                                            | Matches the owner's Vue experience; islands keep JavaScript off static pages.                                                                                                                                                                                                                                                                                                                                                                  |
+| Visual effects       | Selected Inspira UI components, copied into `src/components/inspira/`                                        | Copy-paste library; each component passes the adoption checklist in `.cursor/skills/inspira-component/SKILL.md` (CSS variables, dependencies, server rendering, accessibility, mobile performance) before use.                                                                                                                                                                                                                                 |
+| Content              | Astro content collections with Markdown                                                                      | Typed front matter, build-time validation, no CMS runtime.                                                                                                                                                                                                                                                                                                                                                                                     |
+| Markdown processor   | Astro 7 default (Sätteri)                                                                                    | Works with no configuration. remark/rehype plugins would require `@astrojs/markdown-remark`; Sätteri plugins require `@astrojs/markdown-satteri`. Neither is installed.                                                                                                                                                                                                                                                                        |
+| TypeScript           | 6.x, not 7.x                                                                                                 | `@astrojs/check` (peer `^5 \|\| ^6`) and `typescript-eslint` (`<6.1`) do not support TypeScript 7. TypeScript 6 also deprecates `baseUrl`, so path aliases use `paths` alone.                                                                                                                                                                                                                                                                  |
+| Browser testing      | Playwright with axe-core, five projects                                                                      | Desktop Chromium runs every suite; Firefox, WebKit, mobile Chromium (Pixel 7), and mobile WebKit (iPhone 15) run the engine-sensitive suites. The test server runs on port 4322 with `--ignore-lock` because Astro 7 (via the `am-i-vibing` package) auto-backgrounds servers started by AI agents.                                                                                                                                            |
+| Performance audit    | Lighthouse 13 CLI driven by `scripts/perf-audit.mjs`                                                         | Lighthouse 13 dropped `--budget-path`, so the script enforces `lighthouse.budgets.json` itself (category scores, metrics, transfer sizes, request counts). Uses Playwright's pinned Chromium for reproducibility.                                                                                                                                                                                                                              |
+| Site header          | `src/components/sections/Navbar.astro`, rendered by `BaseLayout` as the default content of its `header` slot | Sticky dark bar built from daisyUI semantic tokens (`neutral`, `primary`), so it follows the brand theme once one exists. Below `lg` the links move into a native modal `<dialog>` opened by a short inline script instead of a Vue island: the browser supplies the focus trap, Escape handling, and inert background, and no framework runtime loads on static pages. Entries come from `primaryNav` and `primaryCta` in `src/data/site.ts`. |
+| Logo                 | `src/assets/aura.svg` (the owner's artwork, 2026-11-17), inlined by the navbar and its menu panel            | Cropped to the artwork, clipping frame removed, paths optimised once with SVGO (16.4 KB to 5.6 KB; inlined twice per page). The wordmark fills with `currentColor`, so it takes the bar's text colour and looks black when opened alone; the mark's yellow is not a theme token. 48px tall so the "Studio" line stays readable. Treat a new export the same way. The earlier green-mark `aura-logo.svg` stays, unused, at the owner's request. |
+| Primary button       | `src/components/ui/Button.astro`, with the `btn-lit` and `aura-lap` utilities in `src/styles/global.css`     | Lit from above, after the owner's reference (https://www.youtube.com/shorts/XldO61IcsX4): a gradient and four shadows (top light, bottom shade, contact, own-colour glow), flipped on press. The gradient shades downward, keeping the label at 4.5:1. daisyUI's `aura` makes one lap on appearance, returns on hover or keyboard focus, and stays off under reduced motion (WCAG 2.2.2).                                                      |
+| Home hero            | `src/components/sections/Hero.astro`; image `src/assets/hero/laptop-phone.webp`                              | Owner's brief (2026-11-17): copy left (about 45%), devices right (55%), stacked below `lg`. The headline is sized in container units (`cqi`) so "brings them back." always fits one line. The only motion is the pencil underline (`PencilUnderline.astro`, `animate-pencil-draw`): drawn once after 250 ms, already finished under reduced motion. Buttons change colour at once (`transition-none`).                                         |
+| Hero image           | Rendered from `design/hero-mockup/` (three.js in headless Chromium), served as AVIF with WebP fallback       | No approved client work exists yet, so the screens show a fictional sample shop, labelled as concept work in that folder's README. Original 3D devices, no stock or third-party art. Six widths, loaded eagerly with `fetchpriority="high"` and explicit dimensions. `render.mjs` crops to the visible pixels and refuses a frame that would cut a shadow.                                                                                     |
+| Secondary button     | `variant="secondary"` of `src/components/ui/Button.astro`: daisyUI `btn-outline btn-neutral`                 | The brief asked for the existing secondary style, and none existed. A neutral outline sits beside the yellow primary without adding a colour; it fills near-black on hover and focus. In the hero both buttons get a near-black focus ring, because daisyUI's ring takes the button colour (yellow is 1.4:1 on the light background).                                                                                                          |
+| Colour scheme        | Light only, whatever the visitor's device or browser prefers                                                 | Owner's decision (2026-11-17). daisyUI loads only `light`, which `<html data-theme="light">` selects explicitly. `color-scheme: only light`, on `:root` (unlayered, to beat the plain `light` in daisyUI's theme) and in a meta tag, keeps native controls light and opts out of Chromium's forced dark mode (Chrome's "Darken websites"). Tailwind's `dark:` variant is bound to `[data-theme=dark]`, which nothing sets.                     |
+| Brand colours        | Primary `#f7db15` (owner, 2026-11-17), set on daisyUI's `light` theme in `src/styles/global.css`             | The yellow of the logo's mark, for every primary call to action and the navbar links' hover and current-page states. A `daisyui/theme` block named `light` merges into the built-in theme, so `data-theme` and the light-only setup are unchanged. Labels take the `neutral` near-black: 9.7:1 where the lit gradient is darkest, 8:1 on hover (white: 1.4:1). The logo keeps its own copy of the yellow. The rest of the palette is open.     |
+| Dependency placement | Build-time packages in `dependencies`, tooling in `devDependencies`                                          | Netlify installs both by default (its build installs devDependencies unless `NODE_ENV=production` is set); the split documents what the production build needs.                                                                                                                                                                                                                                                                                |
+
+## Installed versions
+
+Verified on 2026-11-16 with `npm ls --depth=0`. Ranges in `package.json` use caret semver; refresh this table when upgrading.
+
+| Package                         | Version                                                                         | Documentation                                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| astro                           | 7.4.12                                                                          | https://docs.astro.build/ (upgrade notes: https://docs.astro.build/en/guides/upgrade-to/v7/) |
+| @astrojs/vue                    | 7.1.6                                                                           | https://docs.astro.build/en/guides/integrations-guide/vue/                                   |
+| vue                             | 3.5.45                                                                          | https://vuejs.org/guide/                                                                     |
+| @astrojs/sitemap                | 3.7.5                                                                           | https://docs.astro.build/en/guides/integrations-guide/sitemap/                               |
+| tailwindcss, @tailwindcss/vite  | 4.3.5                                                                           | https://tailwindcss.com/docs/ and https://docs.astro.build/en/guides/styling/                |
+| daisyui                         | 5.8.1                                                                           | https://daisyui.com/docs/ (Astro install: https://daisyui.com/docs/install/astro/)           |
+| tw-animate-css                  | 1.4.0                                                                           | https://github.com/Wombosvideo/tw-animate-css                                                |
+| @inspira-ui/plugins             | 0.0.2                                                                           | https://inspira-ui.com/docs/en/getting-started/installation                                  |
+| @vueuse/core                    | 15.0.0                                                                          | https://vueuse.org/                                                                          |
+| motion-v                        | 2.12.0                                                                          | https://motion.dev/docs/vue                                                                  |
+| clsx, tailwind-merge            | 2.1.1, 3.7.0                                                                    | used by `cn()` in `src/lib/utils.ts`                                                         |
+| @playwright/test                | 1.65.1                                                                          | https://playwright.dev/docs/intro                                                            |
+| Playwright browsers             | Chromium 159 (build 1255), Firefox 159.0 (build 1572), WebKit 27.2 (build 2388) | installed with `npx playwright install chromium firefox webkit`                              |
+| @axe-core/playwright            | 4.14.0                                                                          | https://github.com/dequelabs/axe-core-npm/tree/develop/packages/playwright                   |
+| lighthouse                      | 13.6.0                                                                          | https://developer.chrome.com/docs/lighthouse/overview                                        |
+| @astrojs/check                  | 0.9.12                                                                          | https://docs.astro.build/en/guides/typescript/                                               |
+| typescript                      | 6.0.3                                                                           | https://www.typescriptlang.org/docs/                                                         |
+| vue-tsc                         | 3.3.14                                                                          | https://github.com/vuejs/language-tools                                                      |
+| eslint, @eslint/js              | 10.15.0, 10.0.1                                                                 | https://eslint.org/docs/latest/                                                              |
+| typescript-eslint               | 8.73.0                                                                          | https://typescript-eslint.io/                                                                |
+| eslint-plugin-astro             | 3.2.1                                                                           | https://ota-meshi.github.io/eslint-plugin-astro/                                             |
+| eslint-plugin-vue               | 10.12.1                                                                         | https://eslint.vuejs.org/                                                                    |
+| eslint-config-prettier          | 10.1.8                                                                          | https://github.com/prettier/eslint-config-prettier                                           |
+| prettier, prettier-plugin-astro | 3.10.1, 1.1.2                                                                   | https://prettier.io/docs/                                                                    |
+| globals                         | 17.14.0                                                                         | https://github.com/sindresorhus/globals                                                      |
+
+Runtime: Node 24.21 locally (`engines` requires `>=22.23.4`), npm 11.19. `netlify.toml` pins `NODE_VERSION = "24"` for builds; CI uses Node 24 as well.
+
+Tooling references: Cursor rules https://cursor.com/docs/rules , skills https://cursor.com/docs/skills , subagents https://cursor.com/docs/subagents ; Claude Code memory https://code.claude.com/docs/en/memory ; Google Search Central https://developers.google.com/search/docs/ ; WCAG 2.2 quick reference https://www.w3.org/WAI/WCAG22/quickref/ ; Netlify dependencies https://docs.netlify.com/configure-builds/manage-dependencies/ .
+
+## Repository map
+
+```
+src/
+  pages/              routes; dynamic routes read collections
+  layouts/            BaseLayout.astro: <head>, metadata, skip link, <main>
+  components/
+    ui/               Astro primitives built on daisyUI
+    sections/         page sections composed by pages
+    seo/              JSON-LD and metadata components
+    islands/          Vue 3 hydrated components
+    inspira/          Inspira UI components copied in
+  content/            Markdown collections (services, work, insights, faqs); `_README.md` templates
+  content.config.ts   Zod schemas and glob loaders
+  data/site.ts        verified business facts, service catalogue, planned routes
+  lib/utils.ts        cn()
+  styles/global.css   Tailwind, daisyUI, tokens, base layer
+  styles/inspira-backgrounds.mjs   Tailwind plugin wrapper for @inspira-ui/plugins
+  assets/             images optimised by astro:assets
+public/               favicons, robots.txt
+tests/e2e/            Playwright suites (smoke, a11y, motion, navigation, hero, seo, layout, rendering) and helpers
+scripts/              verify-workflow.mjs, check-content.mjs, perf-audit.mjs, lib/
+reports/              generated screenshots and Lighthouse reports (gitignored)
+design/hero-mockup/   editable source of the home hero's device image (README, render script)
+docs/                 this folder
+.cursor/              rules (.mdc), agents, skills
+.github/workflows/    quality.yml (pull-request and main-branch gate)
+AGENTS.md, CLAUDE.md  shared and Claude-specific instructions
+```
+
+## Configuration files
+
+| File                             | Purpose                                                                                                                           |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `astro.config.mjs`               | `site` (canonical origin), Vue and sitemap integrations, Tailwind Vite plugin                                                     |
+| `tsconfig.json`                  | strict preset, `@/*` alias, excludes build and test output; `allowJs` from the preset means `vue-tsc` also parses `scripts/*.mjs` |
+| `src/styles/global.css`          | Tailwind import, `tw-animate-css`, daisyUI light theme, Inspira backgrounds plugin, `@theme` tokens, reduced-motion base layer    |
+| `eslint.config.js`               | flat config: JS, TypeScript, Astro, Vue (script-setup, block order, macro order), Prettier compatibility last                     |
+| `.prettierrc`, `.prettierignore` | formatting with the Astro plugin; `.mdc` rules, `public/`, and `reports/` are not formatted                                       |
+| `playwright.config.ts`           | builds (unless `PLAYWRIGHT_SKIP_BUILD=1`) and previews on 4322; five projects; `PLAYWRIGHT_SKIP_FIREFOX=1` drops Firefox locally  |
+| `lighthouse.budgets.json`        | score, metric, transfer-size, and request budgets enforced by `scripts/perf-audit.mjs`                                            |
+| `netlify.toml`                   | build command, publish directory, Node version                                                                                    |
+| `.github/workflows/quality.yml`  | CI sequence: `npm ci`, static checks, build, browser matrix, Lighthouse budgets, artifact upload                                  |
+| `.vscode/`                       | recommended extensions, Tailwind CSS language mode for `*.css`, and formatter settings                                            |
+
+## Ports
+
+| Port | Used by                                                  | Notes                                                                                |
+| ---- | -------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 4321 | `astro dev`                                              | Developer server; never tested against (its dev toolbar injects extra `h1` elements) |
+| 4322 | Playwright web server (`astro preview --ignore-lock`)    | Started and stopped by Playwright                                                    |
+| 4323 | `scripts/perf-audit.mjs` (`astro preview --ignore-lock`) | Refuses to run if the port is busy                                                   |
+
+## Inspira UI integration notes
+
+- `@inspira-ui/plugins` ships Tailwind plugins as named exports (`addBackgrounds`, `addVariablesForColors`, `setupInspiraUI`). Tailwind 4's `@plugin` directive needs a default export, so `src/styles/inspira-backgrounds.mjs` re-exports `addBackgrounds` (utilities `bg-grid`, `bg-grid-small`, `bg-dot`). `addVariablesForColors` is skipped because Tailwind 4 already exposes theme colours as `--color-*` variables.
+- Inspira components expect shadcn-style CSS variables and sometimes a `.dark` class that this project does not define globally; the adoption checklist in the `inspira-component` skill covers mapping them to daisyUI tokens per component, dependency approval, server-rendering guards, accessibility, and a per-page Lighthouse comparison.
+- Not verified at setup: the complete CSS variable block from the Inspira installation page (only partially retrieved) and whether specific components require `reka-ui` or shadcn-vue primitives. Check each component's imports when adopting it. No component has been adopted yet.
+
+## Continuous integration
+
+`.github/workflows/quality.yml` runs on pull requests and pushes to `main`: `npm ci`, `npm run quality:static`, `npm run build`, Playwright browser installation, the five-project matrix against the build (`PLAYWRIGHT_SKIP_BUILD=1`), `node scripts/perf-audit.mjs --no-build`, and uploads `playwright-report/`, `test-results/`, and `reports/` as artifacts on every run. Status: the repository has no remote yet, so the workflow is configured but has never executed; GitHub is the expected host (the owner's `gh` CLI is authenticated and Netlify deploys from Git). If another provider is chosen, port the same sequence. Lighthouse scores on shared runners vary; if the performance budget fails in CI without a code change, compare the uploaded report before adjusting anything.
+
+## Deployment checklist (Netlify)
+
+1. Connect the repository; Netlify reads `netlify.toml` (`npm run build`, publish `dist`, Node 24). Netlify installs devDependencies by default; do not set `NODE_ENV=production` in the build environment.
+2. Set the production domain to `auralinkstudio.com` with HTTPS; `site` in `astro.config.mjs` must match so canonical URLs and the sitemap are correct.
+3. Enable form detection (Forms > Form detection) before deploying the contact form.
+4. After the first deploy, submit `https://auralinkstudio.com/sitemap-index.xml` in Google Search Console.
+5. Add redirects to `netlify.toml` whenever a published URL changes.
+
+## Open decisions
+
+Not decided at setup and intentionally not invented: brand colours other than the primary (see "Brand colours" above), web fonts, icon approach, analytics, default Open Graph image, final imagery (the home hero's device image shows a concept sample site until approved client work exists), 404 page design, navbar link labels and the target of its call to action (proposed in `src/data/site.ts`), a transparent navbar over the hero (the bar stays solid for now), footer component, page layouts, privacy page, CI provider confirmation (GitHub assumed). Record each decision here when made.
+
+## Verification notes
+
+- Verified against installed packages or CLI help: Astro flags (`astro dev --background`, `astro preview --ignore-lock`), agent auto-backgrounding (`node_modules/astro/dist/cli/agent.js`), Lighthouse 13 flags (`npx lighthouse --help`) and the absence of `--budget-path`, Playwright device names and `webServer.gracefulShutdown`, TypeScript peer ranges of `@astrojs/check` and `typescript-eslint`.
+- Verified against official documentation on 2026-11-16: Astro 7 upgrade notes, Vue integration, Tailwind setup, content collections, Netlify static deploys and Forms, Netlify devDependency installation, daisyUI 5 install and config syntax, Tailwind 4 `@theme`, Cursor rules, skills, and subagents formats, Claude Code memory and skill discovery, Google's AI-features guidance, FAQ rich result retirement.
+- Cursor `globs`: official docs show a plain string; the comma-separated form is what Cursor's own rule editor writes and what users report working, while YAML lists are reported as ignored. Rules use the comma-separated string; `npm run check:workflow` enforces it.
+- Firefox: Playwright's bundled Firefox 159 build cannot start on this machine (macOS 27.2.1, "Could not find profile folder", with and without a sandbox). The Firefox project is configured and runs in CI on Ubuntu; locally use `PLAYWRIGHT_SKIP_FIREFOX=1`.
+- Not verified: Netlify's current default Node version (pinned to 24 instead), Inspira component dependencies beyond the install page, physical-device rendering (all mobile checks are emulation), field Core Web Vitals (no live traffic yet).
+
+## Upgrade policy
+
+- Patch and minor updates: run `npm run quality:full` afterwards.
+- Major updates (Astro, Tailwind, daisyUI, Vue, Playwright, Lighthouse, ESLint, TypeScript 7): propose separately with the migration guide linked and the breaking changes listed; never as part of a feature task.
+- No prerelease packages.

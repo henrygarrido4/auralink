@@ -1,0 +1,165 @@
+---
+import Logo from '@/assets/aura.svg';
+import Button from '@/components/ui/Button.astro';
+import { primaryCta, primaryNav, site } from '@/data/site';
+
+const trimSlash = (path: string) => path.replace(/\/+$/, '') || '/';
+const currentPath = trimSlash(Astro.url.pathname);
+
+/** `page` for the current page's own link, `true` for the section that contains it. */
+const currentState = (href?: string) => {
+  if (!href) return undefined;
+  const target = trimSlash(href);
+  if (target === currentPath) return 'page';
+  return target !== '/' && currentPath.startsWith(`${target}/`) ? 'true' : undefined;
+};
+
+const focusRing =
+  'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-content';
+const iconButton = [
+  'inline-flex size-11 items-center justify-center rounded-full hover:bg-neutral-content/10',
+  focusRing,
+];
+/**
+ * Hover turns a link primary yellow, and the bar's underline (`bg-current`) follows. Only `color`
+ * fades: `transition-colors` would fade the focus ring in as well. On the menu's current-page bar
+ * the dark label still wins, because Tailwind emits `aria-*` variants after `hover`.
+ */
+const linkHover = 'transition-[color] duration-300 hover:text-primary';
+---
+
+<header class="sticky top-0 z-40 bg-neutral text-neutral-content">
+  <div class="navbar mx-auto h-20 max-w-7xl gap-8 px-6 py-0 lg:px-8">
+    <a href="/" aria-label={`${site.name} home`} class:list={['mr-auto rounded-sm', focusRing]}>
+      {/* 48px: any smaller and the "Studio" line under the wordmark stops being readable. */}
+      <Logo class="h-12 w-auto" aria-hidden="true" />
+    </a>
+
+    <nav aria-label="Primary" class="hidden lg:block">
+      <ul class="flex items-center gap-9">
+        {primaryNav.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              aria-current={currentState(item.href)}
+              class:list={[
+                'relative block rounded-sm py-2 font-bold',
+                'after:absolute after:inset-x-0 after:bottom-1 after:h-0.5 after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-300',
+                'hover:after:scale-x-100 aria-[current]:text-primary aria-[current]:after:scale-x-100',
+                linkHover,
+                focusRing,
+              ]}
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    {/* As tall as the bar and clipped vertically, so the button's glow stays inside the bar. */}
+    <div class="hidden self-stretch overflow-y-clip lg:flex lg:items-center">
+      <Button href={primaryCta.href} aura class={focusRing}>
+        {primaryCta.label}
+      </Button>
+    </div>
+
+    <button
+      type="button"
+      aria-label="Open menu"
+      aria-haspopup="dialog"
+      aria-controls="site-menu"
+      class:list={[iconButton, '-mr-2.5 lg:hidden']}
+    >
+      <svg
+        class="size-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <path d="M3 6h18M3 12h18M9 18h12"></path>
+      </svg>
+    </button>
+  </div>
+</header>
+
+{/*
+ * Menu for viewports below lg. A modal <dialog> keeps focus inside, closes on Escape,
+ * and is display: none while closed, so it must not get a display utility of its own.
+ * The dialog itself is the scrim; the panel slides in from the right.
+ */}
+<dialog
+  id="site-menu"
+  aria-label="Site menu"
+  class="group fixed inset-0 z-50 size-full max-h-none max-w-none overflow-clip bg-transparent transition-[background-color,display,overlay] transition-discrete duration-300 backdrop:bg-transparent open:bg-neutral/60 starting:open:bg-transparent"
+>
+  <div class="ml-auto flex h-full w-full translate-x-full flex-col overflow-y-auto overscroll-contain bg-neutral text-neutral-content transition-transform duration-300 group-open:translate-x-0 sm:max-w-md animate-in slide-in-from-right">
+    <div class="flex h-20 shrink-0 items-center justify-between px-6">
+      <Logo class="h-12 w-auto" aria-hidden="true" />
+      <form method="dialog" class="-mr-2.5">
+        <button aria-label="Close menu" class:list={iconButton}>
+          <svg
+            class="size-6"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M6 6l12 12M18 6 6 18"></path>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <nav aria-label="Primary" class="px-2 py-4">
+      <ul>
+        {primaryNav.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              aria-current={currentState(item.href)}
+              class:list={[
+                'block px-4 py-3.5 text-xl font-bold',
+                'aria-[current]:bg-primary aria-[current]:text-primary-content',
+                linkHover,
+                focusRing,
+              ]}
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="border-t border-neutral-content/10 p-6">
+      <Button href={primaryCta.href} size="lg" block aura class={focusRing}>
+        {primaryCta.label}
+      </Button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  const menu = document.querySelector<HTMLDialogElement>('#site-menu');
+  const opener = document.querySelector<HTMLButtonElement>('[aria-controls="site-menu"]');
+
+  if (menu && opener) {
+    opener.addEventListener('click', () => menu.showModal());
+    // Safari does not focus a button on click, so return focus to the opener explicitly.
+    menu.addEventListener('close', () => opener.focus());
+    // The dialog element is the scrim; a click that lands on it missed the panel.
+    menu.addEventListener('click', (event) => {
+      if (event.target === menu) menu.close();
+    });
+    // The menu belongs to the layout below lg (64rem): close it when the viewport outgrows it.
+    window.matchMedia('(min-width: 64rem)').addEventListener('change', (event) => {
+      if (event.matches) menu.close();
+    });
+  }
+</script>

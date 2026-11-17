@@ -1,0 +1,73 @@
+---
+description: Vue 3 Composition API islands, hydration directives, composables, and island boundaries
+globs: src/**/*.vue,src/composables/**
+alwaysApply: false
+---
+
+# Vue islands
+
+Astro + Vue: https://docs.astro.build/en/guides/framework-components/ and https://docs.astro.build/en/guides/integrations-guide/vue/
+Vue: https://vuejs.org/guide/
+
+## When to create an island
+
+Create a Vue component only when the UI needs client-side state or browser APIs: a mobile navigation drawer, a filterable work grid, a multi-step contact form, tabs or accordions that must be dynamic, an interactive estimate tool. Static markup, links, lists, and one-off toggles stay in Astro.
+
+## Hydration directives
+
+| Directive | Use for |
+| --- | --- |
+| `client:visible` | Default choice. Hydrates when scrolled into view. |
+| `client:idle` | Low-priority widgets near the top of the page. |
+| `client:load` | Above-the-fold controls the visitor uses immediately (navigation toggle, hero form). |
+| `client:only="vue"` | Browser-only libraries that cannot render on the server. Provide a sized fallback to avoid layout shift. |
+
+Never hydrate a component that only renders static content. Pass data from Astro as serialisable props (strings, numbers, arrays, plain objects); never pass functions or class instances.
+
+## Component shape
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from 'vue';
+
+const props = withDefaults(defineProps<{ items: string[]; label?: string }>(), { label: 'Filter' });
+const emit = defineEmits<{ change: [value: string] }>();
+
+const query = ref('');
+const filtered = computed(() => props.items.filter((item) => item.toLowerCase().includes(query.value.toLowerCase())));
+</script>
+
+<template>
+  <div class="form-control">
+    <label :for="`filter-${label}`" class="label">{{ label }}</label>
+    <input :id="`filter-${label}`" v-model="query" type="search" class="input input-bordered" @input="emit('change', query)" />
+    <ul>
+      <li v-for="item in filtered" :key="item">{{ item }}</li>
+    </ul>
+  </div>
+</template>
+```
+
+- `<script setup lang="ts">` first, `<template>` second, no `<style>` block unless a selector is impossible with utilities. ESLint enforces block order and the script-setup API.
+- Type props and emits with the generic forms of `defineProps` and `defineEmits`. Use `defineOptions({ name })` only when the component name must differ from the filename.
+- Shared stateful logic goes in `src/composables/useThing.ts`. No global store; islands are independent. If two islands must share state, use a tiny module-level store with `ref()` exported from a composable, and document why.
+- Access `window`, `document`, `localStorage`, and `matchMedia` inside `onMounted` or event handlers, never at module scope; the component also renders on the server.
+- Name files `PascalCase.vue` under `src/components/islands/`. Inspira UI components live in `src/components/inspira/`.
+
+## Accessibility and motion
+
+- Every control is keyboard operable, has a visible focus style, and a label (`<label for>`, `aria-label`, or `aria-labelledby`).
+- Manage focus when opening or closing drawers, modals, and menus; return focus to the trigger on close. daisyUI's `modal` and `drawer` markup can be used from Vue when it fits.
+- Use `motion-v` for animation and gate it behind `useReducedMotion` from `motion-v` or `usePreferredReducedMotion` from `@vueuse/core`. Animations must never be required to understand content.
+
+## Styling
+
+Tailwind and daisyUI classes only. Use `cn()` from `@/lib/utils` when merging class lists from props.
+
+## Forms in islands
+
+Follow `.cursor/rules/forms-netlify.mdc`: a hidden static form in the Astro page plus a `form-name` hidden input in the Vue form so Netlify detects it.
+
+## Checks for this area
+
+`npx eslint <file.vue>`, `npm run check:vue`, and a Playwright test that exercises the interaction (`.cursor/rules/testing-playwright.mdc`). Use `.cursor/skills/vue-island/SKILL.md` for the full procedure.

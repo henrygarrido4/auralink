@@ -22,3 +22,18 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# personal agent instructions
+CLAUDE.local.md
+
+# netlify cli
+.netlify/
+
+# generated reports (screenshots, lighthouse)
+/reports/

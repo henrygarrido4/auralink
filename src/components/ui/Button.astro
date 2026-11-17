@@ -1,0 +1,52 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The site's call-to-action button, pill-shaped. `primary` (the default) is daisyUI's
+ * `btn-primary` with the lit, raised finish (`btn-lit` in src/styles/global.css); `secondary` is
+ * a neutral outline for the next-best action beside a primary one. A link by default; without an
+ * `href` it is a placeholder for a page that has not shipped. Pass `type` to render a `<button>`.
+ */
+interface Props extends Omit<HTMLAttributes<'a'>, 'type'> {
+  /** Renders a `<button>` of this type instead of a link. */
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  variant?: 'primary' | 'secondary';
+  size?: 'md' | 'lg';
+  /** Fill the width of the container. */
+  block?: boolean;
+  /** Wrap the button in daisyUI's border light (`aura`). Show at most one per view. */
+  aura?: boolean;
+}
+
+const {
+  type,
+  variant = 'primary',
+  size = 'md',
+  block = false,
+  aura = false,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const Tag = type ? 'button' : 'a';
+const classes = [
+  'btn rounded-full font-bold',
+  variant === 'primary' ? 'btn-primary btn-lit' : 'btn-outline btn-neutral',
+  size === 'lg' ? 'btn-lg px-8' : 'px-6',
+  block && 'btn-block',
+  className,
+];
+---
+
+{aura ? (
+  <span class:list={['aura aura-lap rounded-full', block && 'block']}>
+    <Tag type={type} class:list={classes} {...rest}>
+      <slot />
+    </Tag>
+  </span>
+) : (
+  <Tag type={type} class:list={classes} {...rest}>
+    <slot />
+  </Tag>
+)}

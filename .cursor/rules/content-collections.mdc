@@ -1,0 +1,52 @@
+---
+description: Content collections, Markdown entries, schemas, content integrity, and writing guidance
+globs: src/content/**,src/content.config.ts,src/data/**
+alwaysApply: false
+---
+
+# Content collections and editorial content
+
+Docs: https://docs.astro.build/en/guides/content-collections/ and `docs/content-strategy.md`
+
+## Collections
+
+| Collection | Folder | One file per | Key fields |
+| --- | --- | --- | --- |
+| `services` | `src/content/services/` | service | `title`, `summary`, `group`, `order`, `faqs`, `draft` |
+| `work` | `src/content/work/` | case study | `title`, `client`, `industry`, `services`, `summary`, `publishedDate`, `results`, `resultsSource`, `approvedByClient`, `draft` |
+| `insights` | `src/content/insights/` | article | `title`, `description`, `publishedDate`, `updatedDate`, `author`, `topics`, `tags`, `cover`, `draft` |
+| `faqs` | `src/content/faqs/` | question | `question`, `topics`, `order`, `draft` (body is the answer) |
+
+- Schemas are in `src/content.config.ts` using `z` from `astro/zod`, `glob` from `astro/loaders`, `reference()` for cross-links, and `image()` for covers. Each folder has a `_README.md` with a front matter template; files starting with `_` are never loaded.
+- The entry id is the filename without extension: lowercase, hyphenated, stable (`wordpress-development.md`). Renaming an entry changes its URL.
+- Dates are ISO `YYYY-MM-DD`. Service slugs in `services`/`topics` fields must come from the `serviceSlug` enum.
+- Query with a draft filter everywhere: `getCollection('insights', ({ data }) => !data.draft)`. Render bodies with `render(entry)` from `astro:content`.
+- Images referenced from front matter live in `src/assets/content/<collection>/` and are optimised at build time.
+
+## Content integrity (non-negotiable)
+
+- Verified business facts live in `src/data/site.ts` and the "Verified facts" section of `docs/content-strategy.md`. Everything else is proposed content.
+- Never invent clients, testimonials, logos, certifications, pricing, statistics, outcomes, or performance claims. If a draft needs a figure, write the sentence without the number and add a note in the summary asking the owner for the real value.
+- Case studies stay `draft: true` until `approvedByClient: true` is set by the owner. Any `results` entry requires a `resultsSource` that says where the numbers come from (analytics export, client email, report).
+- Quotes are only published with the person's name, role, and written approval on record.
+- `npm run check:content` enforces placeholders, approval, and sources. Run it after every content change.
+
+## Changing a schema
+
+1. Update `src/content.config.ts` and the folder's `_README.md` template together.
+2. Make new fields optional or give them defaults unless every existing entry is updated in the same change.
+3. Run `npx astro sync` and `npm run check`; update pages that read the field.
+4. Record the change in `docs/content-strategy.md` if it alters what authors must supply.
+
+## Writing guidance
+
+- Write for a business owner or marketing lead, not for other developers. Plain language, short paragraphs, concrete examples.
+- Lead with the answer: the first paragraph of a service page, article, or FAQ answer should resolve the main question, then expand.
+- Use descriptive headings phrased the way people search and ask ("How long does a Shopify build take?"). Headings carry meaning for readers first; keyword stuffing and repeated phrases are not allowed.
+- Detailed means useful: process steps, what is included, who it suits, what the client receives, honest limitations. Remove anything that is only there for length.
+- Every service page and article ends with a clear next step (contact, related service, related article).
+- Markdown uses standard syntax only. The built-in processor renders GitHub-Flavored Markdown; custom components in content require MDX, which is not installed.
+
+## Checks for this area
+
+`npm run check:content`, `npm run check` (schema types), and `npm run test:e2e` when a new entry creates a new page.

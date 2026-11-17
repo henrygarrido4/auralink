@@ -1,0 +1,67 @@
+---
+description: Auralink Studio website purpose, stack, repository map, and architectural boundaries
+alwaysApply: true
+---
+
+# Project foundation
+
+## What this repository is
+
+The public website for **Auralink Studio** (https://auralinkstudio.com): an agency marketing site, portfolio, educational resource, and lead-generation site. It must explain services clearly, demonstrate expertise, present genuine work, answer prospective clients' questions, and encourage qualified inquiries.
+
+- Services offered: custom static websites; WordPress development; Shopify development; email design and development; lifecycle email marketing and automation; SEO; answer engine optimization (AEO); generative engine optimization (GEO).
+- Audience: business owners and marketing teams seeking a professional website, stronger online visibility, ecommerce support, or better email marketing.
+- WordPress and Shopify are services sold to clients. This site runs on Astro and never depends on them at runtime.
+- The planned information architecture, content types, and content rules live in `docs/content-strategy.md`. Pages are created when their content is ready, not as empty placeholders.
+
+## Stack (exact versions: docs/architecture.md)
+
+| Layer | Choice | Notes |
+| --- | --- | --- |
+| Framework | Astro 7, static output | No adapter. Netlify hosts the `dist/` build. |
+| Language | TypeScript, `astro/tsconfigs/strict` | `@/*` maps to `src/*`. |
+| Styling | Tailwind CSS 4 via `@tailwindcss/vite` + daisyUI 5 | CSS-first config in `src/styles/global.css`. No `tailwind.config.js`. |
+| Interactivity | Vue 3 `<script setup>` islands via `@astrojs/vue` | Only where real client-side state exists. |
+| Effects | Selected Inspira UI components (copied into `src/components/inspira/`) | Purposeful, sparing, reduced-motion aware. |
+| Content | Astro content collections, Markdown in `src/content/` | Schemas in `src/content.config.ts`. |
+| Testing | Playwright + axe-core | `tests/e2e/`. |
+| Hosting/forms | Netlify (static) and Netlify Forms | `netlify.toml`. |
+
+## Boundaries
+
+- Do not add React, Next.js, Nuxt, a second CSS framework, a database, authentication, CMS runtime, or an application backend. If a feature seems to need one, stop and explain the requirement instead.
+- npm is the package manager. `package-lock.json` is the only lockfile. Do not add another lockfile or switch managers.
+- Do not upgrade existing packages across major versions as part of a feature task. Propose migrations separately with the breaking changes listed.
+- Prefer stable releases. No prerelease, canary, or nightly packages.
+- Keep production dependencies limited to what the build needs; tooling goes in `devDependencies`.
+
+## Repository map
+
+```
+src/
+  pages/            routes (.astro); dynamic routes read content collections
+  layouts/          BaseLayout.astro owns <head>, metadata, skip link, main landmark
+  components/
+    ui/             small Astro primitives built on daisyUI classes
+    sections/       page sections (hero, service grid, CTA, FAQ list)
+    seo/            structured data and metadata helpers
+    islands/        Vue 3 interactive components (hydrated)
+    inspira/        Inspira UI components copied in and adapted
+  content/          Markdown collections: services, work, insights, faqs
+  content.config.ts collection schemas (Zod)
+  data/site.ts      verified business facts, service catalogue, planned routes
+  lib/utils.ts      cn() class merger
+  styles/global.css Tailwind + daisyUI + tokens
+  assets/           images processed by astro:assets
+public/             files served as-is (favicons, robots.txt)
+tests/e2e/          Playwright suites (smoke, a11y, motion, navigation, hero, seo, layout, rendering)
+scripts/            executable checks (workflow, content, Lighthouse audit)
+docs/               architecture, content strategy, quality checks, SEO/AEO/GEO, performance
+reports/            generated screenshots and Lighthouse reports (gitignored)
+design/             editable source artwork for generated images (hero-mockup)
+.cursor/            rules, agents, skills (this instruction system)
+```
+
+## Content integrity
+
+Never invent client names, logos, testimonials, certifications, pricing, statistics, outcomes, or performance claims. Verified facts live only in `src/data/site.ts` and `docs/content-strategy.md`; everything else stays `draft: true` and is labelled as proposed. Workflow, commands, and the guidance index are in `AGENTS.md` (loaded with this rule) and `.cursor/rules/development-workflow.mdc`.

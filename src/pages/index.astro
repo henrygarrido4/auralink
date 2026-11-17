@@ -1,16 +1,15 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/sections/Hero.astro';
+import { site } from '../data/site';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title={site.name} description={site.description}>
+  <Hero aboutHref="#about" />
+  <section id="about" aria-labelledby="about-title" class="mx-auto max-w-3xl px-6 py-24">
+    <h2 id="about-title" class="text-3xl font-semibold tracking-tight">
+      About {site.name}
+    </h2>
+    <p class="mt-6 text-lg leading-relaxed">{site.summary}</p>
+  </section>
+</BaseLayout>

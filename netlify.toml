@@ -1,0 +1,8 @@
+# Netlify build settings for the static Astro site.
+# No adapter is needed for static output; see docs/architecture.md.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "24"

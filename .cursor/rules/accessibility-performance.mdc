@@ -1,0 +1,37 @@
+---
+description: WCAG 2.2 AA accessibility requirements and performance budgets for templates and components
+globs: src/**/*.astro,src/**/*.vue,src/styles/**
+alwaysApply: false
+---
+
+# Accessibility and performance
+
+WCAG 2.2 quick reference: https://www.w3.org/WAI/WCAG22/quickref/
+
+## Accessibility baseline (WCAG 2.2 AA)
+
+- Semantic HTML first: `header`, `nav` (with `aria-label` when there are several), `main` (provided by `BaseLayout`), `section` with a heading, `footer`, lists for lists, buttons for actions, links for navigation.
+- Every image has `alt`; decorative images use `alt=""`. Icons inside buttons or links have a text label or `aria-label` on the control, and the SVG gets `aria-hidden="true"`.
+- Colour contrast: 4.5:1 for text, 3:1 for large text and UI boundaries. daisyUI semantic pairs (`bg-primary` + `text-primary-content`) are designed for this; verify custom brand tokens with a contrast checker before adding them.
+- Keyboard: everything operable with Tab, Enter, Space, Escape, and arrow keys where expected. Visible focus (`focus-visible:` ring) on every interactive element. Focus is never obscured by sticky headers (WCAG 2.4.11).
+- Target size: interactive targets at least 24x24 CSS pixels with spacing (WCAG 2.5.8); prefer 44px on touch-first controls.
+- Forms: visible `<label>` for every field, errors announced in text next to the field and linked with `aria-describedby`, no reliance on colour alone, no asking for the same information twice in one flow (WCAG 3.3.7).
+- Motion: honour `prefers-reduced-motion` (global CSS already shortens animations); no auto-playing motion longer than five seconds without a pause control; no flashing content.
+- Disclosure patterns: use native `<details>` or daisyUI `collapse` with proper `aria-expanded` when built from buttons. Modals and drawers trap and restore focus.
+- Language: `BaseLayout` sets `lang="en"`. Mark content in other languages with `lang` on the element.
+- The skip link to `#main-content` must stay first in the DOM.
+
+## Performance budget
+
+- Lighthouse budgets live in `lighthouse.budgets.json` (mobile performance 0.9+, desktop 0.95+, accessibility 1, best practices 0.95+, SEO 1, metric and transfer limits) and are enforced by `npm run perf:audit`. They are lab measurements; field Core Web Vitals come only from the live site.
+- Ship JavaScript only for islands. A page with no interactivity should load zero component JS.
+- Images: `astro:assets` with explicit dimensions, modern formats (Astro outputs WebP/AVIF), `loading="lazy"` below the fold, `fetchpriority="high"` on the hero image only.
+- Fonts: system fonts by default. Any web font is self-hosted, subset, and uses `font-display: swap`; at most two families.
+- Third-party scripts (analytics, chat, embeds) need an explicit decision, load after interaction or idle, and must not block rendering. Record them in `docs/architecture.md`.
+- Avoid layout shift: reserve space for images, embeds, and client-only islands.
+
+## Checks for this area
+
+- Automated: `npm run test:e2e` runs `tests/e2e/a11y.spec.ts` (axe, WCAG 2.2 AA tags) and `tests/e2e/smoke.spec.ts` (skip link, landmarks) on every built page.
+- Automated: `tests/e2e/motion.spec.ts` (reduced motion, five-second limit on motion that starts on its own), `tests/e2e/layout.spec.ts` (360 to 1920 px, screenshots), and `npm run perf:audit` (Lighthouse mobile and desktop with budgets, `docs/performance.md`).
+- Manual for new templates: full keyboard pass (Alt+Tab to reach links in WebKit), VoiceOver spot check on macOS, zoom to 200%, reduced-motion mode, inspection of the layout screenshots. Automated scans cover a subset of WCAG 2.2; they are not a conformance claim.

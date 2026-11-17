@@ -1,0 +1,76 @@
+---
+description: Conventions for Astro pages, layouts, components, routing, assets, and scripts
+globs: src/**/*.astro,src/pages/**,src/layouts/**
+alwaysApply: false
+---
+
+# Astro components, pages, and layouts
+
+Astro docs: https://docs.astro.build/en/basics/astro-components/ and https://docs.astro.build/en/guides/routing/
+
+## Pages
+
+- Every page renders through `src/layouts/BaseLayout.astro` and passes `title` and `description` (50-160 characters). Use `noindex` only for utility pages such as a form thank-you page.
+- One `h1` per page, matching the page's purpose. Headings descend in order (`h2` for sections, `h3` inside them).
+- Page files are thin: import sections and data, query collections, render. Put reusable markup in `src/components/sections/` and `src/components/ui/`.
+- Dynamic routes read content collections:
+
+```astro
+---
+// src/pages/insights/[id].astro
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('insights', ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<BaseLayout title={post.data.title} description={post.data.description} ogType="article">
+  <article class="mx-auto max-w-3xl px-6 py-16">
+    <h1>{post.data.title}</h1>
+    <Content />
+  </article>
+</BaseLayout>
+```
+
+- Routes use directory style URLs (`/services/seo/`). Keep slugs lowercase, hyphenated, and stable; changing a slug needs a redirect in `netlify.toml`.
+- Add a `src/pages/404.astro` before launch; keep it indexable by nothing (Astro serves it as the 404 response).
+
+## Components
+
+- `PascalCase.astro` filenames. One component per file. Declare props with an `interface Props` and destructure from `Astro.props` with defaults.
+- Prefer `class:list` for conditional classes. Spread `...rest` only for wrapper-style components that forward HTML attributes.
+- Use slots for composition (`<slot />`, named slots) instead of passing markup as strings.
+- Astro components have no client-side state. Anything interactive is a Vue island (`.cursor/rules/vue-islands.mdc`). Small, stateless behaviours (copy a link, toggle a `details` element) can be a `<script>` tag in the component; Astro bundles it once per page.
+- `set:html` only with trusted, already-escaped content. Never pass user input through it.
+- Astro 7 uses a strict HTML compiler: close every non-void element, keep valid nesting (no `<div>` inside `<p>`), and do not rely on auto-correction.
+
+## Assets and images
+
+- Images that belong to the site go in `src/assets/` and render through `<Image />` or `<Picture />` from `astro:assets` with `alt`, `width`, and `height`. Decorative images use `alt=""`.
+- Only favicons, `robots.txt`, and files that must keep their exact path go in `public/`.
+- Below-the-fold images use `loading="lazy"` (the default for `<Image />`); the hero image should set `loading="eager"` and `fetchpriority="high"`.
+
+## Head and metadata
+
+- `BaseLayout` owns `<head>`. Pages add page-specific tags, such as JSON-LD, through `<Fragment slot="head">`.
+- Structured data lives in `src/components/seo/` components that take typed props and render `<script type="application/ld+json" set:html={JSON.stringify(data)} />`. See `.cursor/rules/seo-aeo-geo.mdc`.
+
+## Styling inside Astro files
+
+- Use Tailwind and daisyUI classes in markup. Avoid `<style>` blocks unless a selector cannot be expressed with utilities; when used, keep them scoped (the default) and short.
+- No inline `style=""` attributes except for values that are genuinely dynamic (for example a CSS variable set from props).
+
+## Content and markdown
+
+- Do not place Markdown files in `src/pages/`. Editorial content belongs in collections (`.cursor/rules/content-collections.mdc`).
+- Markdown is rendered by Astro's built-in processor. Do not add remark or rehype plugins without installing the matching processor package described in `docs/architecture.md`.
+
+## Checks for this area
+
+`npx eslint <files>`, `npx prettier --check <files>`, `npm run check`, then `npm run test:e2e` for new or changed pages.

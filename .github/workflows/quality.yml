@@ -1,0 +1,66 @@
+# Pull-request and main-branch quality gate.
+# Sequence mirrors `npm run quality:full` with a single production build:
+# static checks -> build -> browser matrix against the build -> Lighthouse audit with budgets.
+# Artifacts (Playwright HTML report, traces, screenshots, Lighthouse reports) are uploaded on every run.
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Static checks, build, browser matrix, performance budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies (reproducible)
+        run: npm ci
+
+      - name: Static checks (workflow files, content integrity, format, lint, types)
+        run: npm run quality:static
+
+      - name: Production build
+        run: npm run build
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Browser matrix against the build
+        run: npx playwright test
+        env:
+          PLAYWRIGHT_SKIP_BUILD: '1'
+
+      - name: Lighthouse audit with budgets (lab data)
+        run: node scripts/perf-audit.mjs --no-build
+
+      - name: Upload reports and failure artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: quality-artifacts-${{ github.run_number }}
+          path: |
+            playwright-report/
+            test-results/
+            reports/
+          if-no-files-found: ignore
+          retention-days: 14

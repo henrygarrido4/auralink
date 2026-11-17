@@ -1,0 +1,58 @@
+---
+description: Contact and project inquiry forms using Netlify Forms, spam protection, success pages, and privacy
+globs: src/**/*Form*.astro,src/**/*Form*.vue,src/**/*form*.astro,src/**/*form*.vue,src/pages/contact/**,netlify.toml
+alwaysApply: false
+---
+
+# Forms and Netlify Forms
+
+Docs: https://docs.netlify.com/manage/forms/setup/ and https://docs.astro.build/en/guides/deploy/netlify/
+
+The site is static. Lead capture uses Netlify Forms; there is no backend, database, or serverless function for forms unless a documented requirement appears.
+
+## Static HTML form (preferred)
+
+```astro
+<form name="project-inquiry" method="POST" action="/contact/thank-you/" data-netlify="true" netlify-honeypot="company-website">
+  <input type="hidden" name="form-name" value="project-inquiry" />
+  <p class="hidden"><label>Leave this empty: <input name="company-website" /></label></p>
+  <label for="name">Name</label>
+  <input id="name" name="name" type="text" autocomplete="name" required class="input input-bordered" />
+  <!-- more fields -->
+  <button type="submit" class="btn btn-primary">Send inquiry</button>
+</form>
+```
+
+- `name` is unique per form and matches the `form-name` hidden input.
+- `action` points to a `noindex` thank-you page rendered with `BaseLayout`.
+- Keep the honeypot field hidden from sighted and assistive users (`hidden` class plus visually irrelevant label).
+- Form detection must be enabled in the Netlify UI (Forms > Form detection); note this in the deployment checklist in `docs/architecture.md`.
+
+## Vue island forms
+
+When a form needs client-side steps or validation:
+
+1. Keep a hidden static copy of the form in the Astro page so Netlify's build detects the fields (`<form name="project-inquiry" data-netlify="true" hidden>` with the same input names).
+2. Include `<input type="hidden" name="form-name" value="project-inquiry" />` in the Vue template.
+3. Submit with `fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(formData).toString() })`, then show an inline success state or navigate to the thank-you page.
+4. Handle failure visibly with a retry message; never lose what the visitor typed.
+
+## Fields and validation
+
+- Ask only for what qualifying an inquiry needs: name, email, company or website, service interest, message, optional budget range and timeline. No required phone number.
+- Use native validation attributes first (`required`, `type="email"`, `minlength`), then enhance. Error text sits next to the field and is referenced by `aria-describedby`.
+- `autocomplete` attributes on identity fields; labels always visible.
+
+## Privacy and spam
+
+- Link to a privacy note near the submit button once one exists; do not promise response times that are not committed.
+- Never log or echo submitted data to the console or analytics.
+- Honeypot plus Netlify's built-in filtering first; add a captcha only if spam becomes a measured problem.
+
+## If hosting changes
+
+If the site moves off Netlify, forms need a replacement endpoint. Record the decision and the migration in `docs/architecture.md` before changing form markup.
+
+## Checks for this area
+
+A Playwright spec asserting the form renders with labels, the hidden `form-name` input, and the honeypot; `npm run test:e2e` for accessibility of the form page.

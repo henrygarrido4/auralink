@@ -1,0 +1,69 @@
+---
+description: How to work in this repository, which checks to run, and the definition of done
+alwaysApply: true
+---
+
+# Development workflow
+
+## Before changing anything
+
+1. Read the task and identify which part of the site it touches: page, layout, component, island, content, styling, metadata, tests, or configuration.
+2. Look at the existing implementation and neighbouring files first. Reuse existing components, data from `src/data/site.ts`, and collection schemas before creating new ones.
+3. Check the matching rule in `.cursor/rules/` and skill in `.cursor/skills/` for the procedure. Use `docs/` for background.
+4. If the request needs information that is not verified (a client result, a price, a statistic, a certification), do not make it up. Implement with clearly labelled draft or proposed content and list what needs confirmation.
+
+## While changing code
+
+- Keep diffs surgical. Touch only files related to the request. No unrelated reformatting, renaming, or "while I'm here" cleanup.
+- Follow existing naming and structure. New abstractions must remove real duplication or clearly improve clarity.
+- No new dependencies unless the task cannot be done with the stack. Say why in the summary when one is added.
+- Keep pages shippable: every page uses `BaseLayout`, has a unique title and description, one `h1`, and accessible markup.
+- Do not leave placeholder text (lorem ipsum, TODO, TBD) in anything that is not marked `draft: true`.
+
+## Dev server
+
+Use background mode so the terminal stays free: `astro dev --background`, then `astro dev status`, `astro dev logs`, and `astro dev stop`. The site runs at http://localhost:4321.
+
+## Validation: narrow first, then broad
+
+Run the smallest relevant check first, then the full static suite before finishing.
+
+| Scope | Command |
+| --- | --- |
+| Changed files only | `npx eslint path/to/file.astro path/to/other.vue` and `npx prettier --check path/to/file.astro` |
+| Types for Astro and TS | `npm run check` |
+| Types inside `.vue` files | `npm run check:vue` |
+| Content integrity | `npm run check:content` |
+| Instruction files (`.cursor/`, `docs/`, `AGENTS.md`, `CLAUDE.md`) | `npm run check:workflow` |
+| Everything static (format, lint, types, content, workflow) | `npm run quality:static` |
+| Routine browser run (desktop and mobile Chromium: smoke, a11y, motion, SEO, layout, rendering) | `npm run test:e2e:chromium`, or one suite: `npx playwright test tests/e2e/seo.spec.ts` |
+| Full engine matrix (adds Firefox, WebKit, mobile WebKit) | `npm run test:e2e` |
+| Performance audit with budgets (Lighthouse, mobile and desktop, lab data) | `npm run perf:audit` (builds) or `node scripts/perf-audit.mjs --no-build` after a build |
+| Static suite plus the full browser matrix | `npm run quality` |
+| Everything with one build (static, matrix, performance), the CI sequence | `npm run quality:full` |
+
+- Use `npm run lint:fix` and `npm run format` only on the files you changed (`npx eslint --fix <files>`, `npx prettier --write <files>`), never as a repo-wide pass during a feature task.
+- Run `npm run test:e2e:chromium` for routine changes and `npm run test:e2e` whenever a layout, shared component, island, form, or metadata changed. Both rebuild the site, so they also prove the build. Inspect `reports/screenshots/` after layout changes.
+- If a check cannot run (missing browser, network), say so instead of claiming it passed.
+
+## Definition of done
+
+A change is done when all of the following are true:
+
+1. The behaviour requested is implemented and nothing unrelated changed.
+2. `npm run quality:static` passes.
+3. `npm run test:e2e:chromium` passes for routine changes; `npm run test:e2e` passes when pages, layouts, islands, forms, or metadata changed. New pages are covered by the SEO, layout, rendering, and accessibility suites automatically; new interactions get a focused spec.
+4. Performance budgets hold (`node scripts/perf-audit.mjs --no-build` after a build) when assets, scripts, fonts, islands, or templates changed.
+5. New or edited content follows `docs/content-strategy.md`, has no unverified claims, and `npm run check:content` passes.
+6. Metadata is correct: title, description, canonical, Open Graph, structured data where the page type calls for it (`.cursor/rules/seo-aeo-geo.mdc`).
+7. Accessibility basics hold: keyboard reachable, visible focus, labelled controls, alt text, reduced-motion safe.
+8. Docs and instruction files are updated when the change alters conventions, commands, structure, or the content plan.
+
+## Reporting
+
+End every non-trivial task with:
+
+- what changed (files and behaviour)
+- what was intentionally left unchanged
+- what needs human verification (facts, copy, design decisions)
+- which checks ran and their results, including anything that could not be run

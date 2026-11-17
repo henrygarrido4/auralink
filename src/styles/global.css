@@ -1,0 +1,177 @@
+/*
+ * Global stylesheet, imported once by src/layouts/BaseLayout.astro.
+ * Conventions: .cursor/rules/styling-tailwind-daisyui.mdc
+ * Tailwind v4: https://tailwindcss.com/docs/theme
+ * daisyUI 5:   https://daisyui.com/docs/config/
+ */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* daisyUI component classes and its light theme, the only one loaded: the site is light only. */
+@plugin 'daisyui' {
+  themes: light --default;
+}
+
+/*
+ * The owner's brand colours so far, set on that light theme in place: daisyUI merges a theme block
+ * named after a built-in theme into the built-in tokens, so everything not listed here stays as it was.
+ * Primary (owner, 2026-11-17): the yellow of the logo's mark, the colour of every primary call to
+ * action. Its label takes the navbar's near-black, because white on this yellow is only 1.4:1.
+ */
+@plugin 'daisyui/theme' {
+  name: 'light';
+  default: true;
+  --color-primary: #f7db15;
+  --color-primary-content: var(--color-neutral);
+}
+
+/*
+ * Light only, whatever the visitor's device or browser prefers (BaseLayout also sets
+ * `data-theme="light"` and the same value in a `color-scheme` meta tag). Keeps native controls and
+ * scrollbars light, and `only` opts out of forced dark modes such as Chrome's "Darken websites",
+ * which still recolour a page that declares plain `light`. Unlayered, so it outranks the plain
+ * `light` that daisyUI's theme sets in the base layer.
+ */
+:root {
+  color-scheme: only light;
+}
+
+/*
+ * Tailwind's `dark:` variant follows `prefers-color-scheme` by default. Bind it to a daisyUI dark
+ * theme instead; the site never sets one, so `dark:` classes (in a copied component, say) stay inert.
+ */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* Inspira UI background utilities (bg-grid, bg-grid-small, bg-dot). */
+@plugin './inspira-backgrounds.mjs';
+
+/*
+ * Brand tokens. Add design tokens here with @theme so they become utilities
+ * (for example --font-display -> font-display). Brand colors are defined as a
+ * daisyUI theme (see the styling rule) rather than as ad-hoc hex values in markup.
+ */
+@theme {
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+
+  /*
+   * Pencil underline (home hero): one stroke drawn left to right after a short pause, played once.
+   * The path sets pathLength="1" and stroke-dasharray="1 1.1": offset 1.02 hides it completely
+   * (the gap is longer than the path, so no round cap shows as a stray dot) and 0 shows all of it.
+   * Apply with `motion-safe:`, so reduced motion and no animation support show the finished line.
+   */
+  --animate-pencil-draw: pencil-draw 0.8s cubic-bezier(0.6, 0.05, 0.3, 1) 0.25s both;
+
+  @keyframes pencil-draw {
+    from {
+      stroke-dashoffset: 1.02;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
+/*
+ * Lit button: the site's primary call to action (`btn btn-primary btn-lit`, rendered by
+ * src/components/ui/Button.astro). Light falls on it from above, faked with a gentle
+ * top-to-bottom gradient and four shadows: a top light, a bottom shade, a tight contact shadow,
+ * and a soft glow in the button's own colour. A press flips them. Colours derive from the daisyUI
+ * button colour, so the finish follows the theme. The gradient only shades downward: lightening
+ * the top instead takes the label below 4.5:1 with a lighter primary, such as daisyUI's dark one.
+ */
+@utility btn-lit {
+  /* No border, so the top light sits on the edge itself. Forced colours drop the fill and need one. */
+  border-width: 0;
+  background-image: linear-gradient(transparent, rgb(0 0 0 / 0.2));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    inset 0 -2px 0 rgb(0 0 0 / 0.2),
+    0 1px 2px rgb(0 0 0 / 0.4),
+    0 8px 24px -6px color-mix(in oklab, var(--btn-bg) 60%, transparent);
+
+  &:active {
+    translate: 0 1px;
+    box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.267);
+  }
+
+  &:is(:disabled, [aria-disabled='true']) {
+    background-image: none;
+    box-shadow: none;
+  }
+
+  @media (forced-colors: active) {
+    border-width: var(--border);
+  }
+}
+
+/*
+ * Motion policy for daisyUI's `aura`, whose border light circles forever. Here the light fades in,
+ * makes one lap when the element appears, and fades out. It returns only while the control inside
+ * is hovered or keyboard-focused, picking up where it stopped. Motion that starts on its own
+ * therefore ends within five seconds (WCAG 2.2.2), and under reduced motion the aura stays unlit.
+ * The light takes the surrounding text colour.
+ */
+@utility aura-lap {
+  color: transparent;
+  animation-name: none;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: color 0.4s;
+    /* The lap plays once; daisyUI's endless `aura` stays paused beside it until hover or focus. */
+    animation-name: aura-lap, aura;
+    animation-duration: 4s;
+    animation-iteration-count: 1, infinite;
+    animation-play-state: running, paused;
+
+    &:has(:focus-visible) {
+      color: inherit;
+      animation-play-state: running;
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        color: inherit;
+        animation-play-state: running;
+      }
+    }
+  }
+}
+
+@keyframes aura-lap {
+  10%,
+  80% {
+    color: inherit;
+  }
+  to {
+    --aura-angle: 360deg;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Height of the sticky navbar (h-20), so anchored and focused content is never hidden under it. */
+    scroll-padding-top: calc(var(--spacing) * 20);
+  }
+
+  /* The page behind an open modal dialog (the mobile menu) does not scroll. */
+  html:has(dialog:modal) {
+    overflow: hidden;
+  }
+
+  /* Respect reduced-motion preferences for every animation and transition, including Inspira effects. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
