@@ -1,6 +1,7 @@
 ---
 import { Picture } from 'astro:assets';
 import photo from '@/assets/about/business-owner-laptop.webp';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
 
 /**
  * Home page introduction, right below the hero and the target of its "About us" button: who
@@ -27,9 +28,7 @@ const titleId = `${id}-title`;
     {/* One readable column below lg, aligned with the hero's copy; two equal columns from lg. */}
     <div class="grid max-w-2xl gap-12 lg:max-w-none lg:grid-cols-2 lg:items-center lg:gap-16 xl:gap-20">
       <div class="min-w-0">
-        <p class="text-sm font-bold tracking-[0.16em] text-base-content/70 uppercase">
-          About Auralink Studio
-        </p>
+        <Eyebrow>About Auralink Studio</Eyebrow>
         <h2
           id={titleId}
           class="mt-5 text-3xl font-bold tracking-tight text-balance text-base-content sm:text-4xl xl:text-5xl"

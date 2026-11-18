@@ -1,0 +1,15 @@
+---
+/**
+ * The small uppercase label above a section heading, such as "Our services". Shared by the home
+ * hero, the introduction, and the services section, so the label looks the same everywhere.
+ */
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<p class:list={['text-sm font-bold tracking-[0.16em] text-base-content/70 uppercase', className]}>
+  <slot />
+</p>
