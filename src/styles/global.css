@@ -50,7 +50,7 @@
 @plugin './inspira-backgrounds.mjs';
 
 /*
- * Brand tokens. Add design tokens here with @theme so they become utilities
+ * Brand tokens. Add design tokens in this block so they become utilities
  * (for example --font-display -> font-display). Brand colors are defined as a
  * daisyUI theme (see the styling rule) rather than as ad-hoc hex values in markup.
  */
@@ -66,14 +66,14 @@
    * Apply with `motion-safe:`, so reduced motion and no animation support show the finished line.
    */
   --animate-pencil-draw: pencil-draw 0.8s cubic-bezier(0.6, 0.05, 0.3, 1) 0.25s both;
+}
 
-  @keyframes pencil-draw {
-    from {
-      stroke-dashoffset: 1.02;
-    }
-    to {
-      stroke-dashoffset: 0;
-    }
+@keyframes pencil-draw {
+  from {
+    stroke-dashoffset: 1.02;
+  }
+  to {
+    stroke-dashoffset: 0;
   }
 }
 
