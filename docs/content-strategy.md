@@ -32,7 +32,7 @@ The home page introduction (`src/components/sections/AboutIntro.astro`, where th
 
 | Route                                 | Purpose                                                                                                               | Primary call to action                | Content source               | Status                             |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------------- | ---------------------------------- |
-| `/`                                   | Position the agency, show the service groups, highlight real work once available, route visitors to the right service | Start a project inquiry               | `src/data/site.ts`, sections | Built: hero, introduction          |
+| `/`                                   | Position the agency, show the service groups, highlight real work once available, route visitors to the right service | Start a project inquiry               | `src/data/site.ts`, sections | Built: hero, intro, services       |
 | `/services/website-development/`      | Hub comparing static, WordPress, and Shopify builds; helps the visitor choose                                         | Inquiry; links to the three sub-pages | `services` collection        | Planned                            |
 | `/services/static-websites/`          | Custom static websites: what, for whom, process, deliverables                                                         | Inquiry                               | `services` + `faqs`          | Planned                            |
 | `/services/wordpress-development/`    | WordPress builds: scope, approach, maintenance considerations                                                         | Inquiry                               | `services` + `faqs`          | Planned                            |
@@ -54,6 +54,27 @@ Primary (the navbar, `src/components/sections/Navbar.astro`): the logo, five lin
 Proposed, awaiting the owner's confirmation: the five labels (Home, Services, Work, Insights, About) and `/contact/` as the target of the button. Services becomes a menu of the five service pages once they ship.
 
 Footer: service links, Work, Insights, About, Contact, privacy page once written, and verified contact details only.
+
+## Service cards on the home page
+
+The home page's services section (`src/components/sections/Services.astro`, built 2026-11-18) shows six cards, defined once in `serviceCards` in `src/data/site.ts`. Each card presents services from the verified catalogue, and together they present all eight; `tests/e2e/services.spec.ts` fails if one is missing or listed twice. The card titles and descriptions are the owner's (2026-11-17) and claim nothing beyond the verified services: no results, rankings, or timescales.
+
+The section's introduction is a proposal the owner has not confirmed. The owner suggested "Websites, email, and search. Working together." and "From your first impression to your next customer conversation, we help you build an online presence that supports your business." Both repeat the introduction above, which already brings "websites, email, and search strategy together" in a "From ... to ..." sentence. So the proposal invites the visitor to choose instead: "Start with one service. Connect the rest.", then "Each service works on its own and is planned to fit with the others, so whatever you add next builds on what is already in place." The eyebrow, "Our services", is the owner's.
+
+Destinations follow one rule, in `src/lib/service-cards.ts`. A card links to its own service page once that page ships, labelled "Learn more". Until then it links to the inquiry page, labelled "Discuss this service". With neither, it is not a link and shows no label or arrow, so it never pretends to lead somewhere. On 2026-11-18 neither exists: no service page has been written, and `/contact/` is planned but not built, so all six cards are plain cards. When the contact page ships, setting `primaryCta.href` to `/contact/` turns all six into "Discuss this service" links. Adding a card's `href` then points that card at its own page:
+
+| Card               | Planned destination                |
+| ------------------ | ---------------------------------- |
+| Custom Websites    | `/services/static-websites/`       |
+| WordPress Websites | `/services/wordpress-development/` |
+| Shopify Stores     | `/services/shopify-development/`   |
+| Email & Automation | `/services/email-marketing/`       |
+| SEO                | `/services/seo-ai-search/`         |
+| AEO & GEO          | `/services/seo-ai-search/`         |
+
+The plan above puts SEO, AEO, and GEO on one page, so the last two cards would share it. Six service pages, one per card, would change the planned information architecture; that is the owner's decision.
+
+The section's introduction ends with a primary button, "View all services" (the owner's request, 2026-11-18), defined as `servicesCta` in `src/data/site.ts`. It has no destination: no page lists every service, and this plan has none. The navbar's Services entry becomes a menu of the service pages, and `/services/website-development/` compares only the website builds. Until the owner adds such a page, for example a `/services/` overview, the button is a placeholder with no link, like the hero's "Book a free call".
 
 ## Content types and collections
 

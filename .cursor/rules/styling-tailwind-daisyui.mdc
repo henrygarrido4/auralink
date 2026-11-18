@@ -43,7 +43,7 @@ Docs: https://tailwindcss.com/docs/theme , https://daisyui.com/docs/config/ , ht
 
 - Default to system fonts via the `--font-sans` token. If a brand web font is adopted, self-host it in `src/assets/fonts/` or use Astro's font support, with `font-display: swap`, and document the choice.
 - No web font is loaded, so text renders in each visitor's system font: SF Pro on Apple devices, Segoe UI on Windows, Roboto on Android, and on Linux usually DejaVu Sans, the widest (it is also what CI renders). Size anything that must stay on one line for DejaVu Sans; the hero headline's comment in `src/components/sections/Hero.astro` lists measured widths.
-- Icons are not installed yet. Prefer inline SVG for the handful of icons a marketing site needs; if an icon set is adopted, choose one package and document it.
+- Icons: Lucide only (proposed 2026-11-18 for the home service cards, awaiting the owner's confirmation). Its SVG files are copied unchanged into `src/assets/icons/` (no icon package is installed), listed in `src/lib/icons.ts`, and drawn with `src/components/ui/Icon.astro`, which inlines them at build time: no JavaScript, icon font, or request. They are decorative (`aria-hidden`), so the text beside an icon carries its meaning; an icon-only control needs an `aria-label`. Add an icon from the same Lucide release and extend its entry in `src/assets/CREDITS.md`; never mix in another family or emoji.
 
 ## Responsive QA
 

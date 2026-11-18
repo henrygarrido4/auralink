@@ -20,6 +20,7 @@ Docs: https://playwright.dev/docs/intro and https://docs.astro.build/en/guides/t
 | `tests/e2e/rendering.spec.ts` | Sitemap, robots, favicons served; unknown routes return 404; every internal link on every page resolves |
 | `tests/e2e/navigation.spec.ts` | Navbar: every `primaryNav` entry and the call to action render, only entries with an `href` are links, the current page is marked; below `lg` the links collapse into a menu dialog that opens from the keyboard, closes with Escape, the close button, a scrim click, or a resize to desktop, returns focus to the menu button, and passes axe while open |
 | `tests/e2e/hero.spec.ts` | Home hero: headline, copy, and buttons are HTML (the primary follows `primaryCta`, About us targets `#about`); the device image is eager, `fetchpriority="high"`, and sized; the pencil underline is the only animation on load, plays once (200-300 ms delay, 700-900 ms) and stays drawn, is finished at once under reduced motion, is `aria-hidden`, and stays under its phrase at 360-1440 px; the buttons have no transitions; the primary's aura runs nothing until the pointer reaches it, then the navbar's endless light (same animation and timing), nothing again once the pointer leaves, nothing under reduced motion, and takes no room of its own at 390 and 1280 px |
+| `tests/e2e/services.spec.ts` | Home services section: introduction ending with the primary "View all services" button (a link only once `servicesCta.href` is set) and one card per `serviceCards` entry with an `aria-hidden` inline SVG icon; the cards cover the service catalogue exactly once; one, two, then four columns, with the introduction in the first two cells from xl (the Hub2B arrangement); every card keeps the Hub2B tile look (white, square, borderless, centred, a 96px primary icon) and fades in its 2px primary frame under the pointer (at once under reduced motion) without moving; renders without JavaScript; each card links where `src/lib/service-cards.ts` says, or has no link, label, or arrow and ignores the pointer. Linked cards (skipped with a reason while no destination exists): the arrow shows before hover, Tab and Enter work with a visible ring, hover or keyboard focus slides the arrow 3-4px without moving any card, never under reduced motion |
 | `tests/e2e/routes.ts`, `tests/e2e/console.ts` | Helpers: routes from `dist/` (call inside tests), console and hydration-warning capture |
 
 ## Engine and viewport matrix
@@ -27,10 +28,10 @@ Docs: https://playwright.dev/docs/intro and https://docs.astro.build/en/guides/t
 | Project | Device profile | Runs |
 | --- | --- | --- |
 | `desktop-chromium` | Desktop Chrome 1280x720 | all suites, including `seo`, `layout`, `rendering` |
-| `desktop-firefox` | Desktop Firefox 1280x720 | `smoke`, `a11y`, `motion`, `navigation`, `hero` |
-| `desktop-webkit` | Desktop Safari 1280x720 | `smoke`, `a11y`, `motion`, `navigation`, `hero` |
-| `mobile-chromium` | Pixel 7 emulation | `smoke`, `a11y`, `motion`, `navigation`, `hero` |
-| `mobile-webkit` | iPhone 15 emulation | `smoke`, `a11y`, `motion`, `navigation`, `hero` |
+| `desktop-firefox` | Desktop Firefox 1280x720 | `smoke`, `a11y`, `motion`, `navigation`, `hero`, `services` |
+| `desktop-webkit` | Desktop Safari 1280x720 | `smoke`, `a11y`, `motion`, `navigation`, `hero`, `services` |
+| `mobile-chromium` | Pixel 7 emulation | `smoke`, `a11y`, `motion`, `navigation`, `hero`, `services` |
+| `mobile-webkit` | iPhone 15 emulation | `smoke`, `a11y`, `motion`, `navigation`, `hero`, `services` |
 
 Engine-independent suites (metadata, static assets, viewport layout) run once in desktop Chromium on purpose; do not add them to the other projects. Mobile projects are browser emulations, not physical devices.
 

@@ -34,14 +34,15 @@ Related: `npm run test:e2e:ui` (Playwright UI mode), `npm run test:e2e:report` (
 | `tests/e2e/rendering.spec.ts`  | `sitemap-index.xml`, `robots.txt`, favicons served; unknown route returns 404; every internal link on every route resolves with 200                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `tests/e2e/navigation.spec.ts` | Navbar at 1280, 768, and 390 px wide in every project: every `primaryNav` entry and the call to action render, only entries with an `href` are links, the current page carries `aria-current`, the call to action's aura plays one lap on load and afterwards only under the pointer (projects with hover); below `lg` the links collapse into a menu dialog that opens from the keyboard, moves focus to its close button, closes with Escape, the close button, a scrim click, or a resize to desktop, returns focus to the menu button, and has zero axe violations while open |
 | `tests/e2e/hero.spec.ts`       | Home hero in every project: the headline, copy, and both buttons are HTML (the primary follows `primaryCta`, About us targets `#about`); the device image is eager, `fetchpriority="high"`, sized, with an AVIF source; the pencil underline is the only load animation, plays once (delay 200-300 ms, 700-900 ms long) and stays drawn, is finished at once under reduced motion, is `aria-hidden`, and stays under its phrase at 360-1440 px; the buttons have no transitions; the primary's aura: the navbar's light on hover only, none under reduced motion, takes no room   |
+| `tests/e2e/services.spec.ts`   | Home services section in every project: intro ending with the primary "View all services" (no link until its page ships); one card per `serviceCards` entry in order with an `aria-hidden` SVG icon; each service on one card; one, two, then four columns, the intro filling two cells; Hub2B's tile look and hover frame; no JavaScript; cards link as `src/lib/service-cards.ts` says, or are plain. Linked cards (skipped until one exists): arrow shown at rest, Tab and Enter with a visible ring, hover or focus slides the arrow 3-4px, never under reduced motion        |
 
-| Project            | Profile                  | Suites                                |
-| ------------------ | ------------------------ | ------------------------------------- |
-| `desktop-chromium` | Desktop Chrome 1280x720  | all                                   |
-| `desktop-firefox`  | Desktop Firefox 1280x720 | smoke, a11y, motion, navigation, hero |
-| `desktop-webkit`   | Desktop Safari 1280x720  | smoke, a11y, motion, navigation, hero |
-| `mobile-chromium`  | Pixel 7 emulation        | smoke, a11y, motion, navigation, hero |
-| `mobile-webkit`    | iPhone 15 emulation      | smoke, a11y, motion, navigation, hero |
+| Project            | Profile                  | Suites                                          |
+| ------------------ | ------------------------ | ----------------------------------------------- |
+| `desktop-chromium` | Desktop Chrome 1280x720  | all                                             |
+| `desktop-firefox`  | Desktop Firefox 1280x720 | smoke, a11y, motion, navigation, hero, services |
+| `desktop-webkit`   | Desktop Safari 1280x720  | smoke, a11y, motion, navigation, hero, services |
+| `mobile-chromium`  | Pixel 7 emulation        | smoke, a11y, motion, navigation, hero, services |
+| `mobile-webkit`    | iPhone 15 emulation      | smoke, a11y, motion, navigation, hero, services |
 
 Engine-independent suites (seo, layout, rendering) run only in desktop Chromium to avoid multiplying identical assertions. Mobile projects are browser emulations, not physical devices. Routes are discovered from `dist/` by `tests/e2e/routes.ts`, so new pages are covered automatically. WebKit mirrors Safari in skipping links on plain Tab, so the keyboard tests press Alt+Tab there.
 

@@ -2,10 +2,12 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/sections/Hero.astro';
 import AboutIntro from '../components/sections/AboutIntro.astro';
+import Services from '../components/sections/Services.astro';
 import { site } from '../data/site';
 ---
 
 <BaseLayout title={site.name} description={site.description}>
   <Hero aboutHref="#about" />
   <AboutIntro id="about" />
+  <Services id="services" />
 </BaseLayout>

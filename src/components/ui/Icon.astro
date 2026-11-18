@@ -1,0 +1,18 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { icons, type IconName } from '@/lib/icons';
+
+/**
+ * An icon from the site's set (src/lib/icons.ts), inlined as an <svg> at build time. Decorative:
+ * hidden from assistive technology, so the text beside it carries the meaning, and never a tab
+ * stop. Size it with a utility (`size-6`); it draws in `currentColor`.
+ */
+interface Props extends HTMLAttributes<'svg'> {
+  name: IconName;
+}
+
+const { name, ...rest } = Astro.props;
+const Svg = icons[name];
+---
+
+<Svg aria-hidden="true" focusable="false" {...rest} />

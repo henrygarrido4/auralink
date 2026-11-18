@@ -49,8 +49,8 @@ src/
     inspira/        Inspira UI components copied in and adapted
   content/          Markdown collections: services, work, insights, faqs
   content.config.ts collection schemas (Zod)
-  data/site.ts      verified business facts, service catalogue, planned routes
-  lib/utils.ts      cn() class merger
+  data/site.ts      verified business facts, service catalogue, service cards, planned routes
+  lib/              utils.ts cn() class merger, icons.ts icon set, service-cards.ts card links
   styles/global.css Tailwind + daisyUI + tokens
   assets/           images processed by astro:assets
 public/             files served as-is (favicons, robots.txt)
