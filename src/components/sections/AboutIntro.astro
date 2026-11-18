@@ -1,15 +1,19 @@
 ---
 import { Picture } from 'astro:assets';
 import photo from '@/assets/about/business-owner-laptop.webp';
+import Button from '@/components/ui/Button.astro';
 import Eyebrow from '@/components/ui/Eyebrow.astro';
+import { aboutCta, site } from '@/data/site';
 
 /**
  * Home page introduction, right below the hero and the target of its "About us" button: who
  * Auralink Studio works with and what it brings together, beside a photo of a business owner at
  * work. Laid out after the "Space for Freelancers and Creative People" section of the Hub2B
  * reference: from lg the photo sits left on a frame in the primary colour, offset down and to the
- * right, with the copy beside it; below lg the copy comes first and the photo follows. Static: no
- * motion, no links, and no client-side JavaScript.
+ * right, with the copy beside it; below lg the copy comes first and the photo follows. Where
+ * Hub2B's copy ends with its large "Read more" button, ours ends with the primary call to learn
+ * more (`aboutCta`), a placeholder until the About page ships. Nothing moves but that button's
+ * aura, under the pointer or keyboard focus, and there is no client-side JavaScript.
  *
  * The photo is a licensed stock image, credited in src/assets/CREDITS.md. It only illustrates the
  * audience: never caption it, name the person, or present them as a client or team member.
@@ -43,6 +47,23 @@ const titleId = `${id}-title`;
           email, and search strategy together. From getting discovered to keeping customers
           connected, we build thoughtful digital experiences around your business goals.
         </p>
+        {/*
+         * Hub2B's spacing and size: 32px under the text on phones and 48px from md, with an 18px
+         * label (lg). The primary's aura shines in this text colour: dark, so it shows on the white
+         * page. The hidden words name the destination for screen readers and search engines, which
+         * "Learn more" alone does not, and the name still starts with the visible label.
+         */}
+        <div class="mt-8 text-base-content md:mt-12">
+          <Button
+            href={aboutCta.href}
+            size="lg"
+            aura="hover"
+            class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+          >
+            {aboutCta.label}
+            <span class="sr-only"> about {site.name}</span>
+          </Button>
+        </div>
       </div>
 
       {/*

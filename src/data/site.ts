@@ -91,6 +91,14 @@ export const primaryNav: readonly NavItem[] = [
 export const primaryCta: NavItem = { label: 'Book a free call' };
 
 /**
+ * The home introduction's call to action, under its text (owner, 2026-11-18). It leads to the
+ * About page, `/about/` in docs/content-strategy.md, which is planned but not written. Add its
+ * `href` when that page ships, along with the navbar's About entry; until then the button is a
+ * placeholder, as the hero's primary is (src/components/ui/Button.astro).
+ */
+export const aboutCta: NavItem = { label: 'Learn more' };
+
+/**
  * The home services section's call to action, under its introduction (owner, 2026-11-18). It
  * leads to a page listing every service, which docs/content-strategy.md does not plan yet: it plans
  * the service pages and a navbar menu for them. Add its `href` when that page ships; until then
