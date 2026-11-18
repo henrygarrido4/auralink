@@ -116,13 +116,26 @@
  * is hovered or keyboard-focused, picking up where it stopped. Motion that starts on its own
  * therefore ends within five seconds (WCAG 2.2.2), and under reduced motion the aura stays unlit.
  * The light takes the surrounding text colour.
+ *
+ * The gradient restates daisyUI's with the light's stop mixed by its strength, `--aura-light`, and
+ * the light fades through that, never through `color`. After a hover or focus the light stops where
+ * it is, so the fade is the only change, and Safari without WebKit's fix of 2026-10-09
+ * (https://bugs.webkit.org/show_bug.cgi?id=324766) does not repaint a gradient when only its
+ * currentColor changes: the light stayed on after the pointer left. A changing strength changes the
+ * gradient itself, which every engine repaints. `transparent` leads the mix because the build's
+ * fallback for browsers without color-mix() keeps the first colour, and an unlit aura is the safe
+ * fallback.
  */
 @utility aura-lap {
-  color: transparent;
+  background-image: conic-gradient(
+    from var(--aura-angle),
+    transparent 225deg,
+    color-mix(in oklab, transparent, currentColor var(--aura-light))
+  );
   animation-name: none;
 
   @media (prefers-reduced-motion: no-preference) {
-    transition: color 0.4s;
+    transition: --aura-light 0.4s;
     /* The lap plays once; daisyUI's endless `aura` stays paused beside it until hover or focus. */
     animation-name: aura-lap, aura;
     animation-duration: 4s;
@@ -130,23 +143,30 @@
     animation-play-state: running, paused;
 
     &:has(:focus-visible) {
-      color: inherit;
+      --aura-light: 100%;
       animation-play-state: running;
     }
 
     @media (hover: hover) {
       &:hover {
-        color: inherit;
+        --aura-light: 100%;
         animation-play-state: running;
       }
     }
   }
 }
 
+/* How strongly `aura-lap`'s light shines, from 0% (unlit) to 100%. Registered so it can fade. */
+@property --aura-light {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
 @keyframes aura-lap {
   10%,
   80% {
-    color: inherit;
+    --aura-light: 100%;
   }
   to {
     --aura-angle: 360deg;

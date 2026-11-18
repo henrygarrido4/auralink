@@ -84,6 +84,38 @@ test.describe('navbar at desktop width', () => {
     await page.mouse.move(0, 400);
     await expect.poll(() => playingUntil(aura)).not.toContain(Infinity);
   });
+
+  test("the call to action's light fades through its strength, never its colour", async ({
+    page,
+  }) => {
+    // When the pointer leaves, the light stops and fades. A fade of `color` changes only the
+    // gradient's currentColor, which Safari without WebKit's fix of 2026-10-09 never repaints: the
+    // light stayed on. Playwright's WebKit has that fix, so this checks the mechanism instead (see
+    // `aura-lap` in src/styles/global.css).
+    await page.goto('/');
+    if (!(await page.evaluate(() => matchMedia('(hover: hover)').matches))) return;
+    const banner = page.getByRole('banner');
+    const aura = banner.locator('.aura');
+    const light = () =>
+      aura.evaluate((el) => {
+        const style = getComputedStyle(el);
+        return { strength: style.getPropertyValue('--aura-light'), colour: style.color };
+      });
+
+    // Skip the lap, which also moves the strength.
+    await aura.evaluate((el) =>
+      el.getAnimations({ subtree: true }).forEach((animation) => {
+        if ((animation as CSSAnimation).animationName === 'aura-lap') animation.finish();
+      }),
+    );
+    const unlit = await light();
+    expect(unlit.strength).toBe('0%');
+
+    await banner.getByText(primaryCta.label, { exact: true }).hover();
+    await expect.poll(light).toEqual({ ...unlit, strength: '100%' });
+    await page.mouse.move(0, 400);
+    await expect.poll(light).toEqual(unlit);
+  });
 });
 
 test.describe('navbar below the desktop breakpoint', () => {

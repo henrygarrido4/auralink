@@ -44,7 +44,7 @@ Related: `npm run test:e2e:ui` (Playwright UI mode), `npm run test:e2e:report` (
 | `mobile-chromium`  | Pixel 7 emulation        | smoke, a11y, motion, navigation, hero, services |
 | `mobile-webkit`    | iPhone 15 emulation      | smoke, a11y, motion, navigation, hero, services |
 
-Engine-independent suites (seo, layout, rendering) run only in desktop Chromium to avoid multiplying identical assertions. Mobile projects are browser emulations, not physical devices. Routes are discovered from `dist/` by `tests/e2e/routes.ts`, so new pages are covered automatically. WebKit mirrors Safari in skipping links on plain Tab, so the keyboard tests press Alt+Tab there.
+Engine-independent suites (seo, layout, rendering) run only in desktop Chromium to avoid multiplying identical assertions. Mobile projects are browser emulations, not physical devices. Routes are discovered from `dist/` by `tests/e2e/routes.ts`, so new pages are covered automatically. WebKit mirrors Safari in skipping links on plain Tab, so the keyboard tests press Alt+Tab there. Playwright's WebKit is newer than the Safari visitors run, so a WebKit pass does not prove Safari renders the same: Safari 27.2 left the navbar call to action's aura lit after the pointer left (a repaint bug WebKit fixed on 2026-10-09), which no browser in the matrix shows. The navigation suite checks that this light fades through its strength, never its colour, and paint or motion changes still need a look in Safari itself.
 
 ### Changing thresholds
 

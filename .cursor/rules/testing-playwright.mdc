@@ -48,6 +48,8 @@ Engine-independent suites (metadata, static assets, viewport layout) run once in
 ## Engine notes
 
 - WebKit mirrors Safari: plain Tab skips links. Tests that must reach a link in WebKit press `Alt+Tab` (Option+Tab); this is engine behaviour, not a site defect.
+- Playwright's WebKit is newer than the Safari visitors run, so it can pass where Safari fails: Safari 27.2 left the navbar call to action's aura lit after the pointer left, from a repaint bug WebKit fixed on 2026-10-09. Check paint and motion changes in Safari itself, and test the mechanism where the engine cannot show the bug (the navigation suite's "fades through its strength" test).
+- A Playwright WebKit screenshot breaks a running transition of an `@property` custom property: afterwards the computed value reads the end value while the transition still runs, so the shot shows a finished fade. Sample such fades with `getComputedStyle` across animation frames, or record a video, not with screenshots.
 - Firefox is Playwright's bundled build. On macOS 27.2 it fails to start ("Could not find profile folder") with or without a sandbox; run the rest of the matrix with `PLAYWRIGHT_SKIP_FIREFOX=1 npm run test:e2e`, then run Firefox in the Linux container described in `docs/quality-checks.md`, or state in the report that Firefox ran only in CI (Ubuntu). Never skip it silently.
 - CI runs on Linux, which differs from macOS in ways that have failed tests: the default sans-serif is DejaVu Sans, wider than any macOS font, and WebKit styles the page once before the stylesheet arrives. A macOS pass does not show that CI passes; reproduce platform-specific failures in the Linux container.
 
