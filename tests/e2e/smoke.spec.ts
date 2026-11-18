@@ -113,16 +113,28 @@ test.describe('home page', () => {
     browserName,
   }) => {
     await page.goto('/');
-    const expected = await page
-      .locator(FOCUSABLE)
-      .evaluateAll((elements) =>
-        elements
-          .filter((el) => el.getClientRects().length > 0)
-          .map(
-            (el) =>
-              `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}:${(el.textContent ?? '').trim().slice(0, 40)}`,
-          ),
-      );
+    const expected = await page.locator(FOCUSABLE).evaluateAll((elements) =>
+      elements
+        // Rendered and visible: invisible content (a filter panel not chosen) takes no focus.
+        .filter(
+          (el) => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden',
+        )
+        // A radio group is one tab stop, its checked radio (or its first, when none is); the
+        // arrow keys move within it.
+        .filter((el) => {
+          if (!(el instanceof HTMLInputElement) || el.type !== 'radio' || !el.name) return true;
+          const group = Array.from(
+            document.querySelectorAll<HTMLInputElement>(
+              `input[type="radio"][name="${CSS.escape(el.name)}"]`,
+            ),
+          );
+          return el === (group.find((radio) => radio.checked) ?? group[0]);
+        })
+        .map(
+          (el) =>
+            `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}:${(el.textContent ?? '').trim().slice(0, 40)}`,
+        ),
+    );
     expect(expected.length, 'the page has at least one interactive control').toBeGreaterThan(0);
 
     const visited: string[] = [];

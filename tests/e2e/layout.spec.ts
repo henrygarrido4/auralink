@@ -20,6 +20,14 @@ const VIEWPORTS = [
 
 const SCREENSHOT_DIR = 'reports/screenshots';
 
+/*
+ * Layout at rest: under reduced motion every entrance effect is skipped, so the full-page
+ * screenshots show each section finished. A full-page capture never scrolls, so with motion the
+ * home page's work props would still be tucked behind their cards (src/lib/reveal.ts). They move
+ * only by `translate`, so the layout checked is the same either way.
+ */
+test.use({ reducedMotion: 'reduce' });
+
 test('every built page lays out cleanly at representative widths', async ({ page }) => {
   mkdirSync(SCREENSHOT_DIR, { recursive: true });
   for (const route of builtRoutes()) {
@@ -61,6 +69,18 @@ test('every built page lays out cleanly at representative widths', async ({ page
         expect(metrics.overflowing, 'no element extends past the viewport').toEqual([]);
         expect(metrics.clippedText, 'no clipped text').toEqual([]);
         await expect(page.getByRole('heading', { level: 1 })).toBeInViewport();
+
+        // Lazy images load as a visitor scrolls, and a full-page capture never scrolls: load them
+        // all first, so the screenshot shows every photo. Their boxes are reserved, so this
+        // changes nothing the checks above measured.
+        await page.evaluate(() =>
+          Promise.all(
+            Array.from(document.images, async (image) => {
+              image.loading = 'eager';
+              await image.decode().catch(() => undefined);
+            }),
+          ),
+        );
 
         const slug = route === '/' ? 'home' : route.replace(/^\/|\/$/g, '').replace(/\//g, '-');
         await page.screenshot({

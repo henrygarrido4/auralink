@@ -1,0 +1,184 @@
+---
+import type { ImageMetadata } from 'astro';
+import { Picture } from 'astro:assets';
+import Button from '@/components/ui/Button.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { FeaturedProject } from '@/data/site';
+import { projectPhotos, projectProps } from '@/lib/project-photos';
+
+/**
+ * One featured project, laid out as a slide of the Hub2B reference's "Meet our hub space" section,
+ * which sets its look. It is a white, square card. Its left third holds the copy: a label, the
+ * name over a short primary rule, a description, features beside thin line icons in the primary
+ * colour, and a large primary button. The other two thirds hold a 3:2 photo, flush with the card's
+ * top and right edges. The project's number ("01.") sits large at the bottom right, under the photo.
+ * Below xl the copy comes first and the photo follows at the card's full width, as the reference
+ * stacks it. The reference sets its number in white and lays it over the photo only on tablets; on
+ * desktops and phones that white number sits on the white card and cannot be seen. Here it is
+ * near-black and always under the photo, so every number shows on every photo.
+ *
+ * Behind the card lie two cut-out props from the project's industry, as Hub2B's plant and pencil
+ * cup lie behind its card (src/lib/project-photos.ts). One rises above the card's top edge near its
+ * left end and one drops below its bottom edge near its right end, echoing Hub2B's plant high on
+ * the left and cup low on the right. Hub2B slides its props out sideways, but our 88rem card leaves
+ * as little as 32-48px of band beside it, so ours slide out up and down instead. They pop out
+ * as the section scrolls into view and each time a filter shows the card (`pop-out`); otherwise
+ * they simply rest in place. Decorative, with empty alt text and no pointer events.
+ *
+ * The photo is a stock photo of the project's industry, so its alt text describes the photo, never
+ * the business. It does not move, as Hub2B's does not. The button opens the project's site in a
+ * new tab. Visually hidden words complete its name with the project and the new tab, and a project
+ * whose site asks for a password says so under the button, which describes the link too. The
+ * password itself never appears.
+ */
+interface Props {
+  /** Unique on the page; prefixes the ids that name the card and describe its link. */
+  id: string;
+  project: FeaturedProject;
+  /** Its place among the featured projects, counted from 1 and shown as "01.". */
+  position: number;
+}
+
+const { id, project, position } = Astro.props;
+const ids = { title: `${id}-title`, access: `${id}-access` };
+const number = `${String(position).padStart(2, '0')}.`;
+const { link } = project;
+const props = projectProps[project.id];
+
+/*
+ * The props, painted under the card with a soft shadow on the band. Each is cropped to its
+ * object, and its longer side runs 112px on phones, 144px on tablets, 224px from lg, and 288px
+ * from xl. Fixing that side lets the width and height attributes give the other one before the
+ * file arrives, so loading cannot resize a prop. At rest the top prop shows 45% of itself above the
+ * card and the bottom one 40% below it (`--pop-y`); the rest stays tucked behind the card.
+ * `sizes` gives the longest side, so a portrait prop fetches a little more than it needs.
+ */
+const prop = 'pop-out pointer-events-none absolute -z-10 drop-shadow-[0_16px_14px_rgb(0_0_0/0.22)]';
+const fit = (image: ImageMetadata) =>
+  image.height > image.width
+    ? 'h-28 w-auto sm:h-36 lg:h-56 xl:h-72'
+    : 'h-auto w-28 sm:w-36 lg:w-56 xl:w-72';
+const propSizes =
+  '(min-width: 1280px) 288px, (min-width: 1024px) 224px, (min-width: 640px) 144px, 112px';
+const propWidths = [160, 288, 448, 576, 864];
+---
+
+{/* `isolate`: the props' negative z-index stays inside this box, under the card. */}
+<div class="relative isolate h-full">
+  <Picture
+    src={props.top}
+    alt=""
+    formats={['avif']}
+    fallbackFormat="webp"
+    widths={propWidths}
+    sizes={propSizes}
+    class={`${prop} ${fit(props.top)} top-0 left-[4%] [--pop-y:-45%]`}
+  />
+  <Picture
+    src={props.bottom}
+    alt=""
+    formats={['avif']}
+    fallbackFormat="webp"
+    widths={propWidths}
+    sizes={propSizes}
+    class={`${prop} ${fit(props.bottom)} right-[20%] bottom-0 [--pop-y:40%]`}
+  />
+
+  {/*
+   * The card fills its filter panel, which is as tall as the tallest project, as Hub2B's slides
+   * are. Below xl the spare height goes under the photo, before the number (`auto_1fr`), as in
+   * Hub2B's stacked slide; from xl the photo column takes it.
+   */}
+  <article
+    aria-labelledby={ids.title}
+    class="grid h-full grid-rows-[auto_1fr] bg-base-100 xl:grid-cols-3 xl:grid-rows-1"
+  >
+    {/*
+     * The reference's padding: 50px on phones and tablets (32px under 640px, where the card is
+     * narrower than the reference's), then 70px with 50px on the right, where the photo starts.
+     */}
+    <div class="min-w-0 px-8 py-10 sm:p-12.5 lg:py-17.5 lg:pr-12.5 lg:pl-17.5">
+      <Eyebrow>{project.platform}</Eyebrow>
+      {/*
+       * Always a step below the section heading. Hub2B sets its names at 48px under a 56px
+       * heading; under our 48px one, 36px keeps the longest name to two lines in the 285px column
+       * at 1280px.
+       */}
+      <h3
+        id={ids.title}
+        class="mt-4 text-2xl leading-tight font-bold tracking-tight text-balance sm:text-3xl xl:text-4xl"
+      >
+        {project.name}
+      </h3>
+      <div class="mt-3.5 h-0.5 w-24 bg-primary" aria-hidden="true"></div>
+      <p class="mt-7.5 text-base leading-relaxed text-pretty text-base-content/80 lg:text-lg">
+        {project.description}
+      </p>
+      {/*
+       * Lucide keeps a 2px margin on its 24px grid, so a 36px icon draws the reference's 30px
+       * glyph; a 1.25 stroke matches its thin lines. role="list": Safari drops the role otherwise.
+       */}
+      <ul role="list" class="mt-8 space-y-4 lg:text-lg">
+        {project.features.map((feature) => (
+          <li class="flex items-center gap-3">
+            <Icon name={feature.icon} class="size-9 shrink-0 text-primary" stroke-width="1.25" />
+            <span class="min-w-0">{feature.text}</span>
+          </li>
+        ))}
+      </ul>
+      {/* The primary's aura shines in this text colour: dark, so it shows on the white card. */}
+      <div class="mt-8 text-base-content lg:mt-12">
+        <Button
+          href={link.href}
+          target="_blank"
+          rel="noopener"
+          size="lg"
+          aura="hover"
+          aria-describedby={link.passwordProtected ? ids.access : undefined}
+          class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+        >
+          {link.label}
+          <span class="sr-only">, {project.name}, opens in a new tab</span>
+          <Icon name="arrow-up-right" class="size-5" />
+        </Button>
+      </div>
+      {link.passwordProtected && (
+        <p id={ids.access} class="mt-4 flex items-center gap-2 text-sm text-base-content/70">
+          <Icon name="lock" class="size-4 shrink-0" />
+          Password protected
+        </p>
+      )}
+    </div>
+
+    <div class="flex min-w-0 flex-col xl:col-span-2">
+      {/*
+       * `sizes` is the photo's rendered width: the full card below xl, inside the container's
+       * padding (24px a side, 32px from lg), then two thirds of the card, capped with the
+       * container from 1408px. Change it whenever the container or the columns change. Every
+       * width divides by 3, so each file is exactly 3:2, like the box the img's width and height
+       * reserve, and the photo arriving cannot change the card's height by even a fraction.
+       */}
+      <Picture
+        src={projectPhotos[project.id]}
+        alt={project.photoAlt}
+        formats={['avif']}
+        fallbackFormat="webp"
+        widths={[480, 720, 960, 1200, 1440, 1680, 1920]}
+        sizes="(min-width: 1408px) 896px, (min-width: 1280px) calc((100vw - 64px) * 2 / 3), (min-width: 1024px) calc(100vw - 64px), calc(100vw - 48px)"
+        class="block h-auto w-full"
+      />
+      {/*
+       * The reference's number: Mukta bold, 120px from its tablet layout up (64px on phones), 40px
+       * from the card's right edge and 10px from its bottom. Decorative: it repeats the project's
+       * place among the featured projects, which its name already identifies.
+       */}
+      <span
+        aria-hidden="true"
+        class="mt-auto self-end pt-3 pr-6 pb-1 font-(family-name:--font-headers) text-6xl leading-none font-bold sm:pr-10 lg:pt-4 lg:pb-2.5 lg:text-9xl"
+      >
+        {number}
+      </span>
+    </div>
+  </article>
+</div>

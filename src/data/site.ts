@@ -1,4 +1,5 @@
 import type { IconName } from '../lib/icons';
+import type { ProjectId } from '../lib/project-photos';
 
 /**
  * Verified business facts for Auralink Studio. Anything that appears in
@@ -172,5 +173,121 @@ export const serviceCards: readonly ServiceCard[] = [
       'Clear, structured content that supports discovery in answer engines and AI search.',
     icon: 'sparkles',
     services: ['aeo', 'geo'],
+  },
+];
+
+/** Something a visitor can see on a featured project's site, as checked on that site. */
+export interface ProjectFeature {
+  readonly icon: IconName;
+  readonly text: string;
+}
+
+/**
+ * A project in the home page's selected work section (src/components/sections/SelectedWork.astro).
+ * Every statement must be one a visitor could check on the project's own site, or that its
+ * documentation supports; docs/content-strategy.md records where each fact came from.
+ */
+export interface FeaturedProject {
+  /** Lowercase and hyphenated, unique. Element ids derive from it, and it picks the cover photo. */
+  readonly id: ProjectId;
+  /** The name the project itself displays. */
+  readonly name: string;
+  /**
+   * The label above the name: how it is built, and what it is when it is not a live site for the
+   * business ("WordPress demo", "Shopify recreation"), so a demo or a personal project never passes
+   * for client work. Short enough for one line in the narrowest card.
+   */
+  readonly platform: string;
+  /** The catalogue service it shows, which files it under a filter in `workFilters`. */
+  readonly service: ServiceSlug;
+  /** Its purpose and audience, in one or two sentences, starting with what the business is. */
+  readonly description: string;
+  /** One or two features a visitor can see on the site. */
+  readonly features: readonly ProjectFeature[];
+  readonly link: {
+    /** The address the owner supplied for the project. */
+    readonly href: string;
+    /** Names the destination: "View website", "View demo", "View store". */
+    readonly label: string;
+    /** The site asks visitors for a password. The card says so and never shows the password. */
+    readonly passwordProtected?: boolean;
+  };
+  /** Alt text for the cover photo, a stock photo that illustrates the industry, never the project. */
+  readonly photoAlt: string;
+}
+
+/**
+ * The filters above the selected work, in display order (owner, 2026-11-18: "By platform"). Each
+ * shows the featured projects whose `service` it names; the first is selected when the page
+ * loads, so the section opens on one project rather than all of them. Labels follow the service
+ * cards' names. At most six: src/styles/global.css (`filter-group`) maps options to panels by
+ * position, for up to six.
+ */
+export const workFilters: readonly { readonly service: ServiceSlug; readonly label: string }[] = [
+  { service: 'static-websites', label: 'Custom websites' },
+  { service: 'wordpress-development', label: 'WordPress' },
+  { service: 'shopify-development', label: 'Shopify' },
+];
+
+/**
+ * The home page's featured projects, in display order, numbered 01-03 there. Supplied by the owner
+ * on 2026-11-18 and described from what each site shows (checked that day). The Villas @ Foxbrick
+ * demo asked for a password, so its entry rests on the owner's own screenshot and project files.
+ */
+export const featuredProjects: readonly FeaturedProject[] = [
+  {
+    id: 'johnnys-exclusive-barbershop',
+    name: "Johnny's Exclusive Barbershop",
+    platform: 'Custom static website',
+    service: 'static-websites',
+    description:
+      'A website for a barbershop in Humble, Texas, made for local customers choosing where to get a haircut or a shave. It sets out the services, prices, opening hours, and location.',
+    features: [
+      { icon: 'list-filter', text: 'A price list that filters by type of service' },
+      {
+        icon: 'calendar-check',
+        text: "Appointment buttons that open the shop's online booking page",
+      },
+    ],
+    link: { href: 'https://exclusivecutzz.netlify.app/', label: 'View website' },
+    photoAlt:
+      'Straight razors, a shaving brush in a metal bowl, and clipper guards laid out on a dark towel',
+  },
+  {
+    id: 'villas-at-foxbrick',
+    name: 'The Villas @ Foxbrick',
+    platform: 'WordPress demo',
+    service: 'wordpress-development',
+    description:
+      'A demo website for The Villas @ Foxbrick, an apartment community in Humble, Texas, made for renters comparing one- and two-bedroom homes before they visit.',
+    features: [
+      { icon: 'layout-grid', text: 'Floor plan, amenity, gallery, and neighborhood pages' },
+      { icon: 'key-round', text: 'Leasing details and a tour button in the header' },
+    ],
+    link: {
+      href: 'https://villas-foxbrick-demo.instawp.site/',
+      label: 'View demo',
+      passwordProtected: true,
+    },
+    photoAlt:
+      "Aerial view of an apartment complex's swimming pool, ringed by loungers between a clubhouse and a covered patio",
+  },
+  {
+    id: 'one0one',
+    name: 'one0one',
+    platform: 'Shopify recreation',
+    service: 'shopify-development',
+    description:
+      "A personal project that recreates one0one's activewear store on Shopify, as it looked before the brand's latest redesign, for shoppers browsing dresses, tops, belts, and accessories. It is not affiliated with one0one.",
+    features: [
+      { icon: 'sliders-horizontal', text: 'Collection pages with filters and sorting' },
+      { icon: 'globe', text: 'Country, currency, and language selectors' },
+    ],
+    link: {
+      href: 'https://henrrywebsolutions.myshopify.com/',
+      label: 'View store',
+      passwordProtected: true,
+    },
+    photoAlt: 'Woman in black activewear stretching in a butterfly pose on a studio floor',
   },
 ];

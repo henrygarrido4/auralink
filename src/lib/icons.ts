@@ -1,9 +1,17 @@
 import ArrowRight from '../assets/icons/arrow-right.svg';
+import ArrowUpRight from '../assets/icons/arrow-up-right.svg';
+import CalendarCheck from '../assets/icons/calendar-check.svg';
 import CodeXml from '../assets/icons/code-xml.svg';
 import FilePenLine from '../assets/icons/file-pen-line.svg';
+import Globe from '../assets/icons/globe.svg';
+import KeyRound from '../assets/icons/key-round.svg';
+import LayoutGrid from '../assets/icons/layout-grid.svg';
+import ListFilter from '../assets/icons/list-filter.svg';
+import Lock from '../assets/icons/lock.svg';
 import MailClock from '../assets/icons/mail-clock.svg';
 import Search from '../assets/icons/search.svg';
 import ShoppingBag from '../assets/icons/shopping-bag.svg';
+import SlidersHorizontal from '../assets/icons/sliders-horizontal.svg';
 import Sparkles from '../assets/icons/sparkles.svg';
 
 /**
@@ -18,11 +26,19 @@ import Sparkles from '../assets/icons/sparkles.svg';
  */
 export const icons = {
   'arrow-right': ArrowRight,
+  'arrow-up-right': ArrowUpRight,
+  'calendar-check': CalendarCheck,
   'code-xml': CodeXml,
   'file-pen-line': FilePenLine,
+  globe: Globe,
+  'key-round': KeyRound,
+  'layout-grid': LayoutGrid,
+  'list-filter': ListFilter,
+  lock: Lock,
   'mail-clock': MailClock,
   search: Search,
   'shopping-bag': ShoppingBag,
+  'sliders-horizontal': SlidersHorizontal,
   sparkles: Sparkles,
 };
 

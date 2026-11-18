@@ -222,6 +222,71 @@
   }
 }
 
+/*
+ * Pop-out props, after the Hub2B reference's "Meet our hub space", where a plant and a pencil cup
+ * slide out from behind the card as the section scrolls in. The element lies partly under a
+ * surface and slides out from behind it by `--pop-x` and `--pop-y`, a `translate` such as a
+ * `--pop-y` of -45% to rise above a top edge. It moves over 1s with `ease`, the reference's own
+ * motion (animate.css slides: at 0.15s, 0.3s, 0.5s, and 0.7s the reference's plant had covered
+ * 19%, 51%, 79%, and 93% of its path).
+ *
+ * `--pop-open` scales the slide: 1 (the default) is out, 0 is tucked behind the surface. A
+ * `filter-group` sets 0 on every panel not chosen, so choosing one slides its props out. While
+ * src/lib/reveal.ts marks an ancestor `data-reveal="hidden"` everything is tucked, and when it
+ * turns `shown` the props slide out. They simply rest without the script, under reduced motion,
+ * in print, and on screen at load. Only `translate` changes, so nothing around them moves.
+ */
+@utility pop-out {
+  translate: calc(var(--pop-x, 0%) * var(--pop-open, 1)) calc(var(--pop-y, 0%) * var(--pop-open, 1));
+
+  @media screen and (prefers-reduced-motion: no-preference) {
+    [data-reveal='hidden'] & {
+      --pop-open: 0;
+    }
+
+    [data-reveal='shown'] & {
+      transition: translate 1s ease;
+    }
+  }
+}
+
+/*
+ * Filtering without JavaScript (the home page's selected work, SelectedWork.astro). A group of
+ * radio buttons, each inside its own label, chooses which panel shows. Mark the options' container
+ * `data-filter-options` and the panels' container `data-filter-panels`, in the same order: the
+ * n-th option shows the n-th panel. Up to six options.
+ *
+ * As in Hub2B's slider, the panels share one grid cell, so the group stays as tall as its tallest
+ * panel and never jumps when the choice changes. A panel not chosen is invisible, which also takes
+ * its links out of the tab order and the accessibility tree. Its images still load with the
+ * section, so a newly chosen panel shows at once. It also tucks its `pop-out` props away
+ * (`--pop-open: 0`), so they pop out when it is chosen. Browsers without :has() show every panel,
+ * in order.
+ */
+@utility filter-group {
+  @supports selector(:has(*)) {
+    & [data-filter-panels] {
+      display: grid;
+    }
+
+    & [data-filter-panels] > * {
+      grid-area: 1 / 1;
+      visibility: hidden;
+      --pop-open: 0;
+    }
+
+    &:has([data-filter-options] > :nth-child(1) :checked) [data-filter-panels] > :nth-child(1),
+    &:has([data-filter-options] > :nth-child(2) :checked) [data-filter-panels] > :nth-child(2),
+    &:has([data-filter-options] > :nth-child(3) :checked) [data-filter-panels] > :nth-child(3),
+    &:has([data-filter-options] > :nth-child(4) :checked) [data-filter-panels] > :nth-child(4),
+    &:has([data-filter-options] > :nth-child(5) :checked) [data-filter-panels] > :nth-child(5),
+    &:has([data-filter-options] > :nth-child(6) :checked) [data-filter-panels] > :nth-child(6) {
+      visibility: visible;
+      --pop-open: 1;
+    }
+  }
+}
+
 @layer base {
   html {
     font-family: var(--font-main);
