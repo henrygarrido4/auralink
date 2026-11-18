@@ -32,6 +32,7 @@ The devices step fails if anything visible touches the edge of the frame, becaus
 
 - Screen content: replace `screens/desktop.png` and `screens/mobile.png` at the sizes above, then run the pipeline. The screens step refuses a file of any other size, because the device displays map each screenshot across the whole screen.
 - Composition: change `LAYOUT` in `scenes/devices.html` (camera angle and distance, phone position and turn). The page also merges JSON from a `?layout=` query parameter into `LAYOUT`, for scripted side-by-side comparisons.
+- After any change to the devices' outline or the image's proportions, run `npx playwright test tests/e2e/hero.spec.ts`. The service icons around the devices rest at angles tuned to this image, and that suite fails when a device covers one. If it does, change `start` on `ServiceOrbit` in `src/components/sections/Hero.astro` until it passes at every width; 0 to 59 covers every placing of six icons. If none passes, the ring needs different room (`--orbit-above` and `--orbit-below` there) or smaller chips.
 
 The captures above are the homepage as it loaded that day, viewport only, with motion reduced. Refresh them from the demo when the owner asks, and only publish work the owner has agreed to show. The demo was open without a password on the day of the capture; it had answered 401 before that.
 

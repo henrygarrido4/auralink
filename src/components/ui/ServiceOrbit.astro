@@ -1,0 +1,77 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import Icon from '@/components/ui/Icon.astro';
+import { serviceCards } from '@/data/site';
+
+/**
+ * The service icons on a ring around whatever this wraps: the laptop and phone in the home hero
+ * (the owner's choice of three treatments, 2026-11-18). One round chip per service card, evenly
+ * spaced, behind the wrapped content, over a soft glow in the primary colour and two inner rings.
+ * The chips for websites and email, the two promises in the hero's headline, are filled with the
+ * primary colour. Decoration only: hidden from assistive technology, with no text and nothing to
+ * focus. The services are named in the strip and the cards further down the page.
+ *
+ * The `orbit` utility (src/styles/global.css) holds the geometry and the motion; the classes here
+ * are the paint. The ring is the largest circle that fits the wrapped content's box once that box
+ * is grown by `--orbit-above` and `--orbit-below`, so set those two on this component to the room
+ * its surroundings leave. The chips arrive once on load, then travel only while a pointer is over
+ * the component, and never under reduced motion. No JavaScript.
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Where the first chip rests, in degrees clockwise from three o'clock. The others follow at
+   * equal steps. Pick it so no chip rests behind the wrapped content.
+   */
+  start?: number;
+}
+
+const { start = 0, class: className, ...rest } = Astro.props;
+
+/** The cards behind the headline's two promises, websites and email. */
+const accented: readonly string[] = ['custom-websites', 'email-automation'];
+
+/** From the centre outward. The outer ring is the one the chips ride. */
+const rings = ['inner', 'middle', 'outer'] as const;
+---
+
+<div class:list={['orbit relative', className]} {...rest}>
+  {/* Chip sizes: 10vw keeps them in proportion on screens narrower than 360px. */}
+  <div
+    data-orbit-frame
+    aria-hidden="true"
+    style={`--orbit-start: ${start}deg; --orbit-step: ${360 / serviceCards.length}deg`}
+    class="[--orbit-chip:min(2.25rem,10vw)] sm:[--orbit-chip:2.75rem] xl:[--orbit-chip:3.25rem]"
+  >
+    <div data-orbit-disc>
+      {/* A radial gradient reaches a square's corners, so 70% is the circle's edge. */}
+      <span
+        data-orbit-glow
+        class="rounded-full bg-radial from-primary/60 via-primary/20 via-40% to-transparent to-70%"
+      ></span>
+      {rings.map((ring) => (
+        <span data-orbit-ring={ring} class="rounded-full border border-base-content/15"></span>
+      ))}
+      <div data-orbit-track>
+        {serviceCards.map((card, index) => (
+          <span data-orbit-arm style={`--orbit-index: ${index}`}>
+            <span
+              data-orbit-chip={card.id}
+              class:list={[
+                'grid place-items-center rounded-full border shadow-md',
+                accented.includes(card.id)
+                  ? 'border-transparent bg-primary text-primary-content'
+                  : 'border-base-300 bg-base-100 text-base-content',
+              ]}
+            >
+              <Icon name={card.icon} class="size-1/2" stroke-width="1.75" />
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  </div>
+  {/* Positioned, and after the frame, so the wrapped content paints above the ring. */}
+  <div class="relative">
+    <slot />
+  </div>
+</div>

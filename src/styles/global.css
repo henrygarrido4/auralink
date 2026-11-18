@@ -389,6 +389,179 @@
   }
 }
 
+/*
+ * Service orbit (home hero, src/components/ui/ServiceOrbit.astro; the owner's choice of three
+ * treatments, 2026-11-18): the service icons rest on a ring around the laptop and phone, behind
+ * them. This utility is the geometry and the motion. The component's classes are the paint.
+ *
+ * Geometry. The frame is the wrapped content's box grown upward by --orbit-above and downward by
+ * --orbit-below, the room its surroundings leave. The disc is the largest circle that fits the
+ * frame, centred in it: the frame is a size container, and `cqmin` is its shorter side. So the
+ * ring never reaches past that room at any width. The chips ride a track half a chip inside the
+ * disc, so no chip leaves the disc either. Each chip sits at the end of an arm with no height that
+ * starts at the centre. Turning the arm carries the chip around, and the chip turns back by the
+ * same angle, so its icon stays upright. An arm's angle is its resting angle (--orbit-start plus
+ * its index times --orbit-step) plus two angles the track animates: --orbit-turn for the arrival
+ * and --orbit-spin for the pointer. Both are registered, so they interpolate and the arms inherit
+ * them. The fallbacks keep the chips in their resting places where @property is not supported.
+ *
+ * Motion. Nothing that starts by itself runs past five seconds (WCAG 2.2.2). On load the glow
+ * fades in, the rings open from the centre outward, and the chips pop in and swing 150 degrees
+ * into their resting places: all still after 3.3s. From then on the chips travel only while a
+ * hovering pointer is over the component, one lap a minute, and hold their place when it leaves:
+ * `orbit-spin` stays applied and paused, as daisyUI's `aura` does in `aura-hover`. A touch screen
+ * has no hover, so it shows the arrival only. Under reduced motion none of this applies and
+ * everything rests where it belongs.
+ */
+@utility orbit {
+  & [data-orbit-frame] {
+    position: absolute;
+    inset: calc(-1 * var(--orbit-above, 0px)) 0 calc(-1 * var(--orbit-below, 0px));
+    container-type: size;
+  }
+
+  & [data-orbit-disc] {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100cqmin;
+    height: 100cqmin;
+    translate: -50% -50%;
+  }
+
+  & [data-orbit-glow],
+  & [data-orbit-ring],
+  & [data-orbit-track] {
+    position: absolute;
+  }
+
+  /* The glow fades out just inside the ring. The inner rings are fractions of the disc. */
+  & [data-orbit-glow] {
+    inset: 6%;
+  }
+
+  & [data-orbit-ring='inner'] {
+    inset: 29%;
+  }
+
+  & [data-orbit-ring='middle'] {
+    inset: 16%;
+  }
+
+  & [data-orbit-ring='outer'],
+  & [data-orbit-track] {
+    inset: calc(var(--orbit-chip) / 2);
+  }
+
+  & [data-orbit-arm] {
+    --orbit-angle: calc(
+      var(--orbit-start, 0deg) + var(--orbit-index, 0) * var(--orbit-step, 60deg) +
+        var(--orbit-turn, 0deg) + var(--orbit-spin, 0deg)
+    );
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 50%;
+    transform-origin: 0 0;
+    rotate: var(--orbit-angle);
+  }
+
+  & [data-orbit-chip] {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    width: var(--orbit-chip);
+    height: var(--orbit-chip);
+    margin: calc(var(--orbit-chip) / -2);
+    rotate: calc(-1 * var(--orbit-angle));
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    & [data-orbit-glow] {
+      animation: orbit-fade 1.2s ease-out 0.1s both;
+    }
+
+    & [data-orbit-ring] {
+      animation: orbit-ring 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    & [data-orbit-ring='inner'] {
+      animation-delay: 0.15s;
+    }
+
+    & [data-orbit-ring='middle'] {
+      animation-delay: 0.3s;
+    }
+
+    & [data-orbit-ring='outer'] {
+      animation-delay: 0.45s;
+    }
+
+    & [data-orbit-track] {
+      animation:
+        orbit-arrive 2.8s cubic-bezier(0.25, 1, 0.5, 1) 0.5s both,
+        orbit-spin 60s linear infinite paused;
+    }
+
+    /* One after another, 90ms apart, while the track is still turning. */
+    & [data-orbit-chip] {
+      animation: orbit-pop 0.7s cubic-bezier(0.22, 1, 0.36, 1)
+        calc(0.55s + var(--orbit-index, 0) * 0.09s) both;
+    }
+
+    @media (hover: hover) {
+      &:hover [data-orbit-track] {
+        animation-play-state: running;
+      }
+    }
+  }
+}
+
+/* How far the orbit's chips are from their resting places: on arrival, and under the pointer. */
+@property --orbit-turn {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 0deg;
+}
+
+@property --orbit-spin {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 0deg;
+}
+
+@keyframes orbit-arrive {
+  from {
+    --orbit-turn: -150deg;
+  }
+}
+
+@keyframes orbit-spin {
+  to {
+    --orbit-spin: 360deg;
+  }
+}
+
+@keyframes orbit-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes orbit-ring {
+  from {
+    opacity: 0;
+    scale: 0.8;
+  }
+}
+
+@keyframes orbit-pop {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
 @layer base {
   html {
     font-family: var(--font-main);

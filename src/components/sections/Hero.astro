@@ -4,15 +4,18 @@ import devices from '@/assets/hero/laptop-phone.webp';
 import Button from '@/components/ui/Button.astro';
 import Eyebrow from '@/components/ui/Eyebrow.astro';
 import PencilUnderline from '@/components/ui/PencilUnderline.astro';
+import ServiceOrbit from '@/components/ui/ServiceOrbit.astro';
 import { primaryCta } from '@/data/site';
 
 /**
  * Home page hero: positioning copy beside the laptop-and-phone image. The image is rendered from
- * the editable sources in design/hero-mockup/ (see its README). The only motion on load is the
- * pencil underline under "brings them back". The primary button's aura stays unlit until the
- * pointer or keyboard focus reaches it, then fades and circles like the navbar's. When they leave
- * it fades out and keeps its place, so the next visit continues from there. The buttons themselves
- * change colour at once, without transitions.
+ * the editable sources in design/hero-mockup/ (see its README). Two things move on load, once
+ * each: the pencil underline under "brings them back", and the service icons, which swing into
+ * place on a ring around the devices (ServiceOrbit; the owner's choice, 2026-11-18). After that
+ * the icons travel only while a pointer is over the devices. The primary button's aura stays
+ * unlit until the pointer or keyboard focus reaches it, then fades and circles like the navbar's.
+ * When they leave it fades out and keeps its place, so the next visit continues from there. The
+ * buttons themselves change colour at once, without transitions.
  */
 interface Props {
   /** Target of the "About us" button. */
@@ -79,7 +82,19 @@ const buttonClass =
       </div>
     </div>
 
-    <div class="mx-auto w-full max-w-2xl min-w-0 lg:mx-0 lg:max-w-none lg:basis-11/20">
+    {/*
+     * The service icons circle the devices. Their ring may use the room around the image, less
+     * 12px above it (the 3rem gap under the buttons when stacked, the top padding from lg) and,
+     * below it, less 36px of the bottom padding on phones and 20px from sm. Change these with
+     * that gap and those paddings. The first icon rests 5 degrees past three o'clock and the
+     * rest follow every 60. Only a narrow window, about 2 to 10 degrees, keeps every icon clear
+     * of the laptop and the phone at every width. tests/e2e/hero.spec.ts checks it against the
+     * image; a new image needs it tuned again.
+     */}
+    <ServiceOrbit
+      start={5}
+      class="mx-auto w-full max-w-2xl min-w-0 [--orbit-above:2.25rem] [--orbit-below:2.75rem] sm:[--orbit-below:4.75rem] lg:mx-0 lg:max-w-none lg:basis-11/20 lg:[--orbit-above:3.25rem] lg:[--orbit-below:5.75rem]"
+    >
       <Picture
         src={devices}
         alt="Laptop and phone showing The Villas at Foxbrick homepage on desktop and mobile"
@@ -91,7 +106,7 @@ const buttonClass =
         fetchpriority="high"
         class="h-auto w-full"
       />
-    </div>
+    </ServiceOrbit>
   </div>
 
   {/* Curved lower edge: the next section's background rises under the devices. */}
