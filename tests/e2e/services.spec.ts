@@ -1,11 +1,12 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { serviceCards, services, servicesCta } from '../../src/data/site';
+import { aboutCta, serviceCards, services, servicesCta, site } from '../../src/data/site';
 import { serviceCardLink } from '../../src/lib/service-cards';
 
 /**
  * Home page services section (src/components/sections/Services.astro): the introduction, ending
- * with the primary call to view all services, and one card (a tile) per `serviceCards` entry, laid
- * out after the Hub2B reference: from xl a four-column grid with the introduction in its first two
+ * with the primary call to view all services at the same large size as the other primary buttons,
+ * and one card (a tile) per `serviceCards` entry, laid out after the Hub2B reference: from xl a
+ * four-column grid with the introduction in its first two
  * cells, two tiles beside it and four below. Under the pointer every card fades in Hub2B's frame.
  * Each card links where src/lib/service-cards.ts says (its service page, else the inquiry page) or,
  * with nowhere to go, is no link at all. A linked card is a single link whose arrow shows before any
@@ -138,6 +139,18 @@ test('the introduction ends with the primary call to view all services', async (
   const cta = region.getByText(servicesCta.label, { exact: true });
   await expect(cta).toBeVisible();
   await expect(cta, 'the primary button').toHaveClass(/\bbtn-primary\b/);
+  // The large size, the same as the introduction's primary button and the other page primaries.
+  const introductionCta = page.getByText(`${aboutCta.label} about ${site.name}`, { exact: true });
+  const buttonSize = (element: HTMLElement) => {
+    const style = getComputedStyle(element);
+    return {
+      fontSize: style.fontSize,
+      height: style.height,
+      paddingLeft: style.paddingLeft,
+      paddingRight: style.paddingRight,
+    };
+  };
+  expect(await cta.evaluate(buttonSize)).toEqual(await introductionCta.evaluate(buttonSize));
   if (servicesCta.href) {
     await expect(cta).toHaveAttribute('href', servicesCta.href);
   } else {

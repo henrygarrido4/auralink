@@ -57,10 +57,14 @@ const titleId = `${id}-title`;
         Each service works on its own and is planned to fit with the others, so whatever you add
         next builds on what is already in place.
       </p>
-      {/* The primary's aura shines in this text colour: dark, so it shows on the grey band. */}
+      {/*
+       * The large size, the same as the other primary buttons. The aura shines in this text
+       * colour: dark, so it shows on the grey band.
+       */}
       <div class="mt-8 text-base-content">
         <Button
           href={servicesCta.href}
+          size="lg"
           aura="hover"
           class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
         >
