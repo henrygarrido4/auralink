@@ -36,17 +36,20 @@ const buttonClass =
         Web design + lifecycle email
       </p>
       {/*
-       * Font size is 10.5% of the copy column's width, so "brings them back." always fits on its
-       * line: the widest fallback font measured needs 8.6em for it. The column's width is written
-       * in viewport units: 100vw - 3rem when stacked; 45% of (100vw - 4rem), less its share of the
-       * 3rem gap, from lg; fixed from 1280px, hence the 3.45rem cap. Change these with the paddings,
-       * gap, or basis above. (Container units would track the column by themselves, but restyling
-       * after layout starts transitions on load, which the reduced-motion test catches.)
+       * Font size is 10% of the copy column's width, so "brings them back." fits on one line in
+       * whichever font the visitor's system supplies (no web font is loaded). In this bold, tight
+       * setting it measures 7.7em in Roboto, 7.9em in SF Pro, 8.4em in Inter, 8.8em in Cantarell,
+       * and 9.8em in DejaVu Sans, the default sans-serif on Linux and the widest. The column's
+       * width is written in viewport units: 100vw - 3rem when stacked; 45% of (100vw - 4rem), less
+       * its share of the 3rem gap, from lg; fixed from 1280px, hence the 3.285rem cap. The 1.5rem
+       * floor only applies below 288px. Change these with the paddings, gap, or basis above.
+       * (Container units would track the column by themselves, but they restyle the copy after
+       * layout, which can start transitions on load.)
        * The bottom padding holds the underline, which hangs below the last line.
        */}
       <h1
         id="hero-title"
-        class="mt-5 pb-[0.3em] text-[clamp(2rem,calc(10.5vw-5px),3.5rem)] leading-[1.05] font-bold tracking-tight text-base-content lg:text-[clamp(2rem,calc(4.725vw-5.3px),3.45rem)]"
+        class="mt-5 pb-[0.3em] text-[clamp(1.5rem,calc(10vw-4.8px),3.5rem)] leading-[1.05] font-bold tracking-tight text-base-content lg:text-[clamp(2rem,calc(4.5vw-5.04px),3.285rem)]"
       >
         {/* One span per line; the explicit spaces keep the words apart in the heading's text. */}
         <span class="block">Websites that</span> <span class="block">win customers.</span>{' '}

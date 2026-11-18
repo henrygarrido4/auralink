@@ -11,6 +11,11 @@
  * bottom padding. It draws once, left to right, on load (`animate-pencil-draw` in
  * src/styles/global.css); without motion it is simply there. Decorative: hidden from assistive
  * technology.
+ *
+ * The stroke joins round, like its caps. The curve has no corner, so this paints exactly as the
+ * default miter join does, but Firefox sizes a stroked path's box for the sharpest possible miter
+ * (the miter limit, 4, times half the stroke), so with a miter join it reports the line about two
+ * stroke widths longer at each end than it draws.
  */
 ---
 
@@ -27,6 +32,7 @@
     fill="none"
     stroke-width="2.6"
     stroke-linecap="round"
+    stroke-linejoin="round"
     pathLength="1"
     stroke-dasharray="1 1.1"
   ></path>

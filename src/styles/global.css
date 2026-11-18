@@ -197,7 +197,15 @@
     overflow: hidden;
   }
 
-  /* Respect reduced-motion preferences for every animation and transition, including Inspira effects. */
+  /*
+   * Reduced motion, for every element and Inspira effect: nothing fades or moves. Transitions and
+   * animations take no time and start at once, so state changes (hover, focus, the menu opening)
+   * still happen, instantly, and animations show their end state. Zero, not a token 0.01ms:
+   * `transition-property` defaults to `all`, so any duration turns every style change into a
+   * transition. WebKit styles the page once before the stylesheet arrives, and its arrival then
+   * started hundreds of transitions in the first painted frame, which read as colours caught midway
+   * between the browser defaults and the theme.
+   */
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
@@ -205,9 +213,11 @@
     *,
     *::before,
     *::after {
-      animation-duration: 0.01ms !important;
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
       animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
     }
   }
 }

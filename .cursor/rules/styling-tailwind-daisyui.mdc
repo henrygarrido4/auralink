@@ -36,12 +36,13 @@ Docs: https://tailwindcss.com/docs/theme , https://daisyui.com/docs/config/ , ht
 
 - Inspira components are copied into `src/components/inspira/` from the official docs, keeping their file names, then adapted. They import `cn` from `@/lib/utils`. Installed support packages: `@vueuse/core`, `motion-v`, `tw-animate-css`, `@inspira-ui/plugins` (background utilities loaded via `src/styles/inspira-backgrounds.mjs`).
 - Some components depend on additional pieces (shadcn-vue primitives, `reka-ui`, icons). Read the component's import list before copying; add a dependency only when the component is approved, and note it in `docs/architecture.md`.
-- Use effects purposefully: at most one or two per page, on hero backgrounds, section dividers, or interactive cards. Never animate body text, navigation, or form controls. Every effect must respect `prefers-reduced-motion` (global CSS already shortens animations; also skip JS-driven loops when reduced motion is on).
+- Use effects purposefully: at most one or two per page, on hero backgrounds, section dividers, or interactive cards. Never animate body text, navigation, or form controls. Every effect must respect `prefers-reduced-motion` (global CSS gives every animation and transition zero duration and delay, so nothing moves; also skip JS-driven loops when reduced motion is on).
 - Effects must not shift layout or block interaction. Hydrate with `client:visible` or `client:idle`, and keep each effect's JavaScript small enough that Lighthouse performance stays above 90 on mobile.
 
 ## Fonts and icons
 
 - Default to system fonts via the `--font-sans` token. If a brand web font is adopted, self-host it in `src/assets/fonts/` or use Astro's font support, with `font-display: swap`, and document the choice.
+- No web font is loaded, so text renders in each visitor's system font: SF Pro on Apple devices, Segoe UI on Windows, Roboto on Android, and on Linux usually DejaVu Sans, the widest (it is also what CI renders). Size anything that must stay on one line for DejaVu Sans; the hero headline's comment in `src/components/sections/Hero.astro` lists measured widths.
 - Icons are not installed yet. Prefer inline SVG for the handful of icons a marketing site needs; if an icon set is adopted, choose one package and document it.
 
 ## Responsive QA
