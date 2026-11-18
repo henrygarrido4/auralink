@@ -12,6 +12,7 @@ import MailClock from '../assets/icons/mail-clock.svg';
 import Search from '../assets/icons/search.svg';
 import ShoppingBag from '../assets/icons/shopping-bag.svg';
 import SlidersHorizontal from '../assets/icons/sliders-horizontal.svg';
+import Sparkle from '../assets/icons/sparkle.svg';
 import Sparkles from '../assets/icons/sparkles.svg';
 
 /**
@@ -39,6 +40,7 @@ export const icons = {
   search: Search,
   'shopping-bag': ShoppingBag,
   'sliders-horizontal': SlidersHorizontal,
+  sparkle: Sparkle,
   sparkles: Sparkles,
 };
 

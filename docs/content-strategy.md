@@ -55,6 +55,10 @@ Proposed, awaiting the owner's confirmation: the five labels (Home, Services, Wo
 
 Footer: service links, Work, Insights, About, Contact, privacy page once written, and verified contact details only.
 
+## Services strip on the home page
+
+The home page repeats the six service-card titles in a strip between the hero and the introduction (`src/components/sections/ServiceStrip.astro`, built 2026-11-18). The titles come from `serviceCards` and are not renamed. The strip describes what Auralink Studio does. It is not a client, partner, or certification list: no logos, and no "trusted by" line. The names are labels, not links. A link belongs on the service card below, once that card has a destination. The row has no visible heading; its accessible name is "Services". The bold first word of each name is styling only.
+
 ## Service cards on the home page
 
 The home page's services section (`src/components/sections/Services.astro`, built 2026-11-18) shows six cards, defined once in `serviceCards` in `src/data/site.ts`. Each card presents services from the verified catalogue, and together they present all eight; `tests/e2e/services.spec.ts` fails if one is missing or listed twice. The card titles and descriptions are the owner's (2026-11-17) and claim nothing beyond the verified services: no results, rankings, or timescales.

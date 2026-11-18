@@ -1,0 +1,117 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import { serviceCards } from '@/data/site';
+
+/**
+ * Home page services strip, directly below the hero and above the introduction. It follows the
+ * WPRiders logo row under that site's hero: an open white band with no rules and one row with
+ * wide even gaps that moves right to left and fades out at both edges. In place of company logos
+ * it sets the service-card titles as a line of type in the heading face: the first word bold, the
+ * rest light, with a small star in the primary colour between one name and the next (owner's
+ * choice of three treatments, 2026-11-18). High Scale Media's repeating services line is the
+ * content idea only: these are Auralink's own capabilities, from `serviceCards`, not clients,
+ * partners, or certifications, and they are labels rather than links.
+ *
+ * The motion is the `service-strip` utility (src/styles/global.css): two equal halves travel by
+ * half the track, so the loop and its spacing meet. src/lib/service-strip.ts sets the speed and
+ * repeats a set until the band fills the screen. The names hold still while the pointer is over
+ * the band and move on when it leaves; there is no pause button (owner, 2026-11-18). The
+ * stylesheet alone, and the noscript block, show every name in a wrapping row. Reduced motion
+ * does the same and never starts the animation. The repeated half and every star are hidden from
+ * assistive technology.
+ */
+const halves = [{ clone: false }, { clone: true }] as const;
+
+/** "Email & Automation" becomes a bold "Email" and a light " & Automation"; "SEO" is all bold. */
+const split = (title: string) => {
+  const space = title.indexOf(' ');
+  return space < 0
+    ? { lead: title, rest: '' }
+    : { lead: title.slice(0, space), rest: title.slice(space) };
+};
+---
+
+<section data-service-strip aria-labelledby="service-strip-title" class="service-strip bg-base-100">
+  <h2 id="service-strip-title" class="sr-only">
+    Services
+  </h2>
+  {/* The row's vertical padding is on the viewport, so its edge fade never crops the type. */}
+  <div data-service-strip-viewport class="py-7 sm:py-9">
+    <div data-service-strip-track>
+      {halves.map(({ clone }) => (
+        <div
+          data-service-strip-half
+          {...(clone ? { 'data-service-strip-clone': true, 'aria-hidden': 'true' } : {})}
+          class:list={[clone && 'select-none']}
+        >
+          <ul data-service-strip-list {...(clone ? { 'aria-hidden': 'true' } : { role: 'list' })}>
+            {serviceCards.map((card) => {
+              const { lead, rest } = split(card.title);
+              return (
+                /*
+                 * Star, gap, name, inside equal side padding that adds up to the same gap. So a
+                 * star sits midway between two names, the join between the two halves matches
+                 * the spacing inside a half, and a wrapped row stays centred.
+                 */
+                <li class="flex items-center gap-5 px-2.5 font-(family-name:--font-headers) text-2xl leading-none font-light tracking-tight whitespace-nowrap text-base-content sm:gap-10 sm:px-5 sm:text-3xl">
+                  {/* Lucide's outline star, filled, so it reads at this size. */}
+                  <Icon
+                    name="sparkle"
+                    fill="currentColor"
+                    class="size-4 shrink-0 text-primary sm:size-5"
+                  />
+                  <span data-service-strip-label>
+                    <span class="font-bold">{lead}</span>
+                    {rest}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <div data-service-strip-pad aria-hidden="true" class="select-none"></div>
+        </div>
+      ))}
+    </div>
+  </div>
+  {/*
+    Scripts off: the no-preference rules would leave a single clipped line. These repeat the
+    utility's static row and win by source order. is:inline keeps Astro from bundling them into
+    the stylesheet, where they would stop the marquee for everyone.
+  */}
+  <noscript>
+    <style is:inline>
+      .service-strip [data-service-strip-list] {
+        flex-wrap: wrap;
+        justify-content: center;
+        width: auto;
+        row-gap: calc(var(--spacing) * 5);
+      }
+      .service-strip [data-service-strip-half] {
+        display: block;
+        width: auto;
+      }
+      .service-strip [data-service-strip-clone],
+      .service-strip [data-service-strip-pad] {
+        display: none;
+      }
+      .service-strip [data-service-strip-viewport] {
+        overflow: visible;
+        padding-inline: calc(var(--spacing) * 3.5);
+        mask-image: none;
+      }
+      .service-strip [data-service-strip-track] {
+        display: block;
+        width: auto;
+        animation: none;
+      }
+    </style>
+  </noscript>
+</section>
+
+<script>
+  import { startServiceStrip } from '@/lib/service-strip';
+
+  for (const strip of document.querySelectorAll<HTMLElement>('[data-service-strip]')) {
+    startServiceStrip(strip);
+  }
+</script>

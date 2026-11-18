@@ -73,12 +73,12 @@ The photo pages are `https://www.pexels.com/photo/<id>/`. The sneakers' insoles 
 
 ## `icons/` (Lucide icons)
 
-- Files: `arrow-right.svg`, `arrow-up-right.svg`, `calendar-check.svg`, `code-xml.svg`, `file-pen-line.svg`, `globe.svg`, `key-round.svg`, `layout-grid.svg`, `list-filter.svg`, `lock.svg`, `mail-clock.svg`, `search.svg`, `shopping-bag.svg`, `sliders-horizontal.svg`, `sparkles.svg`.
-- Used in: the home page services and selected work sections, `src/components/sections/Services.astro` and `src/components/ui/ProjectCard.astro`, through `src/lib/icons.ts` and `src/components/ui/Icon.astro`.
+- Files: `arrow-right.svg`, `arrow-up-right.svg`, `calendar-check.svg`, `code-xml.svg`, `file-pen-line.svg`, `globe.svg`, `key-round.svg`, `layout-grid.svg`, `list-filter.svg`, `lock.svg`, `mail-clock.svg`, `search.svg`, `shopping-bag.svg`, `sliders-horizontal.svg`, `sparkle.svg`, `sparkles.svg`.
+- Used in: the home page services strip, services, and selected work sections, `src/components/sections/ServiceStrip.astro`, `src/components/sections/Services.astro`, and `src/components/ui/ProjectCard.astro`, through `src/lib/icons.ts` and `src/components/ui/Icon.astro`.
 - Source: Lucide, https://lucide.dev, from the `icons/` folder of the npm package `lucide-static` 1.67.0 (published 2026-11-03).
 - Licence: ISC, copyright Lucide Icons and Contributors. `arrow-right`, `arrow-up-right`, `lock`, `search`, and `shopping-bag` derive from Feather and are also under the MIT licence, copyright Cole Bemis (the package's `LICENSE` lists them). Both allow use, copying, and changes for any purpose, as long as the copyright and permission notices stay with the copies; both are reproduced below as the package ships them.
-- Retrieved: 2026-11-17; `arrow-up-right`, `calendar-check`, `globe`, `key-round`, `layout-grid`, `list-filter`, `lock`, and `sliders-horizontal` on 2026-11-18, from the same release (its `arrow-right.svg` is byte-for-byte the copy already here).
-- Changes: none to the files, which are byte-for-byte copies. When Astro inlines an icon it drops `xmlns`, and `Icon.astro` replaces the `class` and adds `aria-hidden` and `focusable`.
+- Retrieved: 2026-11-17; `arrow-up-right`, `calendar-check`, `globe`, `key-round`, `layout-grid`, `list-filter`, `lock`, `sliders-horizontal`, and `sparkle` on 2026-11-18, from the same release (its `arrow-right.svg` is byte-for-byte the copy already here).
+- Changes: none to the files, which are byte-for-byte copies. When Astro inlines an icon it drops `xmlns`, and `Icon.astro` replaces the `class` and adds `aria-hidden` and `focusable`. The services strip draws `sparkle` filled, by attribute, not by editing the file.
 
 ```text
 ISC License

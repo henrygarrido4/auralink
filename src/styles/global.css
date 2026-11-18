@@ -297,6 +297,98 @@
   }
 }
 
+/*
+ * Home services strip (src/components/sections/ServiceStrip.astro). The only continuous text
+ * motion on the site, and only here: the service names travel right to left, the way the WPRiders
+ * logo row does (an open band, wide even gaps, no rules), with the names from `serviceCards`
+ * instead of client logos. src/lib/service-strip.ts sets --service-strip-duration from the
+ * measured width so the speed stays constant, and repeats a set until the row fills the viewport.
+ * The names hold still while the pointer is over the band (owner, 2026-11-18: pause on hover, no
+ * button). `:hover` is not limited to hovering pointers, so on a touch screen a tap on the band
+ * holds them too, until the next tap elsewhere.
+ *
+ * The moving row fades out toward both edges of the screen through a mask, so a name arrives and
+ * leaves gradually instead of being cut by the edge. --service-strip-fade is how far that reaches.
+ *
+ * Without that script, and under reduced motion, the names wrap in a centred row and nothing
+ * moves or fades. The no-preference rules below are what the script turns into a marquee; a
+ * <noscript> block in the component repeats the static row so a browser with scripts off does not
+ * keep the clipped line. The global reduced-motion reset still forces any animation to its end, so
+ * this marquee is not applied in that query at all.
+ */
+@utility service-strip {
+  --service-strip-fade: clamp(1.5rem, 9vw, 10rem);
+
+  & [data-service-strip-clone],
+  & [data-service-strip-pad] {
+    display: none;
+  }
+
+  & [data-service-strip-list] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    row-gap: calc(var(--spacing) * 5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Static row: with each item's own side padding this keeps the page's 24px gutter. */
+  & [data-service-strip-viewport] {
+    padding-inline: calc(var(--spacing) * 3.5);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    & [data-service-strip-viewport] {
+      padding-inline: 0;
+      overflow-x: clip;
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 var(--service-strip-fade),
+        #000 calc(100% - var(--service-strip-fade)),
+        transparent
+      );
+    }
+
+    & [data-service-strip-track],
+    & [data-service-strip-half],
+    & [data-service-strip-pad] {
+      display: flex;
+      flex: none;
+      align-items: center;
+      width: max-content;
+    }
+
+    & [data-service-strip-list] {
+      flex: none;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      width: max-content;
+      row-gap: 0;
+    }
+
+    &[data-running] [data-service-strip-track] {
+      animation-name: service-strip-scroll;
+      animation-duration: var(--service-strip-duration, 32s);
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+
+    &[data-running]:hover [data-service-strip-track] {
+      animation-play-state: paused;
+    }
+  }
+}
+
+@keyframes service-strip-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @layer base {
   html {
     font-family: var(--font-main);
