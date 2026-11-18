@@ -60,6 +60,14 @@
     sans-serif;
 
   /*
+   * Page container (`max-w-site`): the widest any section's content runs, centred with `mx-auto` and
+   * padded `px-6 lg:px-8` inside. 88rem, one step past Tailwind's 7xl (80rem), which it replaced
+   * (owner, 2026-11-18). Every section uses it, so their edges line up. The hero headline's size cap
+   * and the `sizes` of the hero and introduction images are worked out from it: change them with it.
+   */
+  --container-site: 88rem;
+
+  /*
    * Pencil underline (home hero): one stroke drawn left to right after a short pause, played once.
    * The path sets pathLength="1" and stroke-dasharray="1 1.1": offset 1.02 hides it completely
    * (the gap is longer than the path, so no round cap shows as a stray dot) and 0 shows all of it.

@@ -27,6 +27,7 @@ Docs: https://tailwindcss.com/docs/theme , https://daisyui.com/docs/config/ , ht
 ## Markup rules
 
 - Mobile-first: write base styles for small screens, then `md:` and `lg:` overrides.
+- Page container: every section centres its content with `mx-auto max-w-site px-6 lg:px-8`, so edges line up from the navbar down. `max-w-site` is the `--container-site` token in `global.css` (88rem, owner, 2026-11-18). The hero headline's size cap and the `sizes` of the home images are worked out from it: change them together.
 - No inline `style=""` except for truly dynamic values; no `!important` in markup.
 - Keep class lists readable: layout, spacing, typography, color, state. Extract a component when the same combination appears three times.
 - Spacing and sizing come from the Tailwind scale; arbitrary values (`w-[437px]`) need a comment explaining why.

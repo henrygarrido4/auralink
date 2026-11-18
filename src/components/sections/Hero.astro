@@ -30,7 +30,7 @@ const buttonClass =
 ---
 
 <section aria-labelledby="hero-title" class="relative isolate bg-base-200">
-  <div class="mx-auto flex max-w-7xl flex-col gap-12 px-6 pt-12 pb-20 sm:pt-16 sm:pb-24 lg:flex-row lg:items-center lg:px-8 lg:pb-28">
+  <div class="mx-auto flex max-w-site flex-col gap-12 px-6 pt-12 pb-20 sm:pt-16 sm:pb-24 lg:flex-row lg:items-center lg:px-8 lg:pb-28">
     {/* Copy takes about 45% of the row and the image 55%; flex-shrink absorbs the gap. */}
     <div class="min-w-0 lg:basis-9/20">
       <Eyebrow>Web design + lifecycle email</Eyebrow>
@@ -40,15 +40,16 @@ const buttonClass =
        * setting it measures 7.7em in Roboto, 7.9em in SF Pro, 8.4em in Inter, 8.8em in Cantarell,
        * and 9.8em in DejaVu Sans, the default sans-serif on Linux and the widest. The column's
        * width is written in viewport units: 100vw - 3rem when stacked; 45% of (100vw - 4rem), less
-       * its share of the 3rem gap, from lg; fixed from 1280px, hence the 3.285rem cap. The 1.5rem
-       * floor only applies below 288px. Change these with the paddings, gap, or basis above.
+       * its share of the 3rem gap, from lg; fixed from 1408px, the container's width, hence the
+       * 3.645rem cap. The 1.5rem floor only applies below 288px. Change these with the container,
+       * paddings, gap, or basis above.
        * (Container units would track the column by themselves, but they restyle the copy after
        * layout, which can start transitions on load.)
        * The bottom padding holds the underline, which hangs below the last line.
        */}
       <h1
         id="hero-title"
-        class="mt-5 pb-[0.3em] text-[clamp(1.5rem,calc(10vw-4.8px),3.5rem)] leading-[1.05] font-bold tracking-tight text-base-content lg:text-[clamp(2rem,calc(4.5vw-5.04px),3.285rem)]"
+        class="mt-5 pb-[0.3em] text-[clamp(1.5rem,calc(10vw-4.8px),3.5rem)] leading-[1.05] font-bold tracking-tight text-base-content lg:text-[clamp(2rem,calc(4.5vw-5.04px),3.645rem)]"
       >
         {/* One span per line; the explicit spaces keep the words apart in the heading's text. */}
         <span class="block">Websites that</span> <span class="block">win customers.</span>{' '}
@@ -86,7 +87,7 @@ const buttonClass =
         formats={['avif']}
         fallbackFormat="webp"
         widths={[480, 640, 800, 1024, 1280, 1600]}
-        sizes="(min-width: 1280px) 643px, (min-width: 1024px) calc(55vw - 62px), (min-width: 720px) 672px, calc(100vw - 48px)"
+        sizes="(min-width: 1408px) 713px, (min-width: 1024px) calc(55vw - 62px), (min-width: 720px) 672px, calc(100vw - 48px)"
         loading="eager"
         fetchpriority="high"
         class="h-auto w-full"
