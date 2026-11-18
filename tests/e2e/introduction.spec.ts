@@ -6,7 +6,8 @@ import { aboutCta, site } from '../../src/data/site';
  * button lands. Its copy ends with the primary call to learn more: a link to the About page once
  * `aboutCta.href` is set and a placeholder until then, named for that page by words only assistive
  * technology reads, and spaced and sized like the "Read more" of the Hub2B section it follows. It
- * changes colour at once, and its aura runs nothing until the pointer reaches it.
+ * changes colour at once, and its aura stays unlit until the pointer reaches it, then fades out
+ * and resumes where it stopped.
  */
 const HEADING = 'A digital presence built around your goals.';
 /** The button's whole text: the visible label, then the hidden words naming its destination. */
@@ -15,9 +16,19 @@ const NAME = `${aboutCta.label} about ${site.name}`;
 const section = (page: Page) => page.getByRole('region', { name: HEADING });
 const button = (page: Page) => section(page).getByText(NAME, { exact: true });
 
-/** How many animations run on an aura and its glow. */
-const animationCount = (aura: Locator) =>
-  aura.evaluate((el) => el.getAnimations({ subtree: true }).length);
+/** The aura's own spin, not the glow copies, and how strongly the light shines. */
+const auraSpin = (aura: Locator) =>
+  aura.evaluate((el) => {
+    const spin = el.getAnimations().find((animation) => {
+      const effect = animation.effect as KeyframeEffect | null;
+      return (animation as CSSAnimation).animationName === 'aura' && !effect?.pseudoElement;
+    });
+    return {
+      playing: spin?.playState === 'running',
+      time: spin ? Number(spin.currentTime) : null,
+      strength: getComputedStyle(el).getPropertyValue('--aura-light').trim(),
+    };
+  });
 
 test('the copy ends with the primary call to learn more about the studio', async ({ page }) => {
   await page.goto('/');
@@ -55,18 +66,40 @@ test('sits under the text and in line with it, spaced and sized as in Hub2B', as
 test.describe('motion allowed', () => {
   test.use({ reducedMotion: 'no-preference' });
 
-  test('changes colour at once, and its aura waits for the pointer', async ({ page }) => {
+  test('changes colour at once, and its aura fades and resumes', async ({ page }) => {
     await page.goto('/');
     const cta = button(page);
     await expect(cta).toHaveCSS('transition-property', 'none');
     const aura = section(page).locator('.aura');
     await expect(aura, 'one aura, on the button').toHaveCount(1);
-    expect(await animationCount(aura), 'nothing runs at rest').toBe(0);
+    const resting = await auraSpin(aura);
+    expect(resting.playing, 'nothing runs at rest').toBe(false);
+    expect(resting.strength).toBe('0%');
+    await expect(aura).toHaveCSS('transition-property', '--aura-light');
+    await expect(aura).toHaveCSS('transition-duration', '0.4s');
 
     if (!(await page.evaluate(() => matchMedia('(hover: hover)').matches))) return;
     await cta.hover();
-    await expect.poll(() => animationCount(aura), 'lit under the pointer').toBeGreaterThan(0);
+    await expect
+      .poll(async () => (await auraSpin(aura)).playing, 'lit under the pointer')
+      .toBe(true);
+    await expect.poll(async () => (await auraSpin(aura)).time ?? 0).toBeGreaterThan(200);
+    const carried = (await auraSpin(aura)).time ?? 0;
     await page.mouse.move(0, 400);
-    await expect.poll(() => animationCount(aura), 'out once the pointer leaves').toBe(0);
+    await expect
+      .poll(async () => (await auraSpin(aura)).playing, 'paused once the pointer leaves')
+      .toBe(false);
+    const paused = (await auraSpin(aura)).time ?? 0;
+    expect(paused, 'the spin holds its place').toBeGreaterThanOrEqual(carried - 50);
+    await expect.poll(async () => (await auraSpin(aura)).strength).toBe('0%');
+    await aura.evaluate((el) => {
+      for (const animation of el.getAnimations()) {
+        if ((animation as CSSAnimation).animationName === 'aura') animation.currentTime = 2500;
+      }
+    });
+    await cta.hover();
+    const resumed = (await auraSpin(aura)).time ?? 0;
+    expect(resumed, 'the spin continues from where it stopped').toBeGreaterThanOrEqual(2400);
+    expect(resumed, 'the spin did not start over').toBeLessThan(3500);
   });
 });

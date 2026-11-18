@@ -173,7 +173,7 @@
   }
 }
 
-/* How strongly `aura-lap`'s light shines, from 0% (unlit) to 100%. Registered so it can fade. */
+/* How strongly an aura's light shines, from 0% (unlit) to 100%. Registered so it can fade. */
 @property --aura-light {
   syntax: '<percentage>';
   inherits: false;
@@ -191,32 +191,42 @@
 }
 
 /*
- * Hover-only policy for `aura`, for a button that must look exactly as it does without the light
- * until a visitor reaches it (`aura="hover"` in src/components/ui/Button.astro: the home hero).
- * Nothing animates at rest, not even paused: daisyUI's keyframes move `transform`, so a paused
- * animation would still put the button on its own compositing layer and change how it and its
- * neighbours rasterise on phones. Under the pointer or keyboard focus the light fades in and circles
- * as `aura-lap`'s does (a clockwise turn every 4s); it goes out at once when they leave, and stays
- * unlit under reduced motion.
+ * Hover-only policy for `aura` (`aura="hover"` in src/components/ui/Button.astro): every primary
+ * except the navbar. No lap on appearance, so the button looks as it does without the light until a
+ * visitor reaches it. From then on it matches `aura-lap`: the light fades in through `--aura-light`
+ * and circles (a clockwise turn every 4s) under the pointer or keyboard focus, and fades out the
+ * same way when they leave. The `aura` animation stays applied and paused, so the next visit
+ * continues from the angle where this one stopped.
+ *
+ * The pause is what remembers the angle. daisyUI's `aura` keyframes also set a transform, so the
+ * paused animation keeps the button on its own layer. Removing the animation would drop the layer,
+ * but it would also reset the angle and snap the light off. The light fades through `--aura-light`,
+ * never through `color` (see `aura-lap`), and stays unlit under reduced motion.
  */
 @utility aura-hover {
-  color: transparent;
+  background-image: conic-gradient(
+    from var(--aura-angle),
+    transparent 225deg,
+    color-mix(in oklab, transparent, currentColor var(--aura-light))
+  );
   animation-name: none;
 
   @media (prefers-reduced-motion: no-preference) {
+    transition: --aura-light 0.4s;
+    animation-name: aura;
     animation-duration: 4s;
+    animation-iteration-count: infinite;
+    animation-play-state: paused;
 
     &:has(:focus-visible) {
-      color: inherit;
-      transition: color 0.4s;
-      animation-name: aura;
+      --aura-light: 100%;
+      animation-play-state: running;
     }
 
     @media (hover: hover) {
       &:hover {
-        color: inherit;
-        transition: color 0.4s;
-        animation-name: aura;
+        --aura-light: 100%;
+        animation-play-state: running;
       }
     }
   }

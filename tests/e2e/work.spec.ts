@@ -61,7 +61,11 @@ const propsOf = (card: Locator) =>
         alt: bottom.getAttribute('alt'),
       },
       transition: `${style(top).transitionProperty} ${style(top).transitionDuration} ${style(top).transitionTimingFunction}`,
-      running: wrapper.getAnimations({ subtree: true }).length,
+      // Running only. The card's button keeps a paused aura so the light can resume, and that is
+      // not the props moving.
+      running: wrapper
+        .getAnimations({ subtree: true })
+        .filter((animation) => animation.playState === 'running').length,
     };
   });
 

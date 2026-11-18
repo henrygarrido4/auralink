@@ -6,8 +6,8 @@ import { primaryCta } from '../../src/data/site';
  * loads eagerly with its space reserved, and the pencil underline under "brings them back" is the
  * only motion on load: drawn once after a short pause, already finished under reduced motion,
  * hidden from assistive technology, and attached to its phrase at every width. The primary
- * button's aura is off and still until the pointer reaches it, takes no room of its own, and never
- * lights under reduced motion.
+ * button's aura stays unlit until the pointer reaches it, then fades and circles like the navbar's
+ * and resumes where it stopped. It takes no room of its own, and never lights under reduced motion.
  */
 const HEADLINE = 'Websites that win customers. Email that brings them back.';
 
@@ -28,6 +28,23 @@ const auraAnimations = (aura: Locator) =>
       };
     }),
   );
+
+/**
+ * The aura's own spin, not the glow copies, and how strongly the light shines. `time` is where the
+ * spin has got to, so a later visit can be checked against it.
+ */
+const auraSpin = (aura: Locator) =>
+  aura.evaluate((el) => {
+    const spin = el.getAnimations().find((animation) => {
+      const effect = animation.effect as KeyframeEffect | null;
+      return (animation as CSSAnimation).animationName === 'aura' && !effect?.pseudoElement;
+    });
+    return {
+      playing: spin?.playState === 'running',
+      time: spin ? Number(spin.currentTime) : null,
+      strength: getComputedStyle(el).getPropertyValue('--aura-light').trim(),
+    };
+  });
 
 test('shows the headline, the supporting copy, and both buttons', async ({ page }) => {
   await page.goto('/');
@@ -68,10 +85,13 @@ test.describe('motion allowed', () => {
     await expect(underline(page)).toHaveAttribute('aria-hidden', 'true');
 
     const timings = await hero(page).evaluate((section) =>
-      section.getAnimations({ subtree: true }).map((animation) => ({
-        name: (animation as CSSAnimation).animationName,
-        ...animation.effect!.getTiming(),
-      })),
+      section
+        .getAnimations({ subtree: true })
+        .filter((animation) => animation.playState === 'running')
+        .map((animation) => ({
+          name: (animation as CSSAnimation).animationName,
+          ...animation.effect!.getTiming(),
+        })),
     );
     expect(timings, 'the hero runs exactly one animation').toHaveLength(1);
     const [draw] = timings;
@@ -98,7 +118,7 @@ test.describe('motion allowed', () => {
     }
   });
 
-  test("the primary's aura is still until the pointer reaches it, then circles like the navbar's", async ({
+  test("the primary's aura fades and circles like the navbar's, and resumes where it stopped", async ({
     page,
   }) => {
     await page.goto('/');
@@ -106,13 +126,19 @@ test.describe('motion allowed', () => {
     await expect(aura, 'one aura in the hero, on the primary').toHaveCount(1);
     await expect(aura.getByText(primaryCta.label, { exact: true })).toBeVisible();
 
-    // No lap on load, and no paused animation either: the light is off and nothing moves.
-    expect(await auraAnimations(aura)).toEqual([]);
-    await expect(aura).toHaveCSS('color', 'rgba(0, 0, 0, 0)');
+    // No lap on load. The spin is paused and the light is off, ready to continue later.
+    const resting = await auraSpin(aura);
+    expect(resting.playing, 'nothing moves at rest').toBe(false);
+    expect(resting.time, 'the spin is waiting').not.toBeNull();
+    expect(resting.strength).toBe('0%');
+    // The fade is on the light's strength, in both directions, same as the navbar.
+    await expect(aura).toHaveCSS('transition-property', '--aura-light');
+    await expect(aura).toHaveCSS('transition-duration', '0.4s');
 
     if (!(await page.evaluate(() => matchMedia('(hover: hover)').matches))) return;
     await primaryButton(page).hover();
-    await expect.poll(async () => (await auraAnimations(aura)).length).toBeGreaterThan(0);
+    await expect.poll(async () => (await auraSpin(aura)).strength).toBe('100%');
+    await expect.poll(async () => (await auraSpin(aura)).time ?? 0).toBeGreaterThan(200);
     const hovered = await auraAnimations(aura);
     expect(hovered.every((animation) => animation.playing)).toBe(true);
     // The same endless light as the navbar's, at the same speed and in the same direction.
@@ -122,11 +148,26 @@ test.describe('motion allowed', () => {
         .filter((animation) => animation.name === 'aura')
         .map(({ name, timing }) => ({ name, timing }));
     expect(light(hovered)).toEqual(light(navbar));
+    const carried = (await auraSpin(aura)).time ?? 0;
 
-    // The pointer leaves: the light goes out at once and nothing is left running or paused.
+    // The pointer leaves: the light fades out and the spin stays paused where it is.
     await page.mouse.move(0, 400);
-    await expect.poll(() => auraAnimations(aura)).toEqual([]);
-    await expect(aura).toHaveCSS('color', 'rgba(0, 0, 0, 0)');
+    await expect.poll(async () => (await auraSpin(aura)).playing).toBe(false);
+    const paused = (await auraSpin(aura)).time ?? 0;
+    expect(paused, 'the spin did not jump back to the start').toBeGreaterThanOrEqual(carried - 50);
+    await expect.poll(async () => (await auraSpin(aura)).strength).toBe('0%');
+
+    // Park the spin at a known angle, then come back: it continues from there and the light fades in.
+    await aura.evaluate((el) => {
+      for (const animation of el.getAnimations()) {
+        if ((animation as CSSAnimation).animationName === 'aura') animation.currentTime = 2500;
+      }
+    });
+    await primaryButton(page).hover();
+    const resumed = (await auraSpin(aura)).time ?? 0;
+    expect(resumed, 'the spin continues from where it stopped').toBeGreaterThanOrEqual(2400);
+    expect(resumed, 'the spin did not start over').toBeLessThan(3500);
+    await expect.poll(async () => (await auraSpin(aura)).strength).toBe('100%');
   });
 });
 
@@ -145,8 +186,9 @@ test.describe('reduced motion', () => {
     if (await page.evaluate(() => matchMedia('(hover: hover)').matches)) {
       await primaryButton(page).hover();
     }
-    expect(await auraAnimations(heroAura(page))).toEqual([]);
-    await expect(heroAura(page)).toHaveCSS('color', 'rgba(0, 0, 0, 0)');
+    const aura = heroAura(page);
+    expect(await auraAnimations(aura)).toEqual([]);
+    expect((await auraSpin(aura)).strength).toBe('0%');
   });
 });
 

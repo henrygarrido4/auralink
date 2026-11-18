@@ -9,9 +9,10 @@ import { primaryCta } from '@/data/site';
 /**
  * Home page hero: positioning copy beside the laptop-and-phone image. The image is rendered from
  * the editable sources in design/hero-mockup/ (see its README). The only motion on load is the
- * pencil underline under "brings them back". The primary button's aura is off and still until the
- * pointer or keyboard focus reaches it, circles like the navbar's while they stay, and goes out at
- * once when they leave. The buttons themselves change colour at once, without transitions.
+ * pencil underline under "brings them back". The primary button's aura stays unlit until the
+ * pointer or keyboard focus reaches it, then fades and circles like the navbar's. When they leave
+ * it fades out and keeps its place, so the next visit continues from there. The buttons themselves
+ * change colour at once, without transitions.
  */
 interface Props {
   /** Target of the "About us" button. */

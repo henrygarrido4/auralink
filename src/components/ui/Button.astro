@@ -18,8 +18,9 @@ interface Props extends Omit<HTMLAttributes<'a'>, 'type'> {
   block?: boolean;
   /**
    * Wrap the button in daisyUI's border light (`aura`): one lap when the button appears, then light
-   * only under the pointer or keyboard focus. `'hover'` skips the lap and leaves the button exactly
-   * as it is without the light until then. Let at most one lap play per view.
+   * only under the pointer or keyboard focus. `'hover'` skips the lap and leaves the light unlit
+   * until then. Either way the light fades in and out, and once it has moved it continues from
+   * where it stopped. Let at most one lap play per view.
    */
   aura?: boolean | 'hover';
 }
