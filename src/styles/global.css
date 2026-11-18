@@ -17,12 +17,16 @@
  * named after a built-in theme into the built-in tokens, so everything not listed here stays as it was.
  * Primary (owner, 2026-11-17): the yellow of the logo's mark, the colour of every primary call to
  * action. Its label takes the navbar's near-black, because white on this yellow is only 1.4:1.
+ * Secondary (owner, 2026-11-17): the near-black outline of the secondary call to action, which
+ * fills with it under the pointer, labelled white (17.9:1); see src/components/ui/Button.astro.
  */
 @plugin 'daisyui/theme' {
   name: 'light';
   default: true;
   --color-primary: #f7db15;
   --color-primary-content: var(--color-neutral);
+  --color-secondary: #141817;
+  --color-secondary-content: #ffffff;
 }
 
 /*
@@ -146,6 +150,38 @@
   }
   to {
     --aura-angle: 360deg;
+  }
+}
+
+/*
+ * Hover-only policy for `aura`, for a button that must look exactly as it does without the light
+ * until a visitor reaches it (`aura="hover"` in src/components/ui/Button.astro: the home hero).
+ * Nothing animates at rest, not even paused: daisyUI's keyframes move `transform`, so a paused
+ * animation would still put the button on its own compositing layer and change how it and its
+ * neighbours rasterise on phones. Under the pointer or keyboard focus the light fades in and circles
+ * as `aura-lap`'s does (a clockwise turn every 4s); it goes out at once when they leave, and stays
+ * unlit under reduced motion.
+ */
+@utility aura-hover {
+  color: transparent;
+  animation-name: none;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation-duration: 4s;
+
+    &:has(:focus-visible) {
+      color: inherit;
+      transition: color 0.4s;
+      animation-name: aura;
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        color: inherit;
+        transition: color 0.4s;
+        animation-name: aura;
+      }
+    }
   }
 }
 

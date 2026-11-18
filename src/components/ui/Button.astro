@@ -3,9 +3,10 @@ import type { HTMLAttributes } from 'astro/types';
 
 /**
  * The site's call-to-action button, pill-shaped. `primary` (the default) is daisyUI's
- * `btn-primary` with the lit, raised finish (`btn-lit` in src/styles/global.css); `secondary` is
- * a neutral outline for the next-best action beside a primary one. A link by default; without an
- * `href` it is a placeholder for a page that has not shipped. Pass `type` to render a `<button>`.
+ * `btn-primary` with the lit, raised finish (`btn-lit` in src/styles/global.css); `secondary`, for
+ * the next-best action beside a primary one, is a near-black outline on a transparent fill, which
+ * fills near-black with a white label under the pointer. A link by default; without an `href` it is
+ * a placeholder for a page that has not shipped. Pass `type` to render a `<button>`.
  */
 interface Props extends Omit<HTMLAttributes<'a'>, 'type'> {
   /** Renders a `<button>` of this type instead of a link. */
@@ -15,8 +16,12 @@ interface Props extends Omit<HTMLAttributes<'a'>, 'type'> {
   size?: 'md' | 'lg';
   /** Fill the width of the container. */
   block?: boolean;
-  /** Wrap the button in daisyUI's border light (`aura`). Show at most one per view. */
-  aura?: boolean;
+  /**
+   * Wrap the button in daisyUI's border light (`aura`): one lap when the button appears, then light
+   * only under the pointer or keyboard focus. `'hover'` skips the lap and leaves the button exactly
+   * as it is without the light until then. Let at most one lap play per view.
+   */
+  aura?: boolean | 'hover';
 }
 
 const {
@@ -29,18 +34,39 @@ const {
   ...rest
 } = Astro.props;
 
+/**
+ * daisyUI's outline in the theme's `secondary` gives the resting state (transparent, with the label
+ * and a 1px border in `secondary`) and the filled one under the pointer, labelled white. The
+ * utilities keep that fill and border at exactly `secondary`, which daisyUI darkens on hover, and
+ * remove daisyUI's shadows and its half-pixel shift on press.
+ */
+const secondary =
+  'btn-outline btn-secondary shadow-none text-shadow-none hover:border-secondary hover:bg-secondary active:translate-none';
+
 const Tag = type ? 'button' : 'a';
 const classes = [
   'btn rounded-full font-bold',
-  variant === 'primary' ? 'btn-primary btn-lit' : 'btn-outline btn-neutral',
+  variant === 'primary' ? 'btn-primary btn-lit' : secondary,
   size === 'lg' ? 'btn-lg px-8' : 'px-6',
   block && 'btn-block',
   className,
 ];
+
+/**
+ * The aura's wrapper. `aura-lap` and `aura-hover` (src/styles/global.css) decide when its light
+ * shows. The `'hover'` wrapper also takes no room of its own: a negative margin cancels the light's
+ * padding, and as a grid it stretches the button whenever its parent stretches it (stacked hero
+ * buttons). `isolate` keeps daisyUI's lift of the button (`z-index: 1`) inside the wrapper, so a
+ * positioned sibling later in the page still paints above the button's glow.
+ */
+const auraClasses =
+  aura === 'hover'
+    ? ['aura aura-hover rounded-full -m-(--aura-padding) isolate', block ? 'grid' : 'inline-grid']
+    : ['aura aura-lap rounded-full', block && 'block'];
 ---
 
 {aura ? (
-  <span class:list={['aura aura-lap rounded-full', block && 'block']}>
+  <span class:list={auraClasses}>
     <Tag type={type} class:list={classes} {...rest}>
       <slot />
     </Tag>

@@ -21,11 +21,12 @@ const iconButton = [
   focusRing,
 ];
 /**
- * Hover turns a link primary yellow, and the bar's underline (`bg-current`) follows. Only `color`
- * fades: `transition-colors` would fade the focus ring in as well. On the menu's current-page bar
- * the dark label still wins, because Tailwind emits `aria-*` variants after `hover`.
+ * Links keep the bar's light text in every state. Hover and the current page (or its section) add
+ * a 2px underline in the primary yellow, at once, with no transition. An underline is painted, not
+ * laid out, so the label never moves and the bar keeps its height.
  */
-const linkHover = 'transition-[color] duration-300 hover:text-primary';
+const linkUnderline =
+  'decoration-primary decoration-2 underline-offset-8 hover:underline aria-[current]:underline';
 ---
 
 <header class="sticky top-0 z-40 bg-neutral text-neutral-content">
@@ -42,13 +43,7 @@ const linkHover = 'transition-[color] duration-300 hover:text-primary';
             <a
               href={item.href}
               aria-current={currentState(item.href)}
-              class:list={[
-                'relative block rounded-sm py-2 font-bold',
-                'after:absolute after:inset-x-0 after:bottom-1 after:h-0.5 after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-300',
-                'hover:after:scale-x-100 aria-[current]:text-primary aria-[current]:after:scale-x-100',
-                linkHover,
-                focusRing,
-              ]}
+              class:list={['block rounded-sm py-2 font-bold', linkUnderline, focusRing]}
             >
               {item.label}
             </a>
@@ -123,12 +118,7 @@ const linkHover = 'transition-[color] duration-300 hover:text-primary';
             <a
               href={item.href}
               aria-current={currentState(item.href)}
-              class:list={[
-                'block px-4 py-3.5 text-xl font-bold',
-                'aria-[current]:bg-primary aria-[current]:text-primary-content',
-                linkHover,
-                focusRing,
-              ]}
+              class:list={['block px-4 py-3.5 text-xl font-bold', linkUnderline, focusRing]}
             >
               {item.label}
             </a>

@@ -7,8 +7,10 @@ import { primaryCta } from '@/data/site';
 
 /**
  * Home page hero: positioning copy beside the laptop-and-phone image. The image is rendered from
- * the editable sources in design/hero-mockup/ (see its README). The only motion is the pencil
- * underline under "brings them back"; the buttons change colour at once, without transitions.
+ * the editable sources in design/hero-mockup/ (see its README). The only motion on load is the
+ * pencil underline under "brings them back". The primary button's aura is off and still until the
+ * pointer or keyboard focus reaches it, circles like the navbar's while they stay, and goes out at
+ * once when they leave. The buttons themselves change colour at once, without transitions.
  */
 interface Props {
   /** Target of the "About us" button. */
@@ -60,8 +62,13 @@ const buttonClass =
       <p class="mt-4 max-w-xl text-lg leading-relaxed text-base-content/80 sm:text-xl">
         Custom websites and email journeys that help people find you, choose you, and come back.
       </p>
-      <div class="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-        <Button href={primaryCta.href} size="lg" class={buttonClass}>
+      {/*
+       * The primary's aura shines in this text colour: dark, so it shows on the light background.
+       * `*:relative` makes the buttons paint in page order. The aura raises the primary above static
+       * siblings, and About us must stay above the primary's glow, which reaches under its border.
+       */}
+      <div class="mt-10 flex flex-col gap-3 text-base-content *:relative sm:flex-row sm:items-center sm:gap-4">
+        <Button href={primaryCta.href} size="lg" aura="hover" class={buttonClass}>
           {primaryCta.label}
         </Button>
         <Button href={aboutHref} size="lg" variant="secondary" class={buttonClass}>
