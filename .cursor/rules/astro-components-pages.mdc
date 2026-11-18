@@ -55,6 +55,7 @@ const { Content } = await render(post);
 - Images that belong to the site go in `src/assets/` and render through `<Image />` or `<Picture />` from `astro:assets` with `alt`, `width`, and `height`. Decorative images use `alt=""`.
 - Only favicons, `robots.txt`, and files that must keep their exact path go in `public/`.
 - Below-the-fold images use `loading="lazy"` (the default for `<Image />`); the hero image should set `loading="eager"` and `fetchpriority="high"`.
+- Third-party images, such as stock photos, need a licence that allows use on a business website. Download them into `src/assets/` (never hotlink or use a random-image endpoint) and, in the same change, add an entry to `src/assets/CREDITS.md`: author, photo page, licence, retrieval date, and changes made. Stock photos only illustrate: never caption the people in them as clients, team members, or testimonials, or name them.
 
 ## Head and metadata
 

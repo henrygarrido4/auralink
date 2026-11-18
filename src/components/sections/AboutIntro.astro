@@ -1,0 +1,77 @@
+---
+import { Picture } from 'astro:assets';
+import photo from '@/assets/about/business-owner-laptop.webp';
+
+/**
+ * Home page introduction, right below the hero and the target of its "About us" button: who
+ * Auralink Studio works with and what it brings together, beside a photo of a business owner at
+ * work. Laid out after the "Space for Freelancers and Creative People" section of the Hub2B
+ * reference: from lg the photo sits left on a frame in the primary colour, offset down and to the
+ * right, with the copy beside it; below lg the copy comes first and the photo follows. Static: no
+ * motion, no links, and no client-side JavaScript.
+ *
+ * The photo is a licensed stock image, credited in src/assets/CREDITS.md. It only illustrates the
+ * audience: never caption it, name the person, or present them as a client or team member.
+ */
+interface Props {
+  /** Anchor for in-page links, such as the hero's "About us" button. */
+  id: string;
+}
+
+const { id } = Astro.props;
+const titleId = `${id}-title`;
+---
+
+<section id={id} aria-labelledby={titleId}>
+  <div class="mx-auto max-w-7xl px-6 pt-16 pb-20 sm:pt-20 sm:pb-24 lg:px-8 lg:pt-24 lg:pb-32">
+    {/* One readable column below lg, aligned with the hero's copy; two equal columns from lg. */}
+    <div class="grid max-w-2xl gap-12 lg:max-w-none lg:grid-cols-2 lg:items-center lg:gap-16 xl:gap-20">
+      <div class="min-w-0">
+        <p class="text-sm font-bold tracking-[0.16em] text-base-content/70 uppercase">
+          About Auralink Studio
+        </p>
+        <h2
+          id={titleId}
+          class="mt-5 text-3xl font-bold tracking-tight text-balance text-base-content sm:text-4xl xl:text-5xl"
+        >
+          {/* The explicit space keeps the two lines apart in the heading's text. */}
+          <span class="block">A digital presence</span>{' '}
+          <span class="block font-light">built around your goals.</span>
+        </h2>
+        <div class="mt-6 h-0.5 w-24 bg-primary" aria-hidden="true"></div>
+        <p class="mt-6 max-w-xl text-lg leading-relaxed text-base-content/80">
+          We help business owners, ecommerce brands, and marketing teams bring their websites,
+          email, and search strategy together. From getting discovered to keeping customers
+          connected, we build thoughtful digital experiences around your business goals.
+        </p>
+      </div>
+
+      {/*
+       * The frame is the photo's size, shifted down and right by the padding that makes room for
+       * it, and paints under the photo. The photo has its own positioned box, so a control placed
+       * over it later (the planned video, see docs/architecture.md) lines up with its edges.
+       */}
+      <div class="relative min-w-0 pr-4 pb-4 sm:pr-6 sm:pb-6 lg:order-first lg:pr-10 lg:pb-10 xl:pr-12 xl:pb-12">
+        <div
+          class="absolute top-4 right-0 bottom-0 left-4 border-6 border-primary sm:top-6 sm:left-6 lg:top-10 lg:left-10 lg:border-8 xl:top-12 xl:left-12"
+          aria-hidden="true"
+        ></div>
+        <div class="relative">
+          {/*
+           * `sizes` is the photo's rendered width at each breakpoint, worked out from the container
+           * padding, column gap, and frame padding above: change it whenever they change.
+           */}
+          <Picture
+            src={photo}
+            alt="Woman leaning over a laptop in a craft studio, with shelves of yarn and ceramics behind her"
+            formats={['avif']}
+            fallbackFormat="webp"
+            widths={[480, 640, 800, 1024, 1280, 1600]}
+            sizes="(min-width: 1280px) 520px, (min-width: 1024px) calc(50vw - 104px), (min-width: 720px) 648px, (min-width: 640px) calc(100vw - 72px), calc(100vw - 64px)"
+            class="block h-auto w-full"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
