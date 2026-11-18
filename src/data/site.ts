@@ -242,7 +242,8 @@ export const workFilters: readonly { readonly service: ServiceSlug; readonly lab
 /**
  * The home page's featured projects, in display order, numbered 01-03 there. Supplied by the owner
  * on 2026-11-18 and described from what each site shows (checked that day). The Villas @ Foxbrick
- * demo asked for a password, so its entry rests on the owner's own screenshot and project files.
+ * homepage was open without a password later that day; the card still calls it a demo and does not
+ * repeat the phone number shown there.
  */
 export const featuredProjects: readonly FeaturedProject[] = [
   {

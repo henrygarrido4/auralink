@@ -3,18 +3,21 @@
  * Renders the home hero's laptop-and-phone image, src/assets/hero/laptop-phone.webp, from the
  * editable sources in this folder (see README.md):
  *
- *   1. products  scenes/products.html    -> reports/hero-mockup/products.png (the sample shop's photo)
- *   2. screens   sample-site/*.html      -> reports/hero-mockup/screen-desktop.png, screen-mobile.png
- *   3. devices   scenes/devices.html     -> reports/hero-mockup/devices.png (transparent, 2x size)
- *   4. asset     devices.png, cropped to its visible pixels and downscaled
+ *   1. screens   screens/*.png            -> reports/hero-mockup/screen-desktop.png, screen-mobile.png
+ *   2. devices   scenes/devices.html     -> reports/hero-mockup/devices.png (transparent, 2x size)
+ *   3. asset     devices.png, cropped to its visible pixels and downscaled
  *                                        -> src/assets/hero/laptop-phone.webp
+ *
+ * `screens/desktop.png` (2880x1800) and `screens/mobile.png` (1170x2532) are the pages on the
+ * devices. `--only=products` still renders the earlier sample shop's product photo; nothing in the
+ * default pipeline uses it.
  *
  * Usage: node design/hero-mockup/render.mjs [--from=<step>] [--only=<step>] [--preview]
  * `--preview` renders the devices at a quarter of the final pixel count and skips the asset.
  * Needs network access: the pages load three.js and fonts from cdn.jsdelivr.net (pinned versions).
  * Uses Playwright's Chromium (GPU through Metal on macOS) and sharp, both already installed.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, normalize, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -40,7 +43,7 @@ const args = Object.fromEntries(
     return [key, value];
   }),
 );
-const steps = ['products', 'screens', 'devices', 'asset'];
+const steps = [...(args.only === 'products' ? ['products'] : []), 'screens', 'devices', 'asset'];
 const preview = args.preview === 'true';
 const selected = steps.filter((step, index) => {
   if (preview && step === 'asset') return false;
@@ -139,16 +142,6 @@ async function visibleBox(png, pad) {
   };
 }
 
-/** Screenshots a sample-site page at a device's CSS size and pixel density. */
-async function screenshot(path, viewport, deviceScaleFactor, file) {
-  const context = await servingContext({ viewport, deviceScaleFactor });
-  const page = await context.newPage();
-  await page.goto(`${origin}${path}`, { waitUntil: 'networkidle' });
-  await page.evaluate(() => document.fonts.ready);
-  await page.screenshot({ path: file });
-  await context.close();
-}
-
 for (const step of selected) {
   const started = Date.now();
   if (step === 'products') {
@@ -157,18 +150,18 @@ for (const step of selected) {
       await renderScene('/scenes/products.html', { width: 1200, height: 1240 }),
     );
   } else if (step === 'screens') {
-    await screenshot(
-      '/sample-site/desktop.html',
-      { width: 1440, height: 900 },
-      2,
-      join(outDir, 'screen-desktop.png'),
-    );
-    await screenshot(
-      '/sample-site/mobile.html',
-      { width: 390, height: 844 },
-      3,
-      join(outDir, 'screen-mobile.png'),
-    );
+    const sources = [
+      ['desktop.png', 'screen-desktop.png', 2880, 1800],
+      ['mobile.png', 'screen-mobile.png', 1170, 2532],
+    ];
+    for (const [name, dest, width, height] of sources) {
+      const source = join(here, 'screens', name);
+      const meta = await sharp(source).metadata();
+      if (meta.width !== width || meta.height !== height) {
+        throw new Error(`${name} is ${meta.width}x${meta.height}; expected ${width}x${height}`);
+      }
+      copyFileSync(source, join(outDir, dest));
+    }
   } else if (step === 'devices') {
     const scale = preview ? 1 : 2;
     const png = await renderScene('/scenes/devices.html', {

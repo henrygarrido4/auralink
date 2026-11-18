@@ -1,6 +1,6 @@
 # Asset credits
 
-Every file in `src/assets/` that Auralink Studio did not create has an entry here, added in the same change as the file: where it came from, who made it, the licence it is used under, and what was changed. Original work is not listed: the owner's logo files and the hero's device image, which is rendered from `design/hero-mockup/`. Remove an entry when its file is deleted.
+Every file in `src/assets/` that Auralink Studio did not create has an entry here, added in the same change as the file: where it came from, who made it, the licence it is used under, and what was changed. Original work is not listed: the owner's logo files, and the laptop and phone in the hero, which are rendered from `design/hero-mockup/`. The pages on those screens are a screenshot of the owner's own demo and are noted under the hero entry below. Remove an entry when its file is deleted.
 
 Stock photos only illustrate: the site's audience, or the industry of a featured project. Never caption one as a client, a team member, or a testimonial, never name the people in it, and never present one as a project's own premises, products, or photography.
 
@@ -11,6 +11,13 @@ Not files in this folder. Astro's font support downloads them at build time and 
 - Catamaran, used for text (`--font-main`), weights 400 and 700. Copyright 2014 The Catamaran Authors (pria.ravichandran@gmail.com). Designed by Pria Ravichandran.
 - Mukta, used for headings (`--font-headers` and `--font-subheaders`), weights 300 and 700. Copyright (c) 2014, Girish Dalvi, Ek Type.
 - Licence for both: SIL Open Font License 1.1, https://openfontlicense.org/open-font-license-official-text/ (read from the upstream `OFL.txt` on 2026-11-18). The fonts may be used, studied, modified, and redistributed, including embedded in a website, and may not be sold by themselves. A reserved font name stays with the copyright holder.
+
+## `hero/laptop-phone.webp`
+
+- Used in: the home page hero, `src/components/sections/Hero.astro`.
+- The laptop and phone are original 3D, rendered from `design/hero-mockup/` (see its README). No maker's logo.
+- The pages on the screens are a screenshot of the owner's WordPress demo for The Villas @ Foxbrick, https://villas-foxbrick-demo.instawp.site/, captured 2026-11-18. Desktop is the homepage at 1440×900, saved at 2× (2880×1800). Mobile is the same homepage at 390×844, saved at 3× (1170×2532).
+- The photography inside that screenshot belongs to the demo. It was not downloaded as a stock photo, and no separate licence for those photographs is on record here. The image shows the website the owner asked to feature. Do not describe it as a client result, or as the property's own live site (that site is a different address).
 
 ## `about/business-owner-laptop.webp`
 
