@@ -7,10 +7,10 @@ import { featuredProjects, workFilters, type FeaturedProject } from '../../src/d
  * Hub2B's "Meet our hub space": the copy in the card's left third and a 3:2 photo filling the
  * rest, flush with its top and right edges, from xl; the copy above the photo below xl. The
  * filters are a native radio group that works without JavaScript; the section opens on the first.
- * Each card links to its project in a new tab and says when the site asks for a password. Behind
- * the card lie two cut-out props that pop out, as Hub2B's do, when the section scrolls into view
- * and when a filter shows the card: never without JavaScript or under reduced motion, never when
- * on screen at load, and never moving a box.
+ * Each card links to its project in a new tab and says when the site asks for a password, giving
+ * the password when the owner has published it. Behind the card lie two cut-out props that pop
+ * out, as Hub2B's do, when the section scrolls into view and when a filter shows the card: never
+ * without JavaScript or under reduced motion, never when on screen at load, and never moving a box.
  */
 const HEADING = 'Different businesses. Different reasons to visit.';
 const GROUP = 'Show the projects built with';
@@ -219,12 +219,25 @@ test('each card links to its project in a new tab and says when a password is ne
       await expect(link).toHaveAttribute('href', project.link.href);
       await expect(link).toHaveAttribute('target', '_blank');
       await expect(link).toHaveAttribute('rel', /\bnoopener\b/);
-      if (project.link.passwordProtected) {
-        await expect(card.getByText('Password protected', { exact: true })).toBeVisible();
-        await expect(link).toHaveAccessibleDescription('Password protected');
+      // The note under the button: the password the owner published, or only that there is one.
+      const { password, passwordProtected } = project.link;
+      const note = password
+        ? `Demo password: ${password}`
+        : passwordProtected
+          ? 'Password protected'
+          : undefined;
+      if (note) {
+        await expect(card.getByText(note, { exact: true })).toBeVisible();
+        await expect(link).toHaveAccessibleDescription(note);
       } else {
-        await expect(card.getByText('Password protected')).toHaveCount(0);
+        await expect(card.getByText(/password/i)).toHaveCount(0);
         await expect(link).not.toHaveAttribute('aria-describedby');
+      }
+      if (password) {
+        // Bold, and left alone by page translators, since visitors type it exactly.
+        const value = card.locator('b[translate="no"]');
+        await expect(value).toHaveText(password);
+        expect(await value.evaluate((el) => getComputedStyle(el).fontWeight)).toBe('700');
       }
       // From the filters, Tab reaches this link next, with the near-black ring; the hidden
       // projects' links are skipped.

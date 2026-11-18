@@ -209,8 +209,18 @@ export interface FeaturedProject {
     readonly href: string;
     /** Names the destination: "View website", "View demo", "View store". */
     readonly label: string;
-    /** The site asks visitors for a password. The card says so and never shows the password. */
+    /**
+     * The site asks visitors for a password the owner keeps private. The card says "Password
+     * protected" under the button and never shows the password.
+     */
     readonly passwordProtected?: boolean;
+    /**
+     * The password the site asks for, when the owner has chosen to publish it so visitors can get
+     * in (one0one's storefront, 2026-11-18). The card shows "Demo password: …" under the button
+     * instead, and a project with it needs no `passwordProtected`. Never add one the owner has not
+     * published.
+     */
+    readonly password?: string;
   };
   /** Alt text for the cover photo, a stock photo that illustrates the industry, never the project. */
   readonly photoAlt: string;
@@ -256,18 +266,17 @@ export const featuredProjects: readonly FeaturedProject[] = [
   {
     id: 'villas-at-foxbrick',
     name: 'The Villas @ Foxbrick',
-    platform: 'WordPress demo',
+    platform: 'WordPress',
     service: 'wordpress-development',
     description:
-      'A demo website for The Villas @ Foxbrick, an apartment community in Humble, Texas, made for renters comparing one- and two-bedroom homes before they visit.',
+      'A website for The Villas @ Foxbrick, an apartment community in Humble, Texas, made for renters comparing one- and two-bedroom homes before they visit.',
     features: [
       { icon: 'layout-grid', text: 'Floor plan, amenity, gallery, and neighborhood pages' },
       { icon: 'key-round', text: 'Leasing details and a tour button in the header' },
     ],
     link: {
       href: 'https://villas-foxbrick-demo.instawp.site/',
-      label: 'View demo',
-      passwordProtected: true,
+      label: 'View website',
     },
     photoAlt:
       "Aerial view of an apartment complex's swimming pool, ringed by loungers between a clubhouse and a covered patio",
@@ -286,7 +295,7 @@ export const featuredProjects: readonly FeaturedProject[] = [
     link: {
       href: 'https://henrrywebsolutions.myshopify.com/',
       label: 'View store',
-      passwordProtected: true,
+      password: 'password',
     },
     photoAlt: 'Woman in black activewear stretching in a butterfly pose on a studio floor',
   },
