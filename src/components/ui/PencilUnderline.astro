@@ -7,8 +7,10 @@
  * widens the underline. Coming first matters: as a positioned element the SVG counts as a block,
  * and accessible-name algorithms put a space around blocks, which would land before the period.
  *
- * It sits below the descenders and hangs 0.3em under the line, so give the heading that much
- * bottom padding. It draws once, left to right, on load (`animate-pencil-draw` in
+ * It sits just under the Latin descenders. Mukta's line box is deeper than those letters, so the
+ * stroke is lifted 0.2em from the bottom of the line (`top: calc(100% - 0.28em)`). Give the heading
+ * about 0.1em of bottom padding so the stroke stays clear of whatever follows. It draws once, left
+ * to right, on load (`animate-pencil-draw` in
  * src/styles/global.css); without motion it is simply there. Decorative: hidden from assistive
  * technology.
  *
@@ -20,7 +22,7 @@
 ---
 
 <svg
-  class="pointer-events-none absolute top-[calc(100%-0.08em)] left-[-0.05em] h-[0.3em] w-[calc(100%+0.1em)] overflow-visible"
+  class="pointer-events-none absolute top-[calc(100%-0.28em)] left-[-0.05em] h-[0.3em] w-[calc(100%+0.1em)] overflow-visible"
   viewBox="0 0 300 12"
   preserveAspectRatio="none"
   aria-hidden="true"

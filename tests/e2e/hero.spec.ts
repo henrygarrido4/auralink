@@ -185,6 +185,7 @@ test('the underline stays attached to its phrase at every width', async ({ page 
   for (const width of [360, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
+    await page.evaluate(() => document.fonts.ready);
     const geometry = await underline(page).evaluate((svg) => {
       const phrase = svg.parentElement!.getBoundingClientRect();
       const line = svg.querySelector('path')!.getBoundingClientRect();
@@ -199,8 +200,10 @@ test('the underline stays attached to its phrase at every width', async ({ page 
     expect(Math.abs(line.right - phrase.right), `${width}px: ends at the phrase`).toBeLessThan(
       0.1 * fontSize,
     );
+    // Mukta's line box is deeper than the Latin letters, and the stroke is lifted 0.2em into that
+    // spare descent. Its rising right end is the top of the box, still below the g.
     expect(line.top, `${width}px: below the letters`).toBeGreaterThan(
-      phrase.bottom - 0.1 * fontSize,
+      phrase.bottom - 0.25 * fontSize,
     );
     expect(line.bottom, `${width}px: close to the phrase`).toBeLessThan(
       phrase.bottom + 0.3 * fontSize,

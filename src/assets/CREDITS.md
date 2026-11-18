@@ -4,6 +4,14 @@ Every file in `src/assets/` that Auralink Studio did not create has an entry her
 
 Stock photos only illustrate the site's audience. Never caption one as a client, a team member, or a testimonial, and never name the people in it.
 
+## Web fonts
+
+Not files in this folder. Astro's font support downloads them at build time and the site serves the woff2 files. No request to a font host from the browser. Latin, upright, `font-display: swap`. Registered in `astro.config.mjs`.
+
+- Catamaran, used for text (`--font-main`), weights 400 and 700. Copyright 2014 The Catamaran Authors (pria.ravichandran@gmail.com). Designed by Pria Ravichandran.
+- Mukta, used for headings (`--font-headers` and `--font-subheaders`), weights 300 and 700. Copyright (c) 2014, Girish Dalvi, Ek Type.
+- Licence for both: SIL Open Font License 1.1, https://openfontlicense.org/open-font-license-official-text/ (read from the upstream `OFL.txt` on 2026-11-18). The fonts may be used, studied, modified, and redistributed, including embedded in a website, and may not be sold by themselves. A reserved font name stays with the copyright holder.
+
 ## `about/business-owner-laptop.webp`
 
 - Used in: the home page introduction, `src/components/sections/AboutIntro.astro`.

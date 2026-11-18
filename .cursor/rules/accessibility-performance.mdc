@@ -26,7 +26,7 @@ WCAG 2.2 quick reference: https://www.w3.org/WAI/WCAG22/quickref/
 - Lighthouse budgets live in `lighthouse.budgets.json` (mobile performance 0.9+, desktop 0.95+, accessibility 1, best practices 0.95+, SEO 1, metric and transfer limits) and are enforced by `npm run perf:audit`. They are lab measurements; field Core Web Vitals come only from the live site.
 - Ship JavaScript only for islands. A page with no interactivity should load zero component JS.
 - Images: `astro:assets` with explicit dimensions, modern formats (Astro outputs WebP/AVIF), `loading="lazy"` below the fold, `fetchpriority="high"` on the hero image only.
-- Fonts: system fonts by default. Any web font is self-hosted, subset, and uses `font-display: swap`; at most two families.
+- Fonts: Catamaran for text and Mukta for headings, self-hosted, latin subset, `font-display: swap`. At most these two families.
 - Third-party scripts (analytics, chat, embeds) need an explicit decision, load after interaction or idle, and must not block rendering. Record them in `docs/architecture.md`.
 - Avoid layout shift: reserve space for images, embeds, and client-only islands.
 
