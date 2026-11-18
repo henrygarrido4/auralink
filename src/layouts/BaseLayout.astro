@@ -2,6 +2,7 @@
 import { Font } from 'astro:assets';
 import '../styles/global.css';
 import Navbar from '../components/sections/Navbar.astro';
+import StickyCta from '../components/sections/StickyCta.astro';
 import { site } from '../data/site';
 
 interface Props {
@@ -69,5 +70,6 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : und
       <slot />
     </main>
     <slot name="footer" />
+    <StickyCta />
   </body>
 </html>

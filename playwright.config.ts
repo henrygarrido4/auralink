@@ -7,8 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
  *
  * Matrix: five projects. Desktop Chromium runs every suite; the other engines
  * and the mobile emulations run the cross-browser suites (smoke, a11y, motion,
- * navigation, hero, service-strip, introduction, services, work) and skip the suites whose result
- * cannot differ by engine (seo, layout, rendering). See docs/quality-checks.md for
+ * navigation, sticky-cta, hero, service-strip, introduction, services, work) and skip the suites
+ * whose result cannot differ by engine (seo, layout, rendering). See docs/quality-checks.md for
  * the matrix table.
  *
  * Local: `npm run test:e2e` builds then serves. CI builds once and sets
