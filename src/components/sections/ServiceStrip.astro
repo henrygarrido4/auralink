@@ -3,22 +3,25 @@ import Icon from '@/components/ui/Icon.astro';
 import { serviceCards } from '@/data/site';
 
 /**
- * Home page services strip, directly below the hero and above the introduction. It follows the
- * WPRiders logo row under that site's hero: an open white band with no rules and one row with
- * wide even gaps that moves right to left and fades out at both edges. In place of company logos
- * it sets the service-card titles as a line of type in the heading face: the first word bold, the
- * rest light, with a small star in the primary colour between one name and the next (owner's
- * choice of three treatments, 2026-11-18). High Scale Media's repeating services line is the
- * content idea only: these are Auralink's own capabilities, from `serviceCards`, not clients,
- * partners, or certifications, and they are labels rather than links.
+ * Home page services strip, directly below the hero and above the introduction. Its look follows
+ * the band under the hero of the reference the owner sent on 2026-11-18: a full-width band in the
+ * primary yellow with the names in near-black, over a second band in the navbar's neutral, tilted
+ * so that it shows above the yellow on the right and below it on the left. The names run off both
+ * edges of the screen. The section's upper half carries on the hero's background and its lower
+ * half the page's, so the change between them hides behind the yellow. The service-card titles
+ * are set as a line of type in the heading face: the first word bold, the rest light, with a small
+ * star between one name and the next (owner's choice of three treatments, 2026-11-18). High Scale
+ * Media's repeating services line is the content idea only: these are Auralink's own
+ * capabilities, from `serviceCards`, not clients, partners, or certifications, and they are labels
+ * rather than links.
  *
- * The motion is the `service-strip` utility (src/styles/global.css): two equal halves travel by
- * half the track, so the loop and its spacing meet. src/lib/service-strip.ts sets the speed and
- * repeats a set until the band fills the screen. The names hold still while the pointer is over
- * the band and move on when it leaves; there is no pause button (owner, 2026-11-18). The
- * stylesheet alone, and the noscript block, show every name in a wrapping row. Reduced motion
- * does the same and never starts the animation. The repeated half and every star are hidden from
- * assistive technology.
+ * The tilt and the motion are the `service-strip` utility (src/styles/global.css): two equal
+ * halves travel by half the track, so the loop and its spacing meet. src/lib/service-strip.ts sets
+ * the speed and repeats a set until the band fills the screen. The names hold still while the
+ * pointer is over the band and move on when it leaves; there is no pause button (owner,
+ * 2026-11-18). The stylesheet alone, and the noscript block, show every name in a wrapping row.
+ * Reduced motion does the same and never starts the animation. The repeated half and every star
+ * are hidden from assistive technology.
  */
 const halves = [{ clone: false }, { clone: true }] as const;
 
@@ -31,12 +34,17 @@ const split = (title: string) => {
 };
 ---
 
-<section data-service-strip aria-labelledby="service-strip-title" class="service-strip bg-base-100">
+<section
+  data-service-strip
+  aria-labelledby="service-strip-title"
+  class="service-strip bg-linear-to-b from-base-200 from-50% to-base-100 to-50%"
+>
   <h2 id="service-strip-title" class="sr-only">
     Services
   </h2>
-  {/* The row's vertical padding is on the viewport, so its edge fade never crops the type. */}
-  <div data-service-strip-viewport class="py-7 sm:py-9">
+  {/* The tilted band behind the yellow one. The utility cuts its shape. */}
+  <div data-service-strip-tilt class="bg-neutral"></div>
+  <div data-service-strip-viewport class="bg-primary py-5 text-primary-content sm:py-7">
     <div data-service-strip-track>
       {halves.map(({ clone }) => (
         <div
@@ -53,13 +61,9 @@ const split = (title: string) => {
                  * star sits midway between two names, the join between the two halves matches
                  * the spacing inside a half, and a wrapped row stays centred.
                  */
-                <li class="flex items-center gap-5 px-2.5 font-(family-name:--font-headers) text-2xl leading-none font-light tracking-tight whitespace-nowrap text-base-content sm:gap-10 sm:px-5 sm:text-3xl">
+                <li class="flex items-center gap-12 px-6 font-(family-name:--font-headers) text-2xl leading-none font-light tracking-tight whitespace-nowrap sm:gap-20 sm:px-10 sm:text-3xl">
                   {/* Lucide's outline star, filled, so it reads at this size. */}
-                  <Icon
-                    name="sparkle"
-                    fill="currentColor"
-                    class="size-4 shrink-0 text-primary sm:size-5"
-                  />
+                  <Icon name="sparkle" fill="currentColor" class="size-4 shrink-0 sm:size-5" />
                   <span data-service-strip-label>
                     <span class="font-bold">{lead}</span>
                     {rest}
@@ -96,8 +100,6 @@ const split = (title: string) => {
       }
       .service-strip [data-service-strip-viewport] {
         overflow: visible;
-        padding-inline: calc(var(--spacing) * 3.5);
-        mask-image: none;
       }
       .service-strip [data-service-strip-track] {
         display: block;

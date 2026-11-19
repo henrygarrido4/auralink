@@ -5,13 +5,18 @@ import { SERVICE_STRIP_SPEED_PX_PER_SECOND } from '../../src/lib/service-strip';
 /**
  * Home services strip (src/components/sections/ServiceStrip.astro), between the hero and the
  * introduction: the service-card titles as one line of type, the first word bold and the rest
- * light, with a small star before each. The titles scroll slowly right to left in one continuous
- * loop that fades out at both edges, hold still while the pointer is over the band, and otherwise
- * sit in a static wrapping row: under reduced motion and without JavaScript. There is no pause
- * button (owner, 2026-11-18). The repeated half and the stars stay out of the accessibility tree.
+ * light, with a small star before each, near-black on a yellow band. Behind the yellow lies a
+ * neutral band tilted 2.2 degrees, showing above it on the right and below it on the left, as in
+ * the owner's reference (2026-11-18). The titles scroll slowly right to left in one continuous
+ * loop that runs off both edges, hold still while the pointer is over the band, and otherwise sit
+ * in a static wrapping row: under reduced motion and without JavaScript. There is no pause button
+ * (owner, 2026-11-18). The repeated half and the stars stay out of the accessibility tree.
  * Nothing in the strip is a link or a control.
  */
 const WIDTHS = [360, 390, 768, 1024, 1440, 1920];
+
+/** The tilt of the band behind the yellow one, in degrees. */
+const TILT = 2.2;
 
 const strip = (page: Page) => page.getByRole('region', { name: 'Services', exact: true });
 const trackOf = (page: Page) => strip(page).locator('[data-service-strip-track]');
@@ -58,6 +63,64 @@ const travel = (track: Locator, ms: number) =>
 
 const pageOverflow = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+
+/** A CSS colour as the sRGB channels the page paints it in, through a 1x1 canvas. */
+const srgb = (page: Page, value: string) =>
+  page.evaluate((colour) => {
+    const probe = document.createElement('i');
+    probe.style.color = colour;
+    document.body.append(probe);
+    const computed = getComputedStyle(probe).color;
+    probe.remove();
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext('2d')!;
+    context.fillStyle = computed;
+    context.fillRect(0, 0, 1, 1);
+    return [...context.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+  }, value);
+
+/** The colours at the given points of a screenshot. The page decodes it, so no image library. */
+const pixelsAt = (page: Page, png: Buffer, points: (readonly [number, number])[]) =>
+  page.evaluate(
+    async ({ src, points }) => {
+      const image = new Image();
+      image.src = src;
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext('2d')!;
+      context.drawImage(image, 0, 0);
+      return points.map(([x, y]) => [
+        ...context.getImageData(Math.floor(x), Math.floor(y), 1, 1).data.slice(0, 3),
+      ]);
+    },
+    { src: `data:image/png;base64,${png.toString('base64')}`, points },
+  );
+
+/** WCAG contrast between two sRGB colours given as 0-255 channels. */
+const contrast = (a: number[], b: number[]) => {
+  const luminance = (rgb: number[]) => {
+    const [r, g, bl] = rgb.map((v) => {
+      const c = v / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (light + 0.05) / (dark + 0.05);
+};
+
+const sameColour = (actual: number[], expected: number[], what: string) => {
+  for (const [index, channel] of actual.entries()) {
+    expect(
+      Math.abs(channel - expected[index]),
+      `${what}: ${actual} vs ${expected}`,
+    ).toBeLessThanOrEqual(2);
+  }
+};
 
 /**
  * Where each named item sits, read in one `evaluate` over the strip's list. Not with
@@ -162,7 +225,7 @@ test.describe('services strip', () => {
         boundaryGap: gap(halfLabels[halfLabels.length - 1], cloneLabels[0]),
         misses,
         fontSize: Number.parseFloat(getComputedStyle(halfLabels[0]).fontSize),
-        bandHeight: box(root).height,
+        bandHeight: viewportBox.height,
       };
     });
 
@@ -177,10 +240,10 @@ test.describe('services strip', () => {
     expect(Math.abs(measured.internalGap - measured.boundaryGap)).toBeLessThan(1.5);
     expect(measured.misses, 'no empty gap across the band').toEqual([]);
     expect(measured.fontSize).toBeGreaterThanOrEqual(20);
-    // A short band: one line of type and its padding.
+    // A short yellow band: one line of type and its padding.
     expect(measured.bandHeight).toBeGreaterThanOrEqual(80);
     expect(measured.bandHeight).toBeLessThanOrEqual(120);
-    expect(await edgeFade(page), 'the row fades at its edges').toContain('linear-gradient');
+    expect(await edgeFade(page), 'the names run off both edges, with no fade').toBe('none');
     const speed = measured.halfWidth / (measured.duration / 1000);
     expect(speed).toBeGreaterThan(SERVICE_STRIP_SPEED_PX_PER_SECOND * 0.9);
     expect(speed).toBeLessThan(SERVICE_STRIP_SPEED_PX_PER_SECOND * 1.1);
@@ -188,6 +251,56 @@ test.describe('services strip', () => {
     // 400ms at 30px a second is 12px.
     expect(await travel(track, 400), 'the names move left').toBeLessThan(-6);
     expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
+  });
+
+  test('is a yellow band with near-black names, over a neutral band tilted behind it', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const band = strip(page);
+    const colours = await band.locator('[data-service-strip-viewport]').evaluate((element) => ({
+      band: getComputedStyle(element).backgroundColor,
+      label: getComputedStyle(element.querySelector('[data-service-strip-label]')!).color,
+      star: getComputedStyle(element.querySelector('li svg')!).color,
+    }));
+    const primary = await srgb(page, 'var(--color-primary)');
+    const label = await srgb(page, 'var(--color-primary-content)');
+    sameColour(await srgb(page, colours.band), primary, 'the band is the primary yellow');
+    sameColour(await srgb(page, colours.label), label, "the names take the primary's label colour");
+    expect(colours.star, 'the stars match the names').toBe(colours.label);
+    expect(contrast(label, primary)).toBeGreaterThanOrEqual(4.5);
+
+    // The tilted band shows as a wedge as deep as the section's padding at each edge of the
+    // screen: half the width times tan(2.2deg). The section's top continues the hero's
+    // background and its bottom the page's, so no seam shows beside the wedges.
+    await band.evaluate((element) =>
+      element.scrollIntoView({ block: 'center', behavior: 'instant' }),
+    );
+    const box = await band.boundingBox();
+    expect(box, 'the strip has a box').not.toBeNull();
+    if (!box) return;
+    const { rise, screenWidth } = await band.evaluate((element) => ({
+      rise: Number.parseFloat(getComputedStyle(element).paddingTop),
+      screenWidth: window.innerWidth,
+    }));
+    const expected = (screenWidth / 2) * Math.tan((TILT * Math.PI) / 180);
+    expect(Math.abs(rise - expected), `wedge depth ${rise}px`).toBeLessThan(0.5);
+    const png = await page.screenshot({ clip: box, scale: 'css' });
+    const [topRight, topLeft, bottomLeft, bottomRight] = await pixelsAt(page, png, [
+      [box.width - 3, rise / 2],
+      [2, rise / 2],
+      [2, box.height - rise / 2],
+      [box.width - 3, box.height - rise / 2],
+    ]);
+    const neutral = await srgb(page, 'var(--color-neutral)');
+    sameColour(topRight, neutral, 'the tilted band above the yellow on the right');
+    sameColour(bottomLeft, neutral, 'the tilted band below the yellow on the left');
+    sameColour(topLeft, await srgb(page, 'var(--color-base-200)'), "the hero's background above");
+    sameColour(
+      bottomRight,
+      await srgb(page, 'var(--color-base-100)'),
+      "the page's background below",
+    );
   });
 
   test('stays on one line and inside the page at every checked width', async ({ page }) => {
