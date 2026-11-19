@@ -392,7 +392,8 @@
 /*
  * Service orbit (home hero, src/components/ui/ServiceOrbit.astro; the owner's choice of three
  * treatments, 2026-11-18): the service icons rest on a ring around the laptop and phone, behind
- * them. This utility is the geometry and the motion. The component's classes are the paint.
+ * them, each with its name beside it. This utility is the geometry and the motion. The
+ * component's classes are the paint, and they place the names.
  *
  * Geometry. The frame is the wrapped content's box grown upward by --orbit-above and downward by
  * --orbit-below, the room its surroundings leave. The disc is the largest circle that fits the
@@ -400,18 +401,22 @@
  * ring never reaches past that room at any width. The chips ride a track half a chip inside the
  * disc, so no chip leaves the disc either. Each chip sits at the end of an arm with no height that
  * starts at the centre. Turning the arm carries the chip around, and the chip turns back by the
- * same angle, so its icon stays upright. An arm's angle is its resting angle (--orbit-start plus
- * its index times --orbit-step) plus two angles the track animates: --orbit-turn for the arrival
- * and --orbit-spin for the pointer. Both are registered, so they interpolate and the arms inherit
- * them. The fallbacks keep the chips in their resting places where @property is not supported.
+ * same angle, so its icon and its name stay upright. An arm's angle is its resting angle
+ * (--orbit-start plus its index times --orbit-step) plus --orbit-turn, which the track animates
+ * for the arrival. It is registered, so it interpolates and the arms inherit it. The fallbacks
+ * keep the chips in their resting places where @property is not supported.
  *
  * Motion. Nothing that starts by itself runs past five seconds (WCAG 2.2.2). On load the glow
  * fades in, the rings open from the centre outward, and the chips pop in and swing 150 degrees
- * into their resting places: all still after 3.3s. From then on the chips travel only while a
- * hovering pointer is over the component, one lap a minute, and hold their place when it leaves:
- * `orbit-spin` stays applied and paused, as daisyUI's `aura` does in `aura-hover`. A touch screen
- * has no hover, so it shows the arrival only. Under reduced motion none of this applies and
- * everything rests where it belongs.
+ * into their resting places, still after 3.3s. Their names fade in as they stop, so no text
+ * travels, and all of it is over after 3.4s. The chips stay put from then on: a name that
+ * travelled would slide behind the laptop. What a hovering pointer over the component brings is
+ * a light on the chips' ring, a short arc of the primary colour that fades in and circles, a lap
+ * every ten seconds. It fades out when the pointer leaves, and `orbit-light` stays applied and
+ * paused, so the next visit continues from there, as daisyUI's `aura` does in `aura-hover`. Only
+ * its `rotate` and `opacity` change, so the browser can move it without repainting. A touch
+ * screen has no hover, so it shows the arrival only. Under reduced motion none of this applies:
+ * everything rests where it belongs and the light stays off.
  */
 @utility orbit {
   & [data-orbit-frame] {
@@ -431,6 +436,7 @@
 
   & [data-orbit-glow],
   & [data-orbit-ring],
+  & [data-orbit-light],
   & [data-orbit-track] {
     position: absolute;
   }
@@ -453,10 +459,32 @@
     inset: calc(var(--orbit-chip) / 2);
   }
 
+  /*
+   * The light lies over the outer ring's 1px line, four pixels wide: a conic gradient, brightest
+   * at its head just before twelve o'clock and trailing off behind it, which a mask trims to the
+   * ring's line. Turning the element moves the light around. `transparent` leads the mix, as in
+   * `aura-lap`: an unlit ring is the safe fallback where color-mix() is not supported.
+   */
+  & [data-orbit-light] {
+    inset: calc(var(--orbit-chip) / 2 - 1.5px);
+    background-image: conic-gradient(
+      transparent 250deg,
+      color-mix(in oklab, transparent, var(--color-primary) 85%) 345deg,
+      var(--color-primary) 358deg,
+      transparent
+    );
+    mask-image: radial-gradient(
+      farthest-side,
+      transparent calc(100% - 4px),
+      #000 calc(100% - 3.5px)
+    );
+    opacity: 0;
+  }
+
   & [data-orbit-arm] {
     --orbit-angle: calc(
       var(--orbit-start, 0deg) + var(--orbit-index, 0) * var(--orbit-step, 60deg) +
-        var(--orbit-turn, 0deg) + var(--orbit-spin, 0deg)
+        var(--orbit-turn, 0deg)
     );
     position: absolute;
     top: 50%;
@@ -474,6 +502,22 @@
     height: var(--orbit-chip);
     margin: calc(var(--orbit-chip) / -2);
     rotate: calc(-1 * var(--orbit-angle));
+  }
+
+  /*
+   * A name sits next to its chip, so the ring's line and the pointer's light pass behind it. An
+   * outline in the hero's background colour, painted under the letters, keeps both 2px clear of
+   * them. On that background the outline itself cannot be seen. Only where the outline can go
+   * under the letters, since painted over them it would eat them, and not in forced colours,
+   * where the page behind takes the visitor's colours and the outline may not follow.
+   */
+  @supports (paint-order: stroke fill) {
+    @media not (forced-colors: active) {
+      & [data-orbit-name] {
+        -webkit-text-stroke: 4px var(--color-base-200);
+        paint-order: stroke fill;
+      }
+    }
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -498,9 +542,7 @@
     }
 
     & [data-orbit-track] {
-      animation:
-        orbit-arrive 2.8s cubic-bezier(0.25, 1, 0.5, 1) 0.5s both,
-        orbit-spin 60s linear infinite paused;
+      animation: orbit-arrive 2.8s cubic-bezier(0.25, 1, 0.5, 1) 0.5s both;
     }
 
     /* One after another, 90ms apart, while the track is still turning. */
@@ -509,22 +551,27 @@
         calc(0.55s + var(--orbit-index, 0) * 0.09s) both;
     }
 
+    /* By 2.5s a chip is within a degree of its place. The last name is solid at 3.4s. */
+    & [data-orbit-name] {
+      animation: orbit-fade 0.6s ease-out calc(2.5s + var(--orbit-index, 0) * 0.06s) both;
+    }
+
+    & [data-orbit-light] {
+      transition: opacity 0.4s;
+      animation: orbit-light 10s linear infinite paused;
+    }
+
     @media (hover: hover) {
-      &:hover [data-orbit-track] {
+      &:hover [data-orbit-light] {
+        opacity: 1;
         animation-play-state: running;
       }
     }
   }
 }
 
-/* How far the orbit's chips are from their resting places: on arrival, and under the pointer. */
+/* How far the orbit's chips are from their resting places while they arrive. */
 @property --orbit-turn {
-  syntax: '<angle>';
-  inherits: true;
-  initial-value: 0deg;
-}
-
-@property --orbit-spin {
   syntax: '<angle>';
   inherits: true;
   initial-value: 0deg;
@@ -536,9 +583,9 @@
   }
 }
 
-@keyframes orbit-spin {
+@keyframes orbit-light {
   to {
-    --orbit-spin: 360deg;
+    rotate: 360deg;
   }
 }
 

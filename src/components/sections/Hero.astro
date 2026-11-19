@@ -11,11 +11,12 @@ import { primaryCta } from '@/data/site';
  * Home page hero: positioning copy beside the laptop-and-phone image. The image is rendered from
  * the editable sources in design/hero-mockup/ (see its README). Two things move on load, once
  * each: the pencil underline under "brings them back", and the service icons, which swing into
- * place on a ring around the devices (ServiceOrbit; the owner's choice, 2026-11-18). After that
- * the icons travel only while a pointer is over the devices. The primary button's aura stays
- * unlit until the pointer or keyboard focus reaches it, then fades and circles like the navbar's.
- * When they leave it fades out and keeps its place, so the next visit continues from there. The
- * buttons themselves change colour at once, without transitions.
+ * place on a ring around the devices, where their names fade in (ServiceOrbit; the owner's
+ * choices, 2026-11-18). After that the icons stay put, and a light circles their ring while a
+ * pointer is over the devices. The primary button's aura stays unlit until the pointer or
+ * keyboard focus reaches it, then fades and circles like the navbar's. When they leave it fades
+ * out and keeps its place, so the next visit continues from there. The buttons themselves change
+ * colour at once, without transitions.
  */
 interface Props {
   /** Target of the "About us" button. */
@@ -83,13 +84,14 @@ const buttonClass =
     </div>
 
     {/*
-     * The service icons circle the devices. Their ring may use the room around the image, less
-     * 12px above it (the 3rem gap under the buttons when stacked, the top padding from lg) and,
-     * below it, less 36px of the bottom padding on phones and 20px from sm. Change these with
-     * that gap and those paddings. The first icon rests 5 degrees past three o'clock and the
-     * rest follow every 60. Only a narrow window, about 2 to 10 degrees, keeps every icon clear
-     * of the laptop and the phone at every width. tests/e2e/hero.spec.ts checks it against the
-     * image; a new image needs it tuned again.
+     * The service icons circle the devices, each with its name. Their ring may use the room
+     * around the image, less 12px above it (the 3rem gap under the buttons when stacked, the top
+     * padding from lg) and, below it, less 36px of the bottom padding on phones and 20px from
+     * sm. The names of the lowest icons hang into what is left, so change these with that gap
+     * and those paddings. The first icon rests 5 degrees past three o'clock and the rest follow
+     * every 60. Only a narrow window, about 2 to 10 degrees, keeps every icon clear of the
+     * laptop and the phone at every width. tests/e2e/hero.spec.ts checks the icons and their
+     * names against the image; a new image needs both tuned again.
      */}
     <ServiceOrbit
       start={5}

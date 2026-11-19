@@ -7,11 +7,13 @@ import { primaryCta, serviceCards } from '../../src/data/site';
  * hidden from assistive technology and already in place under reduced motion. The pencil
  * underline under "brings them back" is drawn after a short pause and stays attached to its phrase
  * at every width. The service icons swing into place on a ring around the devices
- * (src/components/ui/ServiceOrbit.astro): one chip per service card, resting clear of the laptop
- * and the phone, inside the hero and off the copy, at every width. Afterwards they travel only
- * while a pointer is over the devices, and keep their place when it leaves. The primary button's
- * aura stays unlit until the pointer reaches it, then fades and circles like the navbar's and
- * resumes where it stopped. It takes no room of its own, and never lights under reduced motion.
+ * (src/components/ui/ServiceOrbit.astro), where their names fade in: one chip per service card,
+ * named by its title, and both chip and name resting clear of the laptop and the phone, inside
+ * the hero and off the copy, at every width. Afterwards the icons stay put. While a pointer is
+ * over the devices a light circles their ring, and it keeps its place when the pointer leaves.
+ * The primary button's aura stays unlit until the pointer reaches it, then fades and circles like
+ * the navbar's and resumes where it stopped. It takes no room of its own, and never lights under
+ * reduced motion.
  */
 const HEADLINE = 'Websites that win customers. Email that brings them back.';
 
@@ -22,7 +24,7 @@ const heroAura = (page: Page) => hero(page).locator('.aura');
 const devices = (page: Page) => hero(page).getByRole('img', { name: /laptop and phone/i });
 const orbit = (page: Page) => hero(page).locator('[data-orbit-frame]');
 
-/** The animations that bring the orbit in on load. Its `orbit-spin` waits for the pointer. */
+/** The animations that bring the orbit in on load. Its `orbit-light` waits for the pointer. */
 const ORBIT_ARRIVAL = ['orbit-arrive', 'orbit-fade', 'orbit-pop', 'orbit-ring'];
 
 const hasHover = (page: Page) => page.evaluate(() => matchMedia('(hover: hover)').matches);
@@ -31,27 +33,24 @@ const hasHover = (page: Page) => page.evaluate(() => matchMedia('(hover: hover)'
 const apart = (a: number, b: number) => Math.abs(((a - b + 540) % 360) - 180);
 
 /**
- * Where each chip is on the ring: its angle around the centre, clockwise from three o'clock, and
- * its distance from the centre. `spinTo` first moves the pointer-driven spin to that many
- * milliseconds, in the same step, so a running spin cannot move on before the chips are measured.
+ * Each chip on the ring: its angle around the centre, clockwise from three o'clock, its distance
+ * from the centre, and the angle the component gives its place (the first place's angle plus
+ * equal steps).
  */
-const chipPlaces = (page: Page, spinTo?: number) =>
-  orbit(page).evaluate((frame, spinTo) => {
-    if (spinTo !== undefined) {
-      for (const animation of frame.getAnimations({ subtree: true })) {
-        if ((animation as CSSAnimation).animationName === 'orbit-spin') {
-          animation.currentTime = spinTo;
-        }
-      }
-    }
+const chipPlaces = (page: Page) =>
+  orbit(page).evaluate((frame) => {
+    const degrees = (name: string) => parseFloat(getComputedStyle(frame).getPropertyValue(name));
     const disc = frame.querySelector('[data-orbit-disc]')!.getBoundingClientRect();
     const centre = { x: disc.left + disc.width / 2, y: disc.top + disc.height / 2 };
     return Array.from(frame.querySelectorAll<HTMLElement>('[data-orbit-chip]'), (chip) => {
       const box = chip.getBoundingClientRect();
       const x = box.left + box.width / 2 - centre.x;
       const y = box.top + box.height / 2 - centre.y;
+      const place = Number(getComputedStyle(chip).getPropertyValue('--orbit-index'));
       return {
         id: chip.dataset.orbitChip,
+        place,
+        resting: (degrees('--orbit-start') + place * degrees('--orbit-step')) % 360,
         angle: ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360,
         distance: Math.hypot(x, y),
         // A turned box has a larger bounding box than its own size.
@@ -60,51 +59,40 @@ const chipPlaces = (page: Page, spinTo?: number) =>
           Math.abs(box.height - chip.offsetHeight) < 0.5,
       };
     });
-  }, spinTo);
-
-/** Where the chips rest: from the first one's angle, at equal steps, as the component sets them. */
-const restingAngles = (page: Page) =>
-  orbit(page).evaluate((frame) => {
-    const style = getComputedStyle(frame);
-    const degrees = (name: string) => parseFloat(style.getPropertyValue(name));
-    const count = frame.querySelectorAll('[data-orbit-chip]').length;
-    return Array.from(
-      { length: count },
-      (_, index) => (degrees('--orbit-start') + index * degrees('--orbit-step')) % 360,
-    );
   });
 
-/** Every chip is in its resting place, turned by `turn` degrees, with its icon upright. */
-async function expectChipsInPlace(page: Page, turn = 0) {
-  const resting = await restingAngles(page);
-  const places = await chipPlaces(page, turn ? (turn / 360) * 60_000 : undefined);
-  expect(
-    places.map((place) => place.id),
-    'one chip per service card, in order',
-  ).toEqual(serviceCards.map((card) => card.id));
-  places.forEach((place, index) => {
-    const expected = (resting[index] + turn) % 360;
+/** Every chip is in a resting place of its own, on the ring, with its icon and name upright. */
+async function expectChipsInPlace(page: Page) {
+  const chips = await chipPlaces(page);
+  expect(chips.map((chip) => chip.id).sort(), 'one chip per service card').toEqual(
+    serviceCards.map((card) => card.id).sort(),
+  );
+  expect(chips.map((chip) => chip.place).sort(), 'every place on the ring taken once').toEqual(
+    chips.map((_, index) => index),
+  );
+  for (const chip of chips) {
     expect(
-      apart(place.angle, expected),
-      `${place.id} is at ${expected} degrees, not ${place.angle.toFixed(1)}`,
+      apart(chip.angle, chip.resting),
+      `${chip.id} is at ${chip.resting} degrees, not ${chip.angle.toFixed(1)}`,
     ).toBeLessThan(1);
-    expect(place.upright, `${place.id} is upright`).toBe(true);
-    expect(place.distance, `${place.id} is on the ring`).toBeCloseTo(places[0].distance, 0);
-  });
+    expect(chip.upright, `${chip.id} is upright`).toBe(true);
+    expect(chip.distance, `${chip.id} is on the ring`).toBeCloseTo(chips[0].distance, 0);
+  }
 }
 
-/** The orbit's pointer-driven spin: whether it plays, how far it has got, and its timing. */
-const orbitSpin = (page: Page) =>
+/** The pointer's light on the ring: whether it plays, how far round, how bright, its timing. */
+const orbitLight = (page: Page) =>
   orbit(page).evaluate((frame) => {
-    const spins = frame
+    const lights = frame
       .getAnimations({ subtree: true })
-      .filter((animation) => (animation as CSSAnimation).animationName === 'orbit-spin');
-    const [spin] = spins;
-    const { duration, easing, iterations } = spin?.effect?.getTiming() ?? {};
+      .filter((animation) => (animation as CSSAnimation).animationName === 'orbit-light');
+    const [light] = lights;
+    const { duration, easing, iterations } = light?.effect?.getTiming() ?? {};
     return {
-      count: spins.length,
-      playing: spin?.playState === 'running',
-      time: spin ? Number(spin.currentTime) : null,
+      count: lights.length,
+      playing: light?.playState === 'running',
+      time: light ? Number(light.currentTime) : null,
+      brightness: Number(getComputedStyle(frame.querySelector('[data-orbit-light]')!).opacity),
       timing: { duration, easing, iterations },
     };
   });
@@ -170,22 +158,25 @@ test('loads the device image eagerly with its space reserved', async ({ page }) 
   await expect(hero(page).locator('picture source[type="image/avif"]')).toHaveCount(1);
 });
 
-test('one chip per service circles the devices, as decoration only', async ({ page }) => {
+test('one named chip per service circles the devices', async ({ page }) => {
   await page.goto('/');
   const frame = orbit(page);
+  // Kept from assistive technology: the strip after the hero lists the same names as a list.
   await expect(frame).toHaveAttribute('aria-hidden', 'true');
-  await expect(frame, 'no text').toHaveText('');
   await expect(
     frame.locator('a, button, input, select, textarea, [tabindex]'),
     'nothing to focus',
   ).toHaveCount(0);
 
+  // Each chip shows its card's icon and its card's title, word for word.
   await expect(frame.locator('[data-orbit-chip]')).toHaveCount(serviceCards.length);
   for (const card of serviceCards) {
-    await expect(
-      frame.locator(`[data-orbit-chip="${card.id}"] svg`),
-      `${card.title}: one icon`,
-    ).toHaveCount(1);
+    const chip = frame.locator(`[data-orbit-chip="${card.id}"]`);
+    await expect(chip.locator('svg'), `${card.title}: one icon`).toHaveCount(1);
+    await expect(chip.locator('[data-orbit-name]'), `${card.title}: its name`).toHaveText(
+      card.title,
+    );
+    await expect(chip, `${card.title}: nothing else`).toHaveText(card.title);
   }
 
   // The headline's two promises, websites and email, take the primary colour. The rest do not.
@@ -206,14 +197,16 @@ test('one chip per service circles the devices, as decoration only', async ({ pa
   ]);
 });
 
-test('the service icons rest clear of the devices and the copy, inside the hero, at every width', async ({
+test('the service icons and their names rest clear of the devices and the copy, inside the hero, at every width', async ({
   page,
 }) => {
-  // Reduced motion shows the resting places at once. With motion only transforms differ.
+  // Reduced motion shows the resting places at once. With motion only transforms and fades differ.
   await page.emulateMedia({ reducedMotion: 'reduce' });
   for (const width of [320, 360, 390, 768, 1024, 1280, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
+    // The names are measured in Catamaran, not in the wider face a browser shows until it loads.
+    await page.evaluate(() => document.fonts.ready);
     await expectChipsInPlace(page);
 
     const measured = await hero(page).evaluate(async (section) => {
@@ -254,44 +247,82 @@ test('the service icons rest clear of the devices and the copy, inside the hero,
         return covered / points;
       };
 
-      // The disc is every place a chip can reach. It must miss the copy, with a little air.
-      const copy = Array.from(section.querySelector('h1')!.parentElement!.children);
-      const touchesCopy = copy.some((element) => {
-        const box = element.getBoundingClientRect();
-        return !(
-          disc.right <= box.left - 8 ||
-          disc.left >= box.right + 8 ||
-          disc.bottom <= box.top - 8 ||
-          disc.top >= box.bottom + 8
+      // The copy, with a little air around it: nothing of the orbit may reach into that.
+      const copy = Array.from(section.querySelector('h1')!.parentElement!.children, (element) =>
+        element.getBoundingClientRect(),
+      );
+      const touchesCopy = (box: DOMRect) =>
+        copy.some(
+          (text) =>
+            !(
+              box.right <= text.left - 8 ||
+              box.left >= text.right + 8 ||
+              box.bottom <= text.top - 8 ||
+              box.top >= text.bottom + 8
+            ),
         );
-      });
+      const overlap = (a: DOMRect, b: DOMRect) =>
+        !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+      const screen = document.documentElement.clientWidth;
+      const chips = Array.from(frame.querySelectorAll<HTMLElement>('[data-orbit-chip]'));
+      const names = chips.map((chip) =>
+        chip.querySelector('[data-orbit-name]')!.getBoundingClientRect(),
+      );
 
       return {
         // The laptop's keyboard is at the middle of the image: proof that the sampling sees it.
         devicesSeen: opaqueAt(shown.left + shown.width / 2, shown.top + shown.height / 2),
-        touchesCopy,
+        // The disc is every place a chip can reach.
+        discTouchesCopy: touchesCopy(disc),
         room: {
           top: disc.top - hero.top,
           bottom: hero.bottom - disc.bottom,
           left: disc.left,
-          right: document.documentElement.clientWidth - disc.right,
+          right: screen - disc.right,
         },
-        chips: Array.from(frame.querySelectorAll<HTMLElement>('[data-orbit-chip]'), (chip) => {
+        chips: chips.map((chip, index) => {
           const box = chip.getBoundingClientRect();
           const centre = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
           const icon = chip.querySelector('svg')!.getBoundingClientRect();
+          const name = names[index];
+          // The name's box, sampled edge to edge: any opaque point means a device is over it.
+          let nameHidden = 0;
+          for (let i = 0; i <= 12; i += 1) {
+            for (let j = 0; j <= 6; j += 1) {
+              const x = name.left + (i / 12) * name.width;
+              const y = name.top + (j / 6) * name.height;
+              if (opaqueAt(x, y)) nameHidden += 1;
+            }
+          }
           return {
             id: chip.dataset.orbitChip,
             // Lucide draws inside the middle 20 of its 24 units.
             iconHidden: hidden(centre, (icon.width / 2) * (20 / 24), false),
             chipHidden: hidden(centre, box.width / 2, true),
+            nameHidden,
+            nameSize: parseFloat(
+              getComputedStyle(chip.querySelector('[data-orbit-name]')!).fontSize,
+            ),
+            nameRoom: {
+              top: name.top - hero.top,
+              bottom: hero.bottom - name.bottom,
+              left: name.left,
+              right: screen - name.right,
+            },
+            nameTouchesCopy: touchesCopy(name),
+            // Another chip, or another chip's name, under this name.
+            nameCrowded: chips.some(
+              (other, at) =>
+                at !== index &&
+                (overlap(name, other.getBoundingClientRect()) || overlap(name, names[at])),
+            ),
           };
         }),
       };
     });
 
     expect(measured.devicesSeen, `${width}px: the image was sampled`).toBe(true);
-    expect(measured.touchesCopy, `${width}px: the ring keeps off the copy`).toBe(false);
+    expect(measured.discTouchesCopy, `${width}px: the ring keeps off the copy`).toBe(false);
     expect(measured.room.top, `${width}px: below the navbar`).toBeGreaterThanOrEqual(8);
     expect(measured.room.bottom, `${width}px: above the hero's lower edge`).toBeGreaterThanOrEqual(
       8,
@@ -299,11 +330,20 @@ test('the service icons rest clear of the devices and the copy, inside the hero,
     expect(measured.room.left, `${width}px: inside the screen`).toBeGreaterThanOrEqual(0);
     expect(measured.room.right, `${width}px: inside the screen`).toBeGreaterThanOrEqual(0);
     for (const chip of measured.chips) {
-      expect(chip.iconHidden, `${width}px: no device covers the ${chip.id} icon`).toBe(0);
+      const at = `${width}px: the ${chip.id}`;
+      expect(chip.iconHidden, `${at} icon has no device over it`).toBe(0);
       expect(
         chip.chipHidden,
-        `${width}px: at most a fifth of the ${chip.id} chip is tucked behind a device`,
+        `${at} chip has at most a fifth tucked behind a device`,
       ).toBeLessThanOrEqual(0.2);
+      expect(chip.nameHidden, `${at} name has no device over it`).toBe(0);
+      expect(chip.nameSize, `${at} name is large enough to read`).toBeGreaterThanOrEqual(10);
+      expect(chip.nameRoom.left, `${at} name is on the screen`).toBeGreaterThanOrEqual(2);
+      expect(chip.nameRoom.right, `${at} name is on the screen`).toBeGreaterThanOrEqual(2);
+      expect(chip.nameRoom.top, `${at} name is below the navbar`).toBeGreaterThanOrEqual(8);
+      expect(chip.nameRoom.bottom, `${at} name is inside the hero`).toBeGreaterThanOrEqual(8);
+      expect(chip.nameTouchesCopy, `${at} name keeps off the copy`).toBe(false);
+      expect(chip.nameCrowded, `${at} name has its place to itself`).toBe(false);
     }
   }
 });
@@ -318,7 +358,7 @@ test.describe('motion allowed', () => {
     await expect(underline(page)).toHaveAttribute('aria-hidden', 'true');
 
     // Everything in the hero that plays by itself, still playing or already over. What waits for
-    // the pointer is paused: the primary's aura and the orbit's spin.
+    // the pointer is paused: the primary's aura and the orbit's light.
     const started = await hero(page).evaluate((section) =>
       section
         .getAnimations({ subtree: true })
@@ -347,7 +387,27 @@ test.describe('motion allowed', () => {
       expect(animation.end, `${animation.name} is over in time`).toBeLessThanOrEqual(3500);
     }
 
-    // Once drawn, the line stays. Once arrived, every icon rests in its place, upright and solid.
+    // The names are the last to arrive: they fade in only once their chips have all but stopped
+    // (the swing is 99% done after 2.5s), so no text travels.
+    const names = await orbit(page).evaluate((frame) =>
+      Array.from(frame.querySelectorAll('[data-orbit-name]'), (name) =>
+        name.getAnimations().map((animation) => ({
+          name: (animation as CSSAnimation).animationName,
+          delay: Number(animation.effect!.getTiming().delay),
+        })),
+      ),
+    );
+    expect(names).toHaveLength(serviceCards.length);
+    for (const fades of names) {
+      expect(
+        fades.map((fade) => fade.name),
+        'a name only fades',
+      ).toEqual(['orbit-fade']);
+      expect(fades[0].delay, 'after its chip has arrived').toBeGreaterThanOrEqual(2500);
+    }
+
+    // Once drawn, the line stays. Once arrived, every icon rests in its place, upright and solid,
+    // with its name showing.
     await hero(page).evaluate(async (section) => {
       const playing = section
         .getAnimations({ subtree: true })
@@ -356,61 +416,80 @@ test.describe('motion allowed', () => {
     });
     await expect(underline(page).locator('path')).toHaveCSS('stroke-dashoffset', '0px');
     await expectChipsInPlace(page);
-    for (const chip of await orbit(page).locator('[data-orbit-chip]').all()) {
-      await expect(chip).toHaveCSS('opacity', '1');
+    for (const part of await orbit(page).locator('[data-orbit-chip], [data-orbit-name]').all()) {
+      await expect(part).toHaveCSS('opacity', '1');
     }
   });
 
-  test('the service icons travel only under the pointer, and keep their place when it leaves', async ({
+  test('a light circles the ring only under the pointer, and the icons stay where they are', async ({
     page,
   }) => {
     await page.goto('/');
+    const light = orbit(page).locator('[data-orbit-light]');
 
-    // Applied and waiting, so a later visit can continue: nothing travels by itself.
-    const waiting = await orbitSpin(page);
-    expect(waiting.count, 'one spin, on the track').toBe(1);
-    expect(waiting.playing, 'nothing travels at rest').toBe(false);
+    // Applied and waiting, so a later visit can continue: dark, and nothing circles by itself.
+    const waiting = await orbitLight(page);
+    expect(waiting.count, 'one light, on the ring').toBe(1);
+    expect(waiting.playing, 'nothing circles at rest').toBe(false);
     expect(waiting.time).toBe(0);
+    expect(waiting.brightness, 'dark at rest').toBe(0);
     expect(
       waiting.timing,
-      'a lap a minute, at an even pace, for as long as the pointer stays',
-    ).toEqual({ duration: 60_000, easing: 'linear', iterations: Infinity });
+      'a lap every ten seconds, at an even pace, for as long as the pointer stays',
+    ).toEqual({ duration: 10_000, easing: 'linear', iterations: Infinity });
+    // It fades, in both directions, as the buttons' aura does.
+    await expect(light).toHaveCSS('transition-property', 'opacity');
+    await expect(light).toHaveCSS('transition-duration', '0.4s');
 
-    // A touch screen has no hover: a tap on the devices starts nothing.
+    // A touch screen has no hover: a tap on the devices lights nothing.
     if (!(await hasHover(page))) {
       await devices(page).tap();
-      expect((await orbitSpin(page)).playing, 'still waiting after a tap').toBe(false);
+      const tapped = await orbitLight(page);
+      expect(tapped.playing, 'still waiting after a tap').toBe(false);
+      expect(tapped.brightness, 'still dark after a tap').toBe(0);
       return;
     }
 
     await devices(page).hover();
-    await expect.poll(async () => (await orbitSpin(page)).playing).toBe(true);
-    await expect.poll(async () => (await orbitSpin(page)).time ?? 0).toBeGreaterThan(100);
-    const carried = (await orbitSpin(page)).time ?? 0;
+    await expect.poll(async () => (await orbitLight(page)).playing).toBe(true);
+    await expect.poll(async () => (await orbitLight(page)).brightness).toBe(1);
+    await expect.poll(async () => (await orbitLight(page)).time ?? 0).toBeGreaterThan(100);
+    const carried = (await orbitLight(page)).time ?? 0;
 
-    // The pointer leaves: the icons stop where they are.
-    await page.mouse.move(0, 400);
-    await expect.poll(async () => (await orbitSpin(page)).playing).toBe(false);
-    expect(
-      (await orbitSpin(page)).time ?? 0,
-      'the spin did not jump back to the start',
-    ).toBeGreaterThanOrEqual(carried);
-
-    // A sixth of a lap on, each icon stands where the next one rests, still upright. Measured
-    // from the resting places, so skip to the end of the arrival first.
+    // Only the light moves. Skip to the end of the arrival (everything here that has an end):
+    // every icon is in its resting place.
     await orbit(page).evaluate((frame) => {
       for (const animation of frame.getAnimations({ subtree: true })) {
-        if (animation.playState !== 'paused') animation.finish();
+        const end = Number(animation.effect?.getComputedTiming().endTime);
+        if (Number.isFinite(end)) animation.finish();
       }
     });
-    await expectChipsInPlace(page, 360 / serviceCards.length);
+    await expect.poll(async () => (await orbitLight(page)).playing, 'still circling').toBe(true);
+    await expectChipsInPlace(page);
 
-    // The pointer returns: they go on from there.
+    // The pointer leaves: the light fades out and stops where it is.
+    await page.mouse.move(0, 400);
+    await expect.poll(async () => (await orbitLight(page)).playing).toBe(false);
+    expect(
+      (await orbitLight(page)).time ?? 0,
+      'the light did not jump back to the start',
+    ).toBeGreaterThanOrEqual(carried);
+    await expect.poll(async () => (await orbitLight(page)).brightness).toBe(0);
+
+    // Park it at a known place, then come back: it goes on from there and fades in again.
+    await light.evaluate((element) => {
+      for (const animation of element.getAnimations()) {
+        if ((animation as CSSAnimation).animationName === 'orbit-light') {
+          animation.currentTime = 4000;
+        }
+      }
+    });
     await devices(page).hover();
-    await expect.poll(async () => (await orbitSpin(page)).playing).toBe(true);
-    const resumed = (await orbitSpin(page)).time ?? 0;
-    expect(resumed, 'the spin continues from where it stopped').toBeGreaterThanOrEqual(10_000);
-    expect(resumed, 'the spin did not start over').toBeLessThan(15_000);
+    await expect.poll(async () => (await orbitLight(page)).playing).toBe(true);
+    const resumed = (await orbitLight(page)).time ?? 0;
+    expect(resumed, 'the light continues from where it stopped').toBeGreaterThanOrEqual(4000);
+    expect(resumed, 'the light did not start over').toBeLessThan(9000);
+    await expect.poll(async () => (await orbitLight(page)).brightness).toBe(1);
   });
 
   test('the buttons change colour without transitions', async ({ page }) => {
@@ -486,19 +565,20 @@ test.describe('reduced motion', () => {
     await expect(path).toHaveCSS('stroke-dashoffset', '0px');
   });
 
-  test('the service icons rest in their places and never move, even under the pointer', async ({
+  test('the service icons and their names rest in place, and no light comes, even under the pointer', async ({
     page,
   }) => {
     await page.goto('/');
     if (await hasHover(page)) await devices(page).hover();
     expect(
       await orbit(page).evaluate((frame) => frame.getAnimations({ subtree: true }).length),
-      'no arrival and no spin',
+      'no arrival, no fade, and no light',
     ).toBe(0);
     await expectChipsInPlace(page);
-    for (const chip of await orbit(page).locator('[data-orbit-chip]').all()) {
-      await expect(chip).toHaveCSS('opacity', '1');
+    for (const part of await orbit(page).locator('[data-orbit-chip], [data-orbit-name]').all()) {
+      await expect(part).toHaveCSS('opacity', '1');
     }
+    await expect(orbit(page).locator('[data-orbit-light]')).toHaveCSS('opacity', '0');
   });
 
   test("the primary's aura stays off and still, even under the pointer", async ({ page }) => {

@@ -4,18 +4,22 @@ import Icon from '@/components/ui/Icon.astro';
 import { serviceCards } from '@/data/site';
 
 /**
- * The service icons on a ring around whatever this wraps: the laptop and phone in the home hero
- * (the owner's choice of three treatments, 2026-11-18). One round chip per service card, evenly
- * spaced, behind the wrapped content, over a soft glow in the primary colour and two inner rings.
- * The chips for websites and email, the two promises in the hero's headline, are filled with the
- * primary colour. Decoration only: hidden from assistive technology, with no text and nothing to
- * focus. The services are named in the strip and the cards further down the page.
+ * The services as named icons on a ring around what this wraps: the laptop and phone in the home
+ * hero (the owner's choice of three treatments, 2026-11-18). One round chip per service card,
+ * evenly spaced, behind the wrapped content, over a soft glow in the primary colour and two inner
+ * rings. Each chip carries its card's title, like the name under an app's icon, so nobody has to
+ * guess what an icon stands for (owner, 2026-11-18). The chips for websites and email, the two
+ * promises in the hero's headline, are filled with the primary colour.
+ *
+ * Hidden from assistive technology, with nothing to focus: the strip straight after the hero
+ * lists the same six names as a real list, and reading them out twice in a row helps nobody.
  *
  * The `orbit` utility (src/styles/global.css) holds the geometry and the motion; the classes here
  * are the paint. The ring is the largest circle that fits the wrapped content's box once that box
  * is grown by `--orbit-above` and `--orbit-below`, so set those two on this component to the room
- * its surroundings leave. The chips arrive once on load, then travel only while a pointer is over
- * the component, and never under reduced motion. No JavaScript.
+ * its surroundings leave. On load the chips swing into place and their names fade in. After that
+ * nothing here travels: while a pointer is over the component a light circles the ring, as it
+ * does around the site's buttons. Nothing moves under reduced motion. No JavaScript.
  */
 interface Props extends HTMLAttributes<'div'> {
   /**
@@ -30,6 +34,52 @@ const { start = 0, class: className, ...rest } = Astro.props;
 /** The cards behind the headline's two promises, websites and email. */
 const accented: readonly string[] = ['custom-websites', 'email-automation'];
 
+/**
+ * The order around the ring, clockwise from the right-hand place. Not the cards' order: each name
+ * goes where the devices leave room for it. The two places at the top take one line above the
+ * chip, the two at the sides a narrow name, and the two at the bottom the longest. The accented
+ * pair shares the bottom. A card not listed here follows the others.
+ */
+const order: readonly string[] = [
+  'wordpress-websites',
+  'custom-websites',
+  'email-automation',
+  'shopify-stores',
+  'seo',
+  'aeo-geo',
+];
+const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length);
+const placed = [...serviceCards].sort((a, b) => rank(a.id) - rank(b.id));
+
+/** Under its chip and centred on it: the place with room on both sides. */
+const below = 'top-full left-1/2 mt-1 -translate-x-1/2 text-center';
+/** Over its chip: under the two top chips are the laptop's lid and the phone. */
+const above = 'bottom-full left-1/2 mb-1 -translate-x-1/2 text-center';
+/**
+ * Where each place's name sits, in the ring's order, so that none lies behind a device or leaves
+ * the screen. The names at the sides hang outward: from the right-hand chip's left edge, and at
+ * the left ending a fifth of a chip short of its right edge, where the lid begins.
+ */
+const namePlaces = [
+  'top-full left-0 mt-1 text-left',
+  below,
+  below,
+  'top-full right-1/5 mt-1 text-right',
+  above,
+  above,
+];
+
+/**
+ * A name on two lines when it is long: the last word goes under the rest, which keeps the name
+ * narrow enough for its place. "SEO" and "AEO & GEO" stay on one.
+ */
+const lines = (title: string) => {
+  const lastSpace = title.lastIndexOf(' ');
+  return lastSpace < 0 || title.length < 10
+    ? { head: title, tail: '' }
+    : { head: title.slice(0, lastSpace), tail: title.slice(lastSpace + 1) };
+};
+
 /** From the centre outward. The outer ring is the one the chips ride. */
 const rings = ['inner', 'middle', 'outer'] as const;
 ---
@@ -39,7 +89,7 @@ const rings = ['inner', 'middle', 'outer'] as const;
   <div
     data-orbit-frame
     aria-hidden="true"
-    style={`--orbit-start: ${start}deg; --orbit-step: ${360 / serviceCards.length}deg`}
+    style={`--orbit-start: ${start}deg; --orbit-step: ${360 / placed.length}deg`}
     class="[--orbit-chip:min(2.25rem,10vw)] sm:[--orbit-chip:2.75rem] xl:[--orbit-chip:3.25rem]"
   >
     <div data-orbit-disc>
@@ -51,22 +101,42 @@ const rings = ['inner', 'middle', 'outer'] as const;
       {rings.map((ring) => (
         <span data-orbit-ring={ring} class="rounded-full border border-base-content/15"></span>
       ))}
+      <span data-orbit-light class="rounded-full"></span>
       <div data-orbit-track>
-        {serviceCards.map((card, index) => (
-          <span data-orbit-arm style={`--orbit-index: ${index}`}>
-            <span
-              data-orbit-chip={card.id}
-              class:list={[
-                'grid place-items-center rounded-full border shadow-md',
-                accented.includes(card.id)
-                  ? 'border-transparent bg-primary text-primary-content'
-                  : 'border-base-300 bg-base-100 text-base-content',
-              ]}
-            >
-              <Icon name={card.icon} class="size-1/2" stroke-width="1.75" />
+        {placed.map((card, place) => {
+          const { head, tail } = lines(card.title);
+          return (
+            <span data-orbit-arm style={`--orbit-index: ${place}`}>
+              <span
+                data-orbit-chip={card.id}
+                class:list={[
+                  'grid place-items-center rounded-full border shadow-md',
+                  accented.includes(card.id)
+                    ? 'border-transparent bg-primary text-primary-content'
+                    : 'border-base-300 bg-base-100 text-base-content',
+                ]}
+              >
+                <Icon name={card.icon} class="size-1/2" stroke-width="1.75" />
+                {/*
+                 * 11px on phones (less below 344px wide, so the side names stay on screen), 12px
+                 * from sm, 13px from xl, where the chips are largest. Tight leading keeps two
+                 * lines together as one name. The space keeps the words apart in the text.
+                 */}
+                <span
+                  data-orbit-name
+                  class:list={[
+                    'absolute w-max text-[min(0.6875rem,3.2vw)] leading-[1.15] font-bold text-base-content sm:text-xs xl:text-[0.8125rem]',
+                    namePlaces[place] ?? below,
+                  ]}
+                >
+                  {head}
+                  {tail && ' '}
+                  {tail && <span class="block">{tail}</span>}
+                </span>
+              </span>
             </span>
-          </span>
-        ))}
+          );
+        })}
       </div>
     </div>
   </div>
