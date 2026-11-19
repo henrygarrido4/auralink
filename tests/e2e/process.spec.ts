@@ -2,14 +2,14 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { processSteps } from '../../src/data/site';
 
 /**
- * Home page process (src/components/sections/Process.astro), directly under selected work, after
+ * Home page process (src/components/sections/Process.astro), directly under who we work with, after
  * the reference the owner named (fdicreative.com, "4 Easy Steps to Launch!"). The four steps from
  * `processSteps` are an ordered list, and each shows an icon, its number, and its title, stacked and
  * centred, as the reference's do. Below md the steps stack, with an arrow pointing down between
  * them; from md they share one row with an arrow pointing across between them, and the icons,
  * numbers, and titles each share a line. The band is the reference's charcoal with fine dark lines
- * over it. Above the steps there is only the heading: no eyebrow, rule, sentence, or button (owner,
- * 2026-11-18). No client-side JavaScript.
+ * over it. Above the steps there is only the heading, left-aligned like the other sections: no
+ * eyebrow, rule, sentence, or button (owner, 2026-11-18). No client-side JavaScript.
  */
 const HEADING = 'Four easy steps. From quote to live work.';
 /** The reference's band colour, #212121. */
@@ -91,25 +91,29 @@ const paintedColours = async (page: Page, element: Locator) => {
   return coloursIn(page, await element.screenshot());
 };
 
-test('follows selected work and shows the four steps in order: icon, number, title', async ({
+test('follows who we work with and shows the four steps in order: icon, number, title', async ({
   page,
 }) => {
   await page.goto('/');
   await expect(items(page)).toHaveCount(processSteps.length);
 
   const order = await page.evaluate(() => {
-    const work = document.getElementById('work');
+    const before = document.getElementById('who-we-work-with');
     const process = document.getElementById('process');
     return Boolean(
-      work && process && work.compareDocumentPosition(process) & Node.DOCUMENT_POSITION_FOLLOWING,
+      before &&
+      process &&
+      before.compareDocumentPosition(process) & Node.DOCUMENT_POSITION_FOLLOWING,
     );
   });
-  expect(order, 'the process section follows selected work').toBe(true);
-  const [workBox, processBox] = [
-    (await page.locator('#work').boundingBox())!,
+  expect(order, 'the process section follows who we work with').toBe(true);
+  const [beforeBox, processBox] = [
+    (await page.locator('#who-we-work-with').boundingBox())!,
     (await page.locator('#process').boundingBox())!,
   ];
-  expect(processBox.y, 'and sits below it').toBeGreaterThanOrEqual(workBox.y + workBox.height - 1);
+  expect(processBox.y, 'and sits below it').toBeGreaterThanOrEqual(
+    beforeBox.y + beforeBox.height - 1,
+  );
 
   for (const [index, step] of processSteps.entries()) {
     const item = items(page).nth(index);
@@ -134,6 +138,25 @@ test('follows selected work and shows the four steps in order: icon, number, tit
   }
   for (const arrow of await arrows(page).all()) {
     await expect(arrow).toHaveAttribute('aria-hidden', 'true');
+  }
+});
+
+test('the heading is left-aligned at every width, like the other sections', async ({ page }) => {
+  for (const width of [360, 768, 1024, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    const offset = await section(page)
+      .getByRole('heading', { level: 2 })
+      .evaluate((heading) => {
+        const range = document.createRange();
+        range.selectNodeContents(heading);
+        const container = heading.parentElement!;
+        const edge =
+          container.getBoundingClientRect().left +
+          parseFloat(getComputedStyle(container).paddingLeft);
+        return range.getBoundingClientRect().left - edge;
+      });
+    expect(Math.abs(offset), `${width}px: the heading starts at the left edge`).toBeLessThan(0.5);
   }
 });
 

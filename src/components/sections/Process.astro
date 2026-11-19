@@ -3,11 +3,13 @@ import Icon from '@/components/ui/Icon.astro';
 import { processSteps } from '@/data/site';
 
 /**
- * Home page process, directly under selected work, with the four steps in `processSteps`
+ * Home page process, directly under who we work with, with the four steps in `processSteps`
  * (src/data/site.ts). The owner named the reference on 2026-11-18: fdicreative.com's "4 Easy Steps
  * to Launch!". Each step is an icon, its number, and its title, and the band behind them is the
  * reference's: charcoal, crossed by fine dark lines. Above the steps there is only the heading:
- * no eyebrow, rule, sentence, or button (owner, 2026-11-18).
+ * no eyebrow, rule, sentence, or button (owner, 2026-11-18). The reference centres the heading;
+ * here it is left-aligned, as in the site's other sections, over the centred steps (owner,
+ * 2026-11-18).
  *
  * Measured from the reference at 1440: white line icons about 116px tall; numbers 64px tall, extra
  * bold, in a faint grey with a full stop in the brand colour, 31px under the icon; 25px titles 25px
@@ -45,7 +47,7 @@ const stepNumber = (index: number) => String(index + 1).padStart(2, '0');
   <div class="mx-auto max-w-site px-6 pt-16 pb-20 sm:pt-20 sm:pb-24 lg:px-8 lg:py-24">
     <h2
       id={titleId}
-      class="mx-auto max-w-3xl text-center text-3xl font-bold tracking-tight text-balance sm:text-4xl xl:text-5xl"
+      class="max-w-3xl text-3xl font-bold tracking-tight text-balance sm:text-4xl xl:text-5xl"
     >
       {/* The explicit space keeps the two lines apart in the heading's text. */}
       <span class="block">Four easy steps.</span>{' '}

@@ -6,12 +6,22 @@ import { featuredProjects, workFilters, type FeaturedProject } from '../../src/d
  * by platform, and the chosen platform's project as a card numbered 01-03, laid out as a slide of
  * Hub2B's "Meet our hub space": the copy in the card's left third and a 3:2 photo filling the
  * rest, flush with its top and right edges, from xl; the copy above the photo below xl. The
- * filters are a native radio group that works without JavaScript; the section opens on the first.
+ * introduction is left-aligned at every width, like the other sections. The filters are a native
+ * radio group that works without JavaScript; the section opens on the first.
  * Each card links to its project in a new tab and says when the site asks for a password, giving
  * the password when the owner has published it. Behind the card lie two cut-out props that pop
  * out, as Hub2B's do, when the section scrolls into view and when a filter shows the card: never
  * without JavaScript or under reduced motion, never when on screen at load, and never moving a box.
+ *
+ * No page renders the section since the owner replaced it on the home page with "Who we work with"
+ * (2026-11-18). Its component, projects, photos, and props are kept for a later page; point these
+ * tests at that page when one renders it.
  */
+test.skip(
+  () => true,
+  'Selected work is on no page: the home page shows "Who we work with" in its place (2026-11-18).',
+);
+
 const HEADING = 'Different businesses. Different reasons to visit.';
 const GROUP = 'Show the projects built with';
 /** Every width the layout suite checks. */
@@ -148,6 +158,39 @@ test('introduces the work, offers one filter per platform, and opens on the firs
   await expect(region.getByRole('heading', { level: 3 })).toHaveText(
     first.map(({ project }) => project.name),
   );
+});
+
+test('the introduction is left-aligned at every width, like the other sections', async ({
+  page,
+}) => {
+  for (const width of WIDTHS) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    // Eyebrow, heading, rule, and text each start at the section's left edge, as the card does.
+    const starts = await section(page)
+      .getByRole('heading', { level: 2 })
+      .evaluate((heading) => {
+        const start = (el: Element) => {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          return range.getBoundingClientRect().left;
+        };
+        const intro = heading.parentElement!;
+        const container = intro.parentElement!;
+        const edge =
+          container.getBoundingClientRect().left +
+          parseFloat(getComputedStyle(container).paddingLeft);
+        const [eyebrow, , rule, text] = Array.from(intro.children);
+        return [start(eyebrow), start(heading), rule.getBoundingClientRect().left, start(text)].map(
+          (left) => left - edge,
+        );
+      });
+    for (const [i, part] of ['eyebrow', 'heading', 'rule', 'text'].entries()) {
+      expect(Math.abs(starts[i]), `${width}px: the ${part} starts at the left edge`).toBeLessThan(
+        0.5,
+      );
+    }
+  }
 });
 
 test("each filter shows its platform's project, complete and numbered, and only that", async ({
@@ -446,9 +489,9 @@ test.describe('motion allowed', () => {
     const [first, second] = workFilters;
     const firstCard = cardOf(page, projectsFor(first.service)[0].project);
 
-    // Below the fold at load: tucked behind the card, waiting.
+    // Below the fold at load: tucked behind the card once the styles apply, waiting.
+    await expect.poll(async () => (await propsOf(firstCard)).state).toBe('hidden');
     let props = await propsOf(firstCard);
-    expect(props.state).toBe('hidden');
     expect([translateY(props.top.translate), translateY(props.bottom.translate)]).toEqual([0, 0]);
     const before = await layout(page);
     const shiftsBefore = await page.evaluate(

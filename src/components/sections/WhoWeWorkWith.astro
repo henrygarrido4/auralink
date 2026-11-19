@@ -1,0 +1,81 @@
+---
+import Button from '@/components/ui/Button.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { industries, primaryCta } from '@/data/site';
+
+/**
+ * Home page "Who we work with", between the services and the process, in the place of the selected
+ * work it replaced (owner, 2026-11-18) and on that section's `primary` band. The owner's mockup of
+ * 2026-11-19 sets the look: an eyebrow, a heading, and a sentence on the container's left edge,
+ * like the other sections; the kinds of business in `industries` (src/data/site.ts) as one compact
+ * white directory; and a closing line with a "Let's talk" button.
+ *
+ * The directory is one flat white panel with square corners and no shadow. Its cells touch, and
+ * thin grey rules part them: the list's 1px gaps show its `base-300` background. Four columns from
+ * lg, two from sm, one on phones, filled row by row, so it reads in the array's order. Every row is
+ * as tall as the tallest (`auto-rows-fr`), at least 112px from lg, and grows when a name needs more
+ * lines. Each cell is a decorative icon centred beside its name, in charcoal.
+ *
+ * Under a hovering pointer a cell turns a very pale yellow and its name gains a fine charcoal
+ * underline, both over 250ms, with nothing moving (`directory-cell` in src/styles/global.css). No
+ * page exists for any of these businesses yet, so the names are not links: the hover is decoration,
+ * no cell is a tab stop, and the cursor stays as it is. "Let's talk" is the flat charcoal button,
+ * following the navbar's call to action (`primaryCta`): a link to the inquiry page once that ships,
+ * a placeholder until then. There is no client-side JavaScript.
+ */
+interface Props {
+  /** Anchor for in-page links. */
+  id: string;
+}
+
+const { id } = Astro.props;
+const titleId = `${id}-title`;
+---
+
+<section id={id} aria-labelledby={titleId} class="bg-primary">
+  <div class="mx-auto max-w-site px-6 py-16 sm:py-20 lg:px-8 lg:py-24">
+    <Eyebrow>Who we work with</Eyebrow>
+    <h2
+      id={titleId}
+      class="mt-5 max-w-3xl text-3xl font-bold tracking-tight text-balance text-base-content sm:text-4xl xl:text-5xl"
+    >
+      Built for businesses like yours.
+    </h2>
+    <p class="mt-5 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
+      Websites and email marketing built around your business.
+    </p>
+
+    {/* role="list": Safari drops the list role from lists styled without markers. */}
+    <ul
+      role="list"
+      class="mt-10 grid auto-rows-fr gap-px bg-base-300 text-base-content sm:mt-12 sm:grid-cols-2 lg:grid-cols-4"
+    >
+      {industries.map((industry) => (
+        <li class="directory-cell flex min-h-20 items-center gap-4 p-6 hover:directory-cell-active lg:min-h-28">
+          <Icon name={industry.icon} class="size-6 shrink-0" stroke-width="1.75" />
+          {/* 16px from lg to xl, where four columns are narrowest, so no name runs past three lines. */}
+          <span
+            data-directory-name
+            class="min-w-0 text-lg leading-snug font-medium text-balance lg:text-base xl:text-lg"
+          >
+            {industry.name}
+          </span>
+        </li>
+      ))}
+    </ul>
+
+    <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4 text-base-content">
+      <p class="text-lg font-bold">Don't see your business here?</p>
+      <Button
+        href={primaryCta.href}
+        variant="neutral"
+        size="lg"
+        class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+      >
+        Let's talk
+        <Icon name="arrow-up-right" class="size-5" />
+      </Button>
+    </div>
+  </div>
+</section>

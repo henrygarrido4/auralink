@@ -5,12 +5,12 @@ import { SERVICE_STRIP_SPEED_PX_PER_SECOND } from '../../src/lib/service-strip';
 /**
  * Home services strip (src/components/sections/ServiceStrip.astro), between the hero and the
  * introduction: the service-card titles as one line of type, the first word bold and the rest
- * light, with a small star before each, near-black on a yellow band. Behind the yellow lies a
+ * light, with a small eight-point asterisk before each, near-black on a yellow band. Behind the yellow lies a
  * neutral band tilted 2.2 degrees, showing above it on the right and below it on the left, as in
  * the owner's reference (2026-11-18). The titles scroll slowly right to left in one continuous
  * loop that runs off both edges, hold still while the pointer is over the band, and otherwise sit
  * in a static wrapping row: under reduced motion and without JavaScript. There is no pause button
- * (owner, 2026-11-18). The repeated half and the stars stay out of the accessibility tree.
+ * (owner, 2026-11-18). The repeated half and the asterisks stay out of the accessibility tree.
  * Nothing in the strip is a link or a control.
  */
 const WIDTHS = [360, 390, 768, 1024, 1440, 1920];

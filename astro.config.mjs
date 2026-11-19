@@ -15,15 +15,17 @@ export default defineConfig({
   /*
    * Catamaran for text, Mukta for headings (owner, 2026-11-18). Downloaded at build time and
    * served from this site; the browser never requests Google. Latin only, upright only, and only
-   * the weights the pages use: 400 and 700 for body, nav, and buttons; 300 and 700 for headings.
-   * <Font> in BaseLayout writes --font-main and --font-headers. See src/styles/global.css.
+   * the weights the pages use: 400 and 700 for body, nav, and buttons, and 500 for the names in
+   * the home directory; 300 and 700 for headings. Catamaran's weights share one variable file, so
+   * 500 adds no download. <Font> in BaseLayout writes --font-main and --font-headers. See
+   * src/styles/global.css.
    */
   fonts: [
     {
       provider: fontProviders.google(),
       name: 'Catamaran',
       cssVariable: '--font-main',
-      weights: [400, 700],
+      weights: [400, 500, 700],
       styles: ['normal'],
       subsets: ['latin'],
       display: 'swap',

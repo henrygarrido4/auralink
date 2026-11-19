@@ -1,25 +1,27 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
 import Icon from '@/components/ui/Icon.astro';
-import { serviceCards } from '@/data/site';
+import { heroBenefits } from '@/data/site';
 
 /**
- * The services as named icons on a ring around what this wraps: the laptop and phone in the home
- * hero (the owner's choice of three treatments, 2026-11-18). One round chip per service card,
- * evenly spaced, behind the wrapped content, over a soft glow in the primary colour and two inner
- * rings. Each chip carries its card's title, like the name under an app's icon, so nobody has to
- * guess what an icon stands for (owner, 2026-11-18). The chips for websites and email, the two
- * promises in the hero's headline, are filled with the primary colour.
+ * Benefit badges on a ring around what this wraps: the laptop and phone in the home hero (the
+ * owner's choice of three treatments, then benefit labels in the same places, 2026-11-18). One
+ * round chip per benefit, evenly spaced, behind the wrapped content, over a soft glow in the
+ * primary colour and two inner rings. Each chip carries its label, like the name under an app's
+ * icon. The icon is decorative; the label says what it means. "More sales" and "Repeat customers"
+ * are filled with the primary colour. The other four are white.
  *
- * Hidden from assistive technology, with nothing to focus: the strip straight after the hero
- * lists the same six names as a real list, and reading them out twice in a row helps nobody.
+ * The services strip straight after the hero lists the services. These chips do not repeat it,
+ * and they state no figures, client results, or notifications. The labels are ordinary text. The
+ * icons are hidden from assistive technology, and nothing here can be focused.
  *
  * The `orbit` utility (src/styles/global.css) holds the geometry and the motion; the classes here
  * are the paint. The ring is the largest circle that fits the wrapped content's box once that box
  * is grown by `--orbit-above` and `--orbit-below`, so set those two on this component to the room
- * its surroundings leave. On load the chips swing into place and their names fade in. After that
- * nothing here travels: while a pointer is over the component a light circles the ring, as it
- * does around the site's buttons. Nothing moves under reduced motion. No JavaScript.
+ * its surroundings leave. On load the chips swing into place and their labels fade in, and once the
+ * ring has opened a light circles it, like the aura on the site's buttons, for as long as the page
+ * is open (owner, 2026-11-18). Nothing else travels after the arrival. Nothing moves under reduced
+ * motion. No JavaScript.
  */
 interface Props extends HTMLAttributes<'div'> {
   /**
@@ -31,33 +33,31 @@ interface Props extends HTMLAttributes<'div'> {
 
 const { start = 0, class: className, ...rest } = Astro.props;
 
-/** The cards behind the headline's two promises, websites and email. */
-const accented: readonly string[] = ['custom-websites', 'email-automation'];
-
 /**
- * The order around the ring, clockwise from the right-hand place. Not the cards' order: each name
- * goes where the devices leave room for it. The two places at the top take one line above the
- * chip, the two at the sides a narrow name, and the two at the bottom the longest. The accented
- * pair shares the bottom. A card not listed here follows the others.
+ * The order around the ring, clockwise from the right-hand place. The same places the service
+ * chips used, one benefit where each service was: New subscribers (WordPress), Time saved (custom
+ * websites), Repeat customers (email), More bookings (Shopify), More sales (SEO), New inquiries
+ * (AEO & GEO). The two at the bottom take the longer labels, the sides the next, and More sales
+ * stays on one line because its chip sits highest. A benefit not listed here follows the others.
  */
 const order: readonly string[] = [
-  'wordpress-websites',
-  'custom-websites',
-  'email-automation',
-  'shopify-stores',
-  'seo',
-  'aeo-geo',
+  'new-subscribers',
+  'time-saved',
+  'repeat-customers',
+  'more-bookings',
+  'more-sales',
+  'new-inquiries',
 ];
 const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length);
-const placed = [...serviceCards].sort((a, b) => rank(a.id) - rank(b.id));
+const placed = [...heroBenefits].sort((a, b) => rank(a.id) - rank(b.id));
 
 /** Under its chip and centred on it: the place with room on both sides. */
 const below = 'top-full left-1/2 mt-1 -translate-x-1/2 text-center';
 /** Over its chip: under the two top chips are the laptop's lid and the phone. */
 const above = 'bottom-full left-1/2 mb-1 -translate-x-1/2 text-center';
 /**
- * Where each place's name sits, in the ring's order, so that none lies behind a device or leaves
- * the screen. The names at the sides hang outward: from the right-hand chip's left edge, and at
+ * Where each place's label sits, in the ring's order, so that none lies behind a device or leaves
+ * the screen. The labels at the sides hang outward: from the right-hand chip's left edge, and at
  * the left ending a fifth of a chip short of its right edge, where the lid begins.
  */
 const namePlaces = [
@@ -70,14 +70,15 @@ const namePlaces = [
 ];
 
 /**
- * A name on two lines when it is long: the last word goes under the rest, which keeps the name
- * narrow enough for its place. "SEO" and "AEO & GEO" stay on one.
+ * A label on two lines when it is long: the last word goes under the rest, which keeps the label
+ * narrow enough for its place. "More sales" stays on one line. It sits on the highest chip, and a
+ * second line there leaves the hero. No label here runs past two words, so none takes a third line.
  */
-const lines = (title: string) => {
-  const lastSpace = title.lastIndexOf(' ');
-  return lastSpace < 0 || title.length < 10
-    ? { head: title, tail: '' }
-    : { head: title.slice(0, lastSpace), tail: title.slice(lastSpace + 1) };
+const lines = (label: string, singleLine: boolean) => {
+  const lastSpace = label.lastIndexOf(' ');
+  return singleLine || lastSpace < 0 || label.length < 10
+    ? { head: label, tail: '' }
+    : { head: label.slice(0, lastSpace), tail: label.slice(lastSpace + 1) };
 };
 
 /** From the centre outward. The outer ring is the one the chips ride. */
@@ -88,7 +89,6 @@ const rings = ['inner', 'middle', 'outer'] as const;
   {/* Chip sizes: 10vw keeps them in proportion on screens narrower than 360px. */}
   <div
     data-orbit-frame
-    aria-hidden="true"
     style={`--orbit-start: ${start}deg; --orbit-step: ${360 / placed.length}deg`}
     class="[--orbit-chip:min(2.25rem,10vw)] sm:[--orbit-chip:2.75rem] xl:[--orbit-chip:3.25rem]"
   >
@@ -103,24 +103,24 @@ const rings = ['inner', 'middle', 'outer'] as const;
       ))}
       <span data-orbit-light class="rounded-full"></span>
       <div data-orbit-track>
-        {placed.map((card, place) => {
-          const { head, tail } = lines(card.title);
+        {placed.map((benefit, place) => {
+          const { head, tail } = lines(benefit.label, benefit.id === 'more-sales');
           return (
             <span data-orbit-arm style={`--orbit-index: ${place}`}>
               <span
-                data-orbit-chip={card.id}
+                data-orbit-chip={benefit.id}
                 class:list={[
                   'grid place-items-center rounded-full border shadow-md',
-                  accented.includes(card.id)
+                  benefit.accent
                     ? 'border-transparent bg-primary text-primary-content'
                     : 'border-base-300 bg-base-100 text-base-content',
                 ]}
               >
-                <Icon name={card.icon} class="size-1/2" stroke-width="1.75" />
+                <Icon name={benefit.icon} class="size-1/2 text-neutral" stroke-width="1.75" />
                 {/*
-                 * 11px on phones (less below 344px wide, so the side names stay on screen), 12px
+                 * 11px on phones (less below 344px wide, so the side labels stay on screen), 12px
                  * from sm, 13px from xl, where the chips are largest. Tight leading keeps two
-                 * lines together as one name. The space keeps the words apart in the text.
+                 * lines together as one label. The space keeps the words apart in the text.
                  */}
                 <span
                   data-orbit-name

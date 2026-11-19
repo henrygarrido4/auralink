@@ -4,11 +4,15 @@ import ProjectCard from '@/components/ui/ProjectCard.astro';
 import { featuredProjects, workFilters } from '@/data/site';
 
 /**
+ * On no page since 2026-11-18, when the owner replaced it on the home page with "Who we work with"
+ * (WhoWeWorkWith.astro). Kept, with its projects, photos, and props, for a later page.
+ *
  * Home page selected work, after the services: a short introduction, filters by platform, and the
  * chosen platform's projects as cards numbered by their place in `featuredProjects`
  * (src/data/site.ts). The Hub2B theme's "Meet our hub space" section sets the look: a band in the
- * primary yellow, a centred heading in bold and light weights over a short white rule, and one
- * large white card at a time that pairs the copy with a 3:2 photo (ProjectCard.astro).
+ * primary yellow, a heading in bold and light weights over a short white rule, and one large
+ * white card at a time that pairs the copy with a 3:2 photo (ProjectCard.astro). Hub2B centres the
+ * heading; here it is left-aligned, as in the site's other sections (owner, 2026-11-18).
  *
  * Hub2B steps through its spaces with slider arrows; here filters choose the project (owner,
  * 2026-11-18: "a filtering system ... instead of displaying them all at once", by platform), and
@@ -49,7 +53,7 @@ const pill =
  */}
 <section id={id} aria-labelledby={titleId} class="bg-primary">
   <div class="filter-group mx-auto max-w-site px-6 pt-16 pb-20 sm:pt-20 sm:pb-24 lg:px-8 lg:pb-32 xl:pt-24 xl:pb-40">
-    <div class="mx-auto max-w-3xl text-center">
+    <div class="max-w-3xl">
       <Eyebrow>Selected work</Eyebrow>
       <h2
         id={titleId}
@@ -60,8 +64,8 @@ const pill =
         <span class="block font-light">Different reasons to visit.</span>
       </h2>
       {/* Hub2B's rule under a heading on its yellow band is white. */}
-      <div class="mx-auto mt-6 h-0.5 w-24 bg-base-100" aria-hidden="true"></div>
-      <p class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
+      <div class="mt-6 h-0.5 w-24 bg-base-100" aria-hidden="true"></div>
+      <p class="mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
         Three projects on three platforms: a custom static website for a barbershop, a WordPress
         website for an apartment community, and a Shopify recreation of an activewear store.
       </p>

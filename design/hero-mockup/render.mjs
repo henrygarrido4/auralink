@@ -9,8 +9,9 @@
  *                                        -> src/assets/hero/laptop-phone.webp
  *
  * `screens/desktop.png` (2880x1800) and `screens/mobile.png` (1170x2532) are the pages on the
- * devices. `--only=products` still renders the earlier sample shop's product photo; nothing in the
- * default pipeline uses it.
+ * devices. They are screenshots of sample-site/ (a fictional heating and cooling homepage).
+ * Refresh them with `--only=capture`, then run the pipeline. `--only=products` still renders the
+ * earlier ceramics shop's product photo; nothing in the default pipeline uses it.
  *
  * Usage: node design/hero-mockup/render.mjs [--from=<step>] [--only=<step>] [--preview]
  * `--preview` renders the devices at a quarter of the final pixel count and skips the asset.
@@ -43,7 +44,13 @@ const args = Object.fromEntries(
     return [key, value];
   }),
 );
-const steps = [...(args.only === 'products' ? ['products'] : []), 'screens', 'devices', 'asset'];
+const steps = [
+  ...(args.only === 'products' ? ['products'] : []),
+  ...(args.only === 'capture' ? ['capture'] : []),
+  'screens',
+  'devices',
+  'asset',
+];
 const preview = args.preview === 'true';
 const selected = steps.filter((step, index) => {
   if (preview && step === 'asset') return false;
@@ -71,6 +78,50 @@ async function servingContext(options = {}) {
     return route.fulfill({ path: file }).catch(() => route.fulfill({ status: 404 }));
   });
   return context;
+}
+
+/**
+ * Screenshots a sample-site page at the device's pixel size. Fonts load from cdn.jsdelivr.net, so
+ * this step needs network; the default pipeline copies the PNGs it writes.
+ */
+async function captureScreen(pathname, viewport, dest) {
+  const context = await servingContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    deviceScaleFactor: viewport.scale,
+  });
+  const page = await context.newPage();
+  const failed = [];
+  page.on('requestfailed', (request) =>
+    failed.push(`${request.url()} (${request.failure()?.errorText})`),
+  );
+  await page.goto(`${origin}${pathname}`, { waitUntil: 'load' });
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all(
+      [...document.images].map((img) =>
+        img.complete && img.naturalWidth > 0
+          ? Promise.resolve()
+          : new Promise((resolve) => {
+              img.addEventListener('load', resolve, { once: true });
+              img.addEventListener('error', resolve, { once: true });
+            }),
+      ),
+    );
+  });
+  const png = await page.screenshot({ type: 'png' });
+  await context.close();
+  const meta = await sharp(png).metadata();
+  const expected = {
+    width: viewport.width * viewport.scale,
+    height: viewport.height * viewport.scale,
+  };
+  if (meta.width !== expected.width || meta.height !== expected.height) {
+    throw new Error(
+      `${pathname} captured at ${meta.width}x${meta.height}; expected ${expected.width}x${expected.height}`,
+    );
+  }
+  if (failed.length) throw new Error(`${pathname} failed to load: ${failed.join(', ')}`);
+  writeFileSync(dest, png);
 }
 
 /** Opens a scene page and waits for its PNG data URL. */
@@ -144,7 +195,18 @@ async function visibleBox(png, pad) {
 
 for (const step of selected) {
   const started = Date.now();
-  if (step === 'products') {
+  if (step === 'capture') {
+    await captureScreen(
+      '/sample-site/desktop.html',
+      { width: 1440, height: 900, scale: 2 },
+      join(here, 'screens/desktop.png'),
+    );
+    await captureScreen(
+      '/sample-site/mobile.html',
+      { width: 390, height: 844, scale: 3 },
+      join(here, 'screens/mobile.png'),
+    );
+  } else if (step === 'products') {
     writeFileSync(
       join(outDir, 'products.png'),
       await renderScene('/scenes/products.html', { width: 1200, height: 1240 }),

@@ -233,6 +233,87 @@
 }
 
 /*
+ * The arrow box at the foot of each home service card (src/components/ui/ServiceCard.astro), from
+ * the service cards of Johnny's Exclusive Barbershop's website: white with a primary arrow, and
+ * while its card has the pointer or keyboard focus (`arrow-box-active`) filled with the primary
+ * colour, its arrow near-black, over 0.5s with `ease`. The colours fade through two registered
+ * properties, never through `background-color` and `color`: WebKit styles the page once before the
+ * stylesheet arrives, and a colour transition then faded every box in from the browser's defaults
+ * on load. These properties have no value until the stylesheet registers them, so nothing fades.
+ */
+@property --arrow-box-fill {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: transparent;
+}
+
+@property --arrow-box-ink {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: transparent;
+}
+
+@utility arrow-box {
+  --arrow-box-fill: var(--color-base-100);
+  --arrow-box-ink: var(--color-primary);
+  background-color: var(--arrow-box-fill);
+  color: var(--arrow-box-ink);
+  transition-property: --arrow-box-fill, --arrow-box-ink;
+  transition-duration: 0.5s;
+  transition-timing-function: ease;
+}
+
+@utility arrow-box-active {
+  --arrow-box-fill: var(--color-primary);
+  --arrow-box-ink: var(--color-primary-content);
+}
+
+/*
+ * A cell of the home page's business directory (src/components/sections/WhoWeWorkWith.astro):
+ * white, and while the pointer is over it (`directory-cell-active`) a very pale tint of the primary
+ * yellow, with a fine charcoal underline under its name (`data-directory-name`). Both fade in and
+ * out over 250ms with `ease`, through registered properties, for the reason given at `arrow-box`.
+ * The underline is always there, transparent at rest. It is painted, not laid out, so nothing
+ * moves. Forced colours would paint it in the text colour for good, so it is dropped there.
+ */
+@property --directory-fill {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: transparent;
+}
+
+@property --directory-rule {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
+@utility directory-cell {
+  --directory-fill: var(--color-base-100);
+  --directory-rule: transparent;
+  background-color: var(--directory-fill);
+  transition-property: --directory-fill, --directory-rule;
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
+
+  & [data-directory-name] {
+    text-decoration-line: underline;
+    text-decoration-color: var(--directory-rule);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+
+    @media (forced-colors: active) {
+      text-decoration-line: none;
+    }
+  }
+}
+
+@utility directory-cell-active {
+  --directory-fill: color-mix(in oklab, var(--color-primary) 14%, var(--color-base-100));
+  --directory-rule: var(--color-base-content);
+}
+
+/*
  * Pop-out props, after the Hub2B reference's "Meet our hub space", where a plant and a pencil cup
  * slide out from behind the card as the section scrolls in. The element lies partly under a
  * surface and slides out from behind it by `--pop-x` and `--pop-y`, a `translate` such as a
@@ -413,10 +494,10 @@
 }
 
 /*
- * Service orbit (home hero, src/components/ui/ServiceOrbit.astro; the owner's choice of three
- * treatments, 2026-11-18): the service icons rest on a ring around the laptop and phone, behind
- * them, each with its name beside it. This utility is the geometry and the motion. The
- * component's classes are the paint, and they place the names.
+ * Benefit orbit (home hero, src/components/ui/ServiceOrbit.astro; the owner's choice, 2026-11-18):
+ * six benefit chips rest on a ring around the laptop and phone, behind them, each with its label
+ * beside it (`data-orbit-name`). This utility is the geometry and the motion. The component's
+ * classes are the paint, and they place the labels.
  *
  * Geometry. The frame is the wrapped content's box grown upward by --orbit-above and downward by
  * --orbit-below, the room its surroundings leave. The disc is the largest circle that fits the
@@ -429,17 +510,16 @@
  * for the arrival. It is registered, so it interpolates and the arms inherit it. The fallbacks
  * keep the chips in their resting places where @property is not supported.
  *
- * Motion. Nothing that starts by itself runs past five seconds (WCAG 2.2.2). On load the glow
- * fades in, the rings open from the centre outward, and the chips pop in and swing 150 degrees
- * into their resting places, still after 3.3s. Their names fade in as they stop, so no text
- * travels, and all of it is over after 3.4s. The chips stay put from then on: a name that
- * travelled would slide behind the laptop. What a hovering pointer over the component brings is
- * a light on the chips' ring, a short arc of the primary colour that fades in and circles, a lap
- * every ten seconds. It fades out when the pointer leaves, and `orbit-light` stays applied and
- * paused, so the next visit continues from there, as daisyUI's `aura` does in `aura-hover`. Only
- * its `rotate` and `opacity` change, so the browser can move it without repainting. A touch
- * screen has no hover, so it shows the arrival only. Under reduced motion none of this applies:
- * everything rests where it belongs and the light stays off.
+ * Motion. On load the glow fades in, the rings open from the centre outward, and the chips pop in
+ * and swing 150 degrees into their resting places, still after 3.3s. Their labels fade in as they
+ * stop, so no text travels, and all of it is over after 3.4s. The chips stay put from then on: a
+ * name that travelled would slide behind the laptop. Once the outer ring has opened, a light on
+ * it, a short arc of the primary colour, fades in and circles, a lap every ten seconds, for as
+ * long as the page is open, pointer or not, touch screens included. It is the one thing here that
+ * runs past five seconds, and nothing pauses it: the owner's decision of 2026-11-18, an exception
+ * to WCAG 2.2.2 like the services strip (docs/quality-checks.md). Only its `rotate` and `opacity`
+ * change, so the browser can move it without repainting. Under reduced motion none of this
+ * applies: everything rests where it belongs and the light stays off.
  */
 @utility orbit {
   & [data-orbit-frame] {
@@ -485,23 +565,33 @@
   /*
    * The light lies over the outer ring's 1px line, four pixels wide: a conic gradient, brightest
    * at its head just before twelve o'clock and trailing off behind it, which a mask trims to the
-   * ring's line. Turning the element moves the light around. `transparent` leads the mix, as in
+   * ring's line. Turning the gradient (`::before`) moves the light around. The element stays
+   * square to the page and clips it: turned, a square's corners reach past its box, and past the
+   * screen's edge they would make the page scroll sideways. `transparent` leads the mix, as in
    * `aura-lap`: an unlit ring is the safe fallback where color-mix() is not supported.
    */
   & [data-orbit-light] {
     inset: calc(var(--orbit-chip) / 2 - 1.5px);
-    background-image: conic-gradient(
-      transparent 250deg,
-      color-mix(in oklab, transparent, var(--color-primary) 85%) 345deg,
-      var(--color-primary) 358deg,
-      transparent
-    );
+    overflow: clip;
     mask-image: radial-gradient(
       farthest-side,
       transparent calc(100% - 4px),
       #000 calc(100% - 3.5px)
     );
     opacity: 0;
+  }
+
+  & [data-orbit-light]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: conic-gradient(
+      transparent 250deg,
+      color-mix(in oklab, transparent, var(--color-primary) 85%) 345deg,
+      var(--color-primary) 358deg,
+      transparent
+    );
   }
 
   & [data-orbit-arm] {
@@ -528,7 +618,7 @@
   }
 
   /*
-   * The names are placed to the pixel beside their chips, so they must measure the same on every
+   * The labels are placed to the pixel beside their chips, so they must measure the same on every
    * system. Chromium on Linux hints small type, rounding each letter up to whole pixels: at 11px
    * bold it set "WordPress" about a sixth wider than on a Mac, past the edge of a 320px screen
    * (CI, 2026-11-18). geometricPrecision turns the hinting off, so every system sets the names
@@ -539,7 +629,7 @@
   }
 
   /*
-   * A name sits next to its chip, so the ring's line and the pointer's light pass behind it. An
+   * A label sits next to its chip, so the ring's line and the pointer's light pass behind it. An
    * outline in the hero's background colour, painted under the letters, keeps both 2px clear of
    * them. On that background the outline itself cannot be seen. Only where the outline can go
    * under the letters, since painted over them it would eat them, and not in forced colours,
@@ -590,16 +680,14 @@
       animation: orbit-fade 0.6s ease-out calc(2.5s + var(--orbit-index, 0) * 0.06s) both;
     }
 
+    /* Lit once the outer ring has opened (0.45s + 1s), so never on a ring still growing. */
     & [data-orbit-light] {
-      transition: opacity 0.4s;
-      animation: orbit-light 10s linear infinite paused;
+      opacity: 1;
+      animation: orbit-fade 1s ease-out 1.45s both;
     }
 
-    @media (hover: hover) {
-      &:hover [data-orbit-light] {
-        opacity: 1;
-        animation-play-state: running;
-      }
+    & [data-orbit-light]::before {
+      animation: orbit-light 10s linear infinite;
     }
   }
 }

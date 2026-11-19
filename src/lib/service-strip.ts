@@ -15,7 +15,7 @@
  * How fast the names travel. Slow enough to read every label as it drifts past (owner,
  * 2026-11-18: slower than the first 60).
  */
-export const SERVICE_STRIP_SPEED_PX_PER_SECOND = 30;
+export const SERVICE_STRIP_SPEED_PX_PER_SECOND = 60;
 
 /** Enough repeats to fill a very wide screen from the shortest realistic set. */
 const MAX_COPIES = 8;

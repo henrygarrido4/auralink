@@ -6,12 +6,14 @@ import { serviceCardLink } from '../../src/lib/service-cards';
  * Home page services section (src/components/sections/Services.astro): the introduction, ending
  * with the primary call to view all services at the same large size as the other primary buttons,
  * and one card (a tile) per `serviceCards` entry, laid out after the Hub2B reference: from xl a
- * four-column grid with the introduction in its first two
- * cells, two tiles beside it and four below. Under the pointer every card fades in Hub2B's frame.
- * Each card links where src/lib/service-cards.ts says (its service page, else the inquiry page) or,
- * with nowhere to go, is no link at all. A linked card is a single link whose arrow shows before any
- * hover and slides 3-4px toward its point under the pointer or keyboard focus, never under reduced
- * motion, while nothing moves or resizes. The section needs no client-side JavaScript.
+ * four-column grid with the introduction in its first two cells, two tiles beside it and four
+ * below. The introduction and everything on the cards are left-aligned at every width. Under the
+ * pointer every card fades in Hub2B's frame. Each card links where src/lib/service-cards.ts says
+ * (its service page, else the inquiry page) or, with nowhere to go, is no link at all. Every card
+ * ends with the barbershop site's arrow box, shown before any hover: white with a primary arrow, it
+ * fills with primary over 0.5s and the arrow turns near-black, under the pointer and under keyboard
+ * focus on a linked card, at once under reduced motion, while nothing moves or resizes, and nothing
+ * fades in on load. The section needs no client-side JavaScript.
  *
  * The link tests run only once a card has a destination; until then they are skipped with the
  * reason, and the plain-card tests run instead.
@@ -24,7 +26,9 @@ const items = (page: Page) => section(page).getByRole('listitem');
 /** The card itself: the link, or the plain card that stands in for it. */
 const surface = (item: Locator) => item.locator(':scope > *');
 /** The arrow is the card's last icon; the service icon is its first. */
-const arrowOf = (anchor: Locator) => anchor.locator('svg').last();
+const arrowOf = (card: Locator) => card.locator('svg').last();
+/** The white box the arrow sits in. */
+const arrowBoxOf = (card: Locator) => arrowOf(card).locator('xpath=..');
 /** WebKit mirrors Safari: plain Tab skips links; Option+Tab (Alt+Tab) reaches them. */
 const tabKey = (browserName: string) => (browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
 
@@ -52,6 +56,36 @@ const frameOf = (card: Locator) =>
       fade: frame.transitionDuration,
     };
   });
+
+/** The arrow box's fill, the arrow's colour (it inherits the box's), and how they change. */
+const arrowBoxLook = (card: Locator) =>
+  arrowBoxOf(card).evaluate((box) => {
+    const style = getComputedStyle(box);
+    return {
+      fill: style.backgroundColor,
+      arrow: style.color,
+      fade: style.transitionDuration,
+      ease: style.transitionTimingFunction,
+    };
+  });
+
+/** The arrow box's fill and the arrow's colour only. */
+const arrowColours = async (card: Locator) => {
+  const { fill, arrow } = await arrowBoxLook(card);
+  return { fill, arrow };
+};
+
+/** The fill and arrow colours at rest (white, primary) and under the pointer or focus. */
+const arrowBoxColours = async (page: Page) => ({
+  rest: {
+    fill: await tokenColour(page, '--color-base-100'),
+    arrow: await tokenColour(page, '--color-primary'),
+  },
+  active: {
+    fill: await tokenColour(page, '--color-primary'),
+    arrow: await tokenColour(page, '--color-primary-content'),
+  },
+});
 
 const canHover = (page: Page) => page.evaluate(() => matchMedia('(hover: hover)').matches);
 
@@ -91,17 +125,13 @@ function expectSamePlace(actual: number[][], expected: number[][], message: stri
 }
 
 /** Where the arrow sits inside its card, measured in one frame. */
-const arrowOffset = (anchor: Locator) =>
-  anchor.evaluate((card) => {
-    const icons = card.querySelectorAll('svg');
+const arrowOffset = (card: Locator) =>
+  card.evaluate((el) => {
+    const icons = el.querySelectorAll('svg');
     const arrow = icons[icons.length - 1].getBoundingClientRect();
-    const box = card.getBoundingClientRect();
+    const box = el.getBoundingClientRect();
     return [arrow.x - box.x, arrow.y - box.y];
   });
-
-/** Waits for the arrow's slide (a 150ms transition) to finish. */
-const arrowSettled = (anchor: Locator) =>
-  arrowOf(anchor).evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
 
 /** Tabs from the top of the page until `target` has focus (bounded, so a miss fails clearly). */
 async function tabTo(page: Page, target: Locator, browserName: string) {
@@ -200,12 +230,49 @@ test('each card links where it should, or is not a link at all', async ({ page }
       });
       expectSamePlace([gaps], [[0, 0, 0, 0]], `${card.title}: the whole card is the link`);
     } else {
-      // Nowhere to go yet: nothing to click, no action, no arrow.
+      // Nowhere to go yet: nothing to click and no action, only its icon and the arrow.
       await expect(item.locator('a, button, [tabindex]'), card.title).toHaveCount(0);
       await expect(item.getByText(ACTION_LABEL), card.title).toHaveCount(0);
-      await expect(item.locator('svg'), `${card.title}: its icon only`).toHaveCount(1);
+      await expect(item.locator('svg'), `${card.title}: its icon and the arrow`).toHaveCount(2);
     }
   }
+});
+
+test('every card ends with the arrow, shown before any hover, on touch screens too', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const { rest } = await arrowBoxColours(page);
+  for (const [index, { card }] of cards.entries()) {
+    const tile = surface(items(page).nth(index));
+    const arrow = arrowOf(tile);
+    await expect(arrow, card.title).toBeVisible();
+    await expect(arrow).toHaveAttribute('aria-hidden', 'true');
+    // The barbershop's box: 50px square and white, with the arrow in the primary colour.
+    const box = await arrowBoxOf(tile).boundingBox();
+    expect([box!.width, box!.height], `${card.title}: a 50px box`).toEqual([50, 50]);
+    expect(await arrowColours(tile), `${card.title}: white, with a primary arrow`).toEqual(rest);
+  }
+  // Under each card's sentence, and as far above its bottom edge on every card: at its foot.
+  const feet = await section(page)
+    .getByRole('list')
+    .evaluate((list) =>
+      Array.from(list.children, (item) => {
+        const card = item.firstElementChild!;
+        const icons = card.querySelectorAll('svg');
+        const box = icons[icons.length - 1].parentElement!.getBoundingClientRect();
+        const text = card.querySelector('p')!.getBoundingClientRect();
+        return [box.top - text.bottom, card.getBoundingClientRect().bottom - box.bottom];
+      }),
+    );
+  for (const [index, [belowText]] of feet.entries()) {
+    expect(belowText, `${serviceCards[index].title}: under its sentence`).toBeGreaterThan(0);
+  }
+  expectSamePlace(
+    feet.map(([, aboveEdge]) => [aboveEdge]),
+    feet.map(() => [feet[0][1]]),
+    "the arrow sits at every card's foot",
+  );
 });
 
 test('one card per row on phones, two on tablets, and on desktops four, beside the introduction', async ({
@@ -260,7 +327,42 @@ test('one card per row on phones, two on tablets, and on desktops four, beside t
   }
 });
 
-test('cards keep the reference look: white, square, borderless, centred, under a large icon', async ({
+test('the introduction is left-aligned at every width, like the other sections', async ({
+  page,
+}) => {
+  for (const width of [360, 768, 1024, 1280, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    // Eyebrow, heading, rule, text, and button, each from the introduction's left edge.
+    const starts = await section(page)
+      .getByRole('heading', { level: 2 })
+      .evaluate((heading) => {
+        const start = (el: Element) => {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          return range.getBoundingClientRect().left;
+        };
+        const intro = heading.parentElement!;
+        const [eyebrow, , rule, text] = Array.from(intro.children);
+        const button = intro.querySelector('.btn')!;
+        const edge = intro.getBoundingClientRect().left;
+        return [
+          start(eyebrow),
+          start(heading),
+          rule.getBoundingClientRect().left,
+          start(text),
+          button.getBoundingClientRect().left,
+        ].map((left) => left - edge);
+      });
+    for (const [i, part] of ['eyebrow', 'heading', 'rule', 'text', 'button'].entries()) {
+      expect(Math.abs(starts[i]), `${width}px: the ${part} starts at the left edge`).toBeLessThan(
+        0.5,
+      );
+    }
+  }
+});
+
+test('cards keep the reference look: white, square, borderless, under a large icon, all left-aligned', async ({
   page,
 }) => {
   await page.goto('/');
@@ -268,29 +370,41 @@ test('cards keep the reference look: white, square, borderless, centred, under a
   const primary = await tokenColour(page, '--color-primary');
   for (const [index, card] of serviceCards.entries()) {
     const look = await surface(items(page).nth(index)).evaluate((el) => {
+      const start = (target: Element) => {
+        const range = document.createRange();
+        range.selectNodeContents(target);
+        return range.getBoundingClientRect().left;
+      };
       const style = getComputedStyle(el);
-      const icon = el.querySelector('svg')!;
-      const [box, glyph] = [el.getBoundingClientRect(), icon.getBoundingClientRect()];
+      const icons = el.querySelectorAll('svg');
+      const [icon, arrow] = [icons[0], icons[icons.length - 1]];
+      const glyph = icon.getBoundingClientRect();
+      const edge = el.getBoundingClientRect().left + parseFloat(style.paddingLeft);
       return {
         background: style.backgroundColor,
         radius: style.borderRadius,
         shadow: style.boxShadow,
         border: style.borderTopWidth,
-        align: style.textAlign,
         icon: [glyph.width, glyph.height, getComputedStyle(icon).color],
-        offCentre: Math.abs(glyph.x + glyph.width / 2 - (box.x + box.width / 2)),
+        // The icon's drawing starts inside Lucide's 2px margin (2 of 24, 8px at 96px).
+        starts: [
+          glyph.left + glyph.width / 12,
+          start(el.querySelector('h3')!),
+          start(el.querySelector('p')!),
+          arrow.parentElement!.getBoundingClientRect().left,
+        ].map((left) => left - edge),
       };
     });
     expect(look.background, card.title).toBe(white);
-    expect([look.radius, look.shadow, look.border, look.align], card.title).toEqual([
-      '0px',
-      'none',
-      '0px',
-      'center',
-    ]);
+    expect([look.radius, look.shadow, look.border], card.title).toEqual(['0px', 'none', '0px']);
     // Lucide's 24px grid keeps a 2px margin: a 96px icon draws the reference's 80px glyph.
     expect(look.icon, `${card.title}: icon`).toEqual([96, 96, primary]);
-    expect(look.offCentre, `${card.title}: icon centred`).toBeLessThan(0.5);
+    for (const [i, part] of ["icon's drawing", 'title', 'sentence', 'arrow box'].entries()) {
+      expect(
+        Math.abs(look.starts[i]),
+        `${card.title}: the ${part} starts at the text's left edge`,
+      ).toBeLessThan(0.5);
+    }
   }
 });
 
@@ -356,22 +470,96 @@ test.describe("Hub2B's hover", () => {
   });
 });
 
+test.describe('the arrow box', () => {
+  test.describe('motion allowed', () => {
+    test.use({ reducedMotion: 'no-preference' });
+
+    test('under the pointer every box fills with primary over 0.5s, its arrow turns near-black, and nothing moves', async ({
+      page,
+    }) => {
+      await page.goto('/');
+      test.skip(!(await canHover(page)), 'Touch screens have no hover; the box stays white.');
+      const colours = await arrowBoxColours(page);
+
+      for (const [index, { card }] of cards.entries()) {
+        const tile = surface(items(page).nth(index));
+        expect(await arrowBoxLook(tile), `${card.title} at rest`).toEqual({
+          ...colours.rest,
+          fade: '0.5s',
+          ease: 'ease',
+        });
+        const rest = { arrow: await arrowOffset(tile), boxes: await cardBoxes(page) };
+
+        await tile.hover();
+        await expect
+          .poll(() => arrowColours(tile), `${card.title} under the pointer`)
+          .toEqual(colours.active);
+        expectSamePlace([await arrowOffset(tile)], [rest.arrow], `${card.title}: the arrow stays`);
+        expectSamePlace(
+          await cardBoxes(page),
+          rest.boxes,
+          `${card.title}: no card moves or resizes`,
+        );
+
+        await page.mouse.move(0, 0);
+        await expect
+          .poll(() => arrowColours(tile), `${card.title} after the pointer leaves`)
+          .toEqual(colours.rest);
+      }
+    });
+
+    test('no card fades anything in on load, even as the stylesheet arrives', async ({ page }) => {
+      // Count every transition the cards start, from the first frame: WebKit can style the page
+      // before the stylesheet applies, and a colour transition then faded each box in from the
+      // browser's defaults (`arrow-box` in src/styles/global.css).
+      await page.addInitScript(() => {
+        const runs: string[][] = [];
+        Object.assign(window, { cardRuns: runs });
+        document.addEventListener(
+          'transitionrun',
+          (event) => {
+            const item = (event.target as Element).closest('li');
+            if (item) runs.push([item.closest('section')?.id ?? '', event.propertyName]);
+          },
+          true,
+        );
+      });
+      await page.goto('/');
+      const id = await section(page).getAttribute('id');
+      await page.evaluate(
+        () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+      );
+      const runs = await page.evaluate(
+        () => (window as unknown as { cardRuns: string[][] }).cardRuns,
+      );
+      expect(
+        runs.filter(([at]) => at === id).map(([, property]) => property),
+        'no transition on load',
+      ).toEqual([]);
+    });
+  });
+
+  test.describe('reduced motion', () => {
+    test.use({ reducedMotion: 'reduce' });
+
+    test('the box fills at once, without fading', async ({ page }) => {
+      await page.goto('/');
+      const { active } = await arrowBoxColours(page);
+      const tile = surface(items(page).first());
+      expect((await arrowBoxLook(tile)).fade).toBe('0s');
+      if (await canHover(page)) {
+        await tile.hover();
+        expect(await arrowColours(tile)).toEqual(active);
+      }
+    });
+  });
+});
+
 test.describe('linked cards', () => {
   test.skip(
     firstLinked < 0,
     'No card has a destination yet: no service page and no inquiry page exist (docs/content-strategy.md, "Service cards on the home page").',
   );
-
-  test('the arrow shows before any hover, on touch screens too', async ({ page }) => {
-    await page.goto('/');
-    for (const [index, { link }] of cards.entries()) {
-      if (!link) continue;
-      const arrow = arrowOf(items(page).nth(index).getByRole('link'));
-      await expect(arrow).toBeVisible();
-      await expect(arrow).toHaveAttribute('aria-hidden', 'true');
-      await expect(arrow).toHaveCSS('translate', 'none');
-    }
-  });
 
   test('Tab reaches every card in order with a visible ring, and Enter follows it', async ({
     page,
@@ -401,50 +589,18 @@ test.describe('linked cards', () => {
   test.describe('motion allowed', () => {
     test.use({ reducedMotion: 'no-preference' });
 
-    test('under the pointer the arrow slides 3-4px toward its point and nothing else moves', async ({
-      page,
-    }) => {
-      await page.goto('/');
-      test.skip(
-        !(await canHover(page)),
-        'Touch screens have no hover; the arrow stays where it is.',
-      );
-
-      const anchor = items(page).nth(firstLinked).getByRole('link');
-      const rest = { arrow: await arrowOffset(anchor), boxes: await cardBoxes(page) };
-
-      await anchor.hover();
-      await expect
-        .poll(async () => (await arrowOffset(anchor))[0] - rest.arrow[0])
-        .toBeGreaterThanOrEqual(3);
-      await arrowSettled(anchor);
-      const [x, y] = await arrowOffset(anchor);
-      expect(x - rest.arrow[0], 'toward its point, by 3-4px').toBeLessThanOrEqual(4.05);
-      expectSamePlace([[y]], [[rest.arrow[1]]], 'only sideways');
-      expectSamePlace(await cardBoxes(page), rest.boxes, 'no card moves or resizes');
-      // The frame fades over 300ms, longer than the arrow's 150ms slide.
-      await expect.poll(async () => (await frameOf(anchor)).opacity, "Hub2B's frame").toBe('1');
-
-      await page.mouse.move(0, 0);
-      await expect
-        .poll(async () => Math.abs((await arrowOffset(anchor))[0] - rest.arrow[0]))
-        .toBeLessThan(0.01);
-    });
-
-    test('keyboard focus moves the arrow and shows the frame the same way', async ({
+    test("keyboard focus fills the arrow's box and shows the frame the same way", async ({
       page,
       browserName,
     }) => {
       await page.goto('/');
+      const { active } = await arrowBoxColours(page);
       const anchor = items(page).nth(firstLinked).getByRole('link');
       const rest = { arrow: await arrowOffset(anchor), boxes: await cardBoxes(page) };
 
       await tabTo(page, anchor, browserName);
-      await expect
-        .poll(async () => (await arrowOffset(anchor))[0] - rest.arrow[0])
-        .toBeGreaterThanOrEqual(3);
-      await arrowSettled(anchor);
-      expect((await arrowOffset(anchor))[0] - rest.arrow[0]).toBeLessThanOrEqual(4.05);
+      await expect.poll(() => arrowColours(anchor), 'the box fills').toEqual(active);
+      expectSamePlace([await arrowOffset(anchor)], [rest.arrow], 'the arrow stays');
       expectSamePlace(await cardBoxes(page), rest.boxes, 'no card moves or resizes');
       await expect.poll(async () => (await frameOf(anchor)).opacity, "Hub2B's frame").toBe('1');
     });
@@ -453,25 +609,16 @@ test.describe('linked cards', () => {
   test.describe('reduced motion', () => {
     test.use({ reducedMotion: 'reduce' });
 
-    test('the arrow stays put under the pointer and keyboard focus', async ({
+    test('the box fills at once under keyboard focus, and the ring shows', async ({
       page,
       browserName,
     }) => {
       await page.goto('/');
+      const { active } = await arrowBoxColours(page);
       const anchor = items(page).nth(firstLinked).getByRole('link');
-      const arrow = arrowOf(anchor);
-      const rest = await arrowOffset(anchor);
 
-      if (await canHover(page)) {
-        await anchor.hover();
-        await expect(arrow).toHaveCSS('translate', 'none');
-        expectSamePlace([await arrowOffset(anchor)], [rest], 'still under the pointer');
-        await page.mouse.move(0, 0);
-      }
       await tabTo(page, anchor, browserName);
-      await expect(arrow).toHaveCSS('translate', 'none');
-      expectSamePlace([await arrowOffset(anchor)], [rest], 'still under keyboard focus');
-      // The ring still shows: only movement is removed.
+      expect(await arrowColours(anchor)).toEqual(active);
       await expect(anchor).toHaveCSS('outline-style', 'solid');
     });
   });

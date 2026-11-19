@@ -11,13 +11,16 @@ import { serviceCardLink } from '@/lib/service-cards';
  * look and composition: a light grey band, white tiles in a four-column grid, and the introduction
  * inside that grid, in its top-left corner. Hub2B gives the introduction one cell and has seven
  * tiles; with six, the introduction takes the first two cells, so both rows stay full: it and two
- * tiles, then four tiles, the reference's second row. Below xl the introduction comes first,
- * centred, as the reference stacks it, over two tiles per row from sm and one on phones. Where
- * Hub2B's introduction ends with a "Read more" button, ours ends with the primary call to view all
- * services (`servicesCta`), a placeholder until a page lists them. Under the pointer each tile shows
- * Hub2B's hover (ServiceCard.astro). High Scale Media's "What we do" cards inform only how a linked
- * tile shows it is a link. Each tile links to its service page, or to the inquiry page until that
- * exists, or nowhere (src/lib/service-cards.ts). No client-side JavaScript.
+ * tiles, then four tiles, the reference's second row. Below xl the introduction comes first, as
+ * the reference stacks it, over two tiles per row from sm and one on phones. Hub2B centres its
+ * introduction and tiles; here both are left-aligned at every width, like the site's other sections
+ * (owner, 2026-11-18). Where Hub2B's introduction ends with a "Read more" button, ours ends with the
+ * primary call to view all services (`servicesCta`), a placeholder until a page lists them. Under
+ * the pointer each tile shows Hub2B's hover, and the arrow box at its foot, from the service cards
+ * of Johnny's Exclusive Barbershop's website, fills with the primary colour (ServiceCard.astro).
+ * High Scale Media's "What we do" cards inform only the action named beside it on a linked tile.
+ * Each tile links to its service page, or to the inquiry page until that exists, or nowhere
+ * (src/lib/service-cards.ts). No client-side JavaScript.
  */
 interface Props {
   /** Anchor for in-page links. */
@@ -42,7 +45,7 @@ const titleId = `${id}-title`;
    */}
   <div class="mx-auto grid max-w-site gap-12 px-6 pt-16 pb-24 sm:pt-20 lg:px-8 xl:grid-cols-4 xl:gap-7.5 xl:pt-18 xl:pb-40">
     {/* `relative` keeps it above the list, which overlaps its cells from xl, so its text stays selectable. */}
-    <div class="text-center xl:relative xl:col-span-2 xl:col-start-1 xl:row-start-1 xl:pt-4 xl:text-left">
+    <div class="xl:relative xl:col-span-2 xl:col-start-1 xl:row-start-1 xl:pt-4">
       <Eyebrow>Our services</Eyebrow>
       <h2
         id={titleId}
@@ -52,8 +55,8 @@ const titleId = `${id}-title`;
         <span class="block">Start with one service.</span>{' '}
         <span class="block font-light">Connect the rest.</span>
       </h2>
-      <div class="mx-auto mt-6 h-0.5 w-24 bg-primary xl:mx-0" aria-hidden="true"></div>
-      <p class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80 xl:mx-0">
+      <div class="mt-6 h-0.5 w-24 bg-primary" aria-hidden="true"></div>
+      <p class="mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
         Each service works on its own and is planned to fit with the others, so whatever you add
         next builds on what is already in place.
       </p>

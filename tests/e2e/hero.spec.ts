@@ -1,16 +1,17 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { primaryCta, serviceCards } from '../../src/data/site';
+import { heroBenefits, primaryCta } from '../../src/data/site';
 
 /**
  * Home hero (src/components/sections/Hero.astro). Copy and buttons are real HTML, and the device
- * image loads eagerly with its space reserved. Two things move on load, once each, and both are
- * hidden from assistive technology and already in place under reduced motion. The pencil
- * underline under "brings them back" is drawn after a short pause and stays attached to its phrase
- * at every width. The service icons swing into place on a ring around the devices
- * (src/components/ui/ServiceOrbit.astro), where their names fade in: one chip per service card,
- * named by its title, and both chip and name resting clear of the laptop and the phone, inside
- * the hero and off the copy, at every width. Afterwards the icons stay put. While a pointer is
- * over the devices a light circles their ring, and it keeps its place when the pointer leaves.
+ * image loads eagerly with its space reserved. Two things move on load, once each. The pencil
+ * underline is hidden from assistive technology and already in place under reduced motion. It is
+ * drawn under "brings them back" after a short pause and stays attached to its phrase at every
+ * width. The benefit icons swing into place on a ring around the devices
+ * (src/components/ui/ServiceOrbit.astro), where their labels fade in: one chip per hero benefit,
+ * the icon decorative and the label that benefit's text, both resting clear of the laptop and the
+ * phone, inside the hero and off the copy, at every width. Afterwards the icons stay put. Once their
+ * ring has opened a light circles it without end, pointer or not (the owner's decision), and never
+ * makes the page scroll sideways.
  * The primary button's aura stays unlit until the pointer reaches it, then fades and circles like
  * the navbar's and resumes where it stopped. It takes no room of its own, and never lights under
  * reduced motion.
@@ -24,7 +25,7 @@ const heroAura = (page: Page) => hero(page).locator('.aura');
 const devices = (page: Page) => hero(page).getByRole('img', { name: /laptop and phone/i });
 const orbit = (page: Page) => hero(page).locator('[data-orbit-frame]');
 
-/** The animations that bring the orbit in on load. Its `orbit-light` waits for the pointer. */
+/** The animations that bring the orbit in on load. Its `orbit-light` never ends. */
 const ORBIT_ARRIVAL = ['orbit-arrive', 'orbit-fade', 'orbit-pop', 'orbit-ring'];
 
 const hasHover = (page: Page) => page.evaluate(() => matchMedia('(hover: hover)').matches);
@@ -64,8 +65,8 @@ const chipPlaces = (page: Page) =>
 /** Every chip is in a resting place of its own, on the ring, with its icon and name upright. */
 async function expectChipsInPlace(page: Page) {
   const chips = await chipPlaces(page);
-  expect(chips.map((chip) => chip.id).sort(), 'one chip per service card').toEqual(
-    serviceCards.map((card) => card.id).sort(),
+  expect(chips.map((chip) => chip.id).sort(), 'one chip per benefit').toEqual(
+    heroBenefits.map((benefit) => benefit.id).sort(),
   );
   expect(chips.map((chip) => chip.place).sort(), 'every place on the ring taken once').toEqual(
     chips.map((_, index) => index),
@@ -80,7 +81,7 @@ async function expectChipsInPlace(page: Page) {
   }
 }
 
-/** The pointer's light on the ring: whether it plays, how far round, how bright, its timing. */
+/** The light on the ring: whether it plays, how far round, how bright, its timing. */
 const orbitLight = (page: Page) =>
   orbit(page).evaluate((frame) => {
     const lights = frame
@@ -158,46 +159,79 @@ test('loads the device image eagerly with its space reserved', async ({ page }) 
   await expect(hero(page).locator('picture source[type="image/avif"]')).toHaveCount(1);
 });
 
-test('one named chip per service circles the devices', async ({ page }) => {
+test('one labelled benefit chip circles the devices', async ({ page }) => {
   await page.goto('/');
   const frame = orbit(page);
-  // Kept from assistive technology: the strip after the hero lists the same names as a list.
-  await expect(frame).toHaveAttribute('aria-hidden', 'true');
+  // The labels are the text. The icons are decorative, and nothing can be focused.
+  await expect(frame).not.toHaveAttribute('aria-hidden');
   await expect(
     frame.locator('a, button, input, select, textarea, [tabindex]'),
     'nothing to focus',
   ).toHaveCount(0);
 
-  // Each chip shows its card's icon and its card's title, word for word.
-  await expect(frame.locator('[data-orbit-chip]')).toHaveCount(serviceCards.length);
-  for (const card of serviceCards) {
-    const chip = frame.locator(`[data-orbit-chip="${card.id}"]`);
-    await expect(chip.locator('svg'), `${card.title}: one icon`).toHaveCount(1);
-    await expect(chip.locator('[data-orbit-name]'), `${card.title}: its name`).toHaveText(
-      card.title,
+  // Clockwise from the right: the places the service chips used, one benefit in each.
+  // One evaluate on the frame: Firefox crashes on evaluateAll from this named region.
+  const order = await frame.evaluate((frame) =>
+    Array.from(
+      frame.querySelectorAll<HTMLElement>('[data-orbit-chip]'),
+      (chip) => chip.dataset.orbitChip,
+    ),
+  );
+  expect(order).toEqual([
+    'new-subscribers',
+    'time-saved',
+    'repeat-customers',
+    'more-bookings',
+    'more-sales',
+    'new-inquiries',
+  ]);
+
+  // Each chip shows its benefit's icon and its label, word for word, and nothing else.
+  await expect(frame.locator('[data-orbit-chip]')).toHaveCount(heroBenefits.length);
+  for (const benefit of heroBenefits) {
+    const chip = frame.locator(`[data-orbit-chip="${benefit.id}"]`);
+    const icon = chip.locator('svg');
+    await expect(icon, `${benefit.label}: one icon`).toHaveCount(1);
+    await expect(icon, `${benefit.label}: the icon is decorative`).toHaveAttribute(
+      'aria-hidden',
+      'true',
     );
-    await expect(chip, `${card.title}: nothing else`).toHaveText(card.title);
+    await expect(chip.locator('[data-orbit-name]'), `${benefit.label}: its label`).toHaveText(
+      benefit.label,
+    );
+    await expect(
+      chip.locator('[data-orbit-name] span'),
+      `${benefit.label}: at most two lines`,
+    ).toHaveCount(benefit.id === 'more-sales' ? 0 : 1);
+    await expect(chip, `${benefit.label}: nothing else`).toHaveText(benefit.label);
   }
 
-  // The headline's two promises, websites and email, take the primary colour. The rest do not.
+  // More sales and Repeat customers are yellow. The other four are not. Every icon is the same near-black.
   const colours = await frame.evaluate((frame) => {
     const probe = document.createElement('span');
     probe.style.backgroundColor = 'var(--color-primary)';
+    probe.style.color = 'var(--color-neutral)';
     frame.append(probe);
     const primary = getComputedStyle(probe).backgroundColor;
+    const neutral = getComputedStyle(probe).color;
     probe.remove();
     return Array.from(frame.querySelectorAll<HTMLElement>('[data-orbit-chip]'), (chip) => ({
       id: chip.dataset.orbitChip,
       primary: getComputedStyle(chip).backgroundColor === primary,
+      icon: getComputedStyle(chip.querySelector('svg')!).color === neutral,
     }));
   });
   expect(colours.filter((chip) => chip.primary).map((chip) => chip.id)).toEqual([
-    'custom-websites',
-    'email-automation',
+    'repeat-customers',
+    'more-sales',
   ]);
+  expect(
+    colours.every((chip) => chip.icon),
+    'every icon uses the neutral ink',
+  ).toBe(true);
 });
 
-test('the service icons and their names rest clear of the devices and the copy, inside the hero, at every width', async ({
+test('the benefit icons and their labels rest clear of the devices and the copy, inside the hero, at every width', async ({
   page,
 }) => {
   // Reduced motion shows the resting places at once. With motion only transforms and fades differ.
@@ -303,6 +337,7 @@ test('the service icons and their names rest clear of the devices and the copy, 
             nameSize: parseFloat(
               getComputedStyle(chip.querySelector('[data-orbit-name]')!).fontSize,
             ),
+            nameHeight: name.height,
             nameRoom: {
               top: name.top - hero.top,
               bottom: hero.bottom - name.bottom,
@@ -337,7 +372,10 @@ test('the service icons and their names rest clear of the devices and the copy, 
         `${at} chip has at most a fifth tucked behind a device`,
       ).toBeLessThanOrEqual(0.2);
       expect(chip.nameHidden, `${at} name has no device over it`).toBe(0);
-      expect(chip.nameSize, `${at} name is large enough to read`).toBeGreaterThanOrEqual(10);
+      expect(chip.nameSize, `${at} label is large enough to read`).toBeGreaterThanOrEqual(10);
+      expect(chip.nameHeight, `${at} label is at most two lines`).toBeLessThanOrEqual(
+        chip.nameSize * 1.15 * 2 + 1,
+      );
       expect(chip.nameRoom.left, `${at} name is on the screen`).toBeGreaterThanOrEqual(2);
       expect(chip.nameRoom.right, `${at} name is on the screen`).toBeGreaterThanOrEqual(2);
       expect(chip.nameRoom.top, `${at} name is below the navbar`).toBeGreaterThanOrEqual(8);
@@ -351,14 +389,14 @@ test('the service icons and their names rest clear of the devices and the copy, 
 test.describe('motion allowed', () => {
   test.use({ reducedMotion: 'no-preference' });
 
-  test('the underline draws and the service icons swing into place, once each, and nothing else moves', async ({
+  test('the underline draws and the benefit icons swing into place, once each, and only the light on their ring keeps going', async ({
     page,
   }) => {
     await page.goto('/');
     await expect(underline(page)).toHaveAttribute('aria-hidden', 'true');
 
     // Everything in the hero that plays by itself, still playing or already over. What waits for
-    // the pointer is paused: the primary's aura and the orbit's light.
+    // the pointer, the primary's aura, is paused.
     const started = await hero(page).evaluate((section) =>
       section
         .getAnimations({ subtree: true })
@@ -379,8 +417,15 @@ test.describe('motion allowed', () => {
     expect(Number(draw.duration)).toBeLessThanOrEqual(900);
     expect(draw.iterations, 'plays once').toBe(1);
 
+    // The light on the ring is the one thing that never ends: the owner's exception to the
+    // five-second limit, tested on its own below.
+    const endless = started.filter((animation) => animation.end === Infinity);
+    expect(endless.map((animation) => animation.name)).toEqual(['orbit-light']);
+
     // The rest is the orbit arriving: once, and over well inside five seconds (WCAG 2.2.2).
-    const arrival = started.filter((animation) => animation.name !== 'pencil-draw');
+    const arrival = started.filter(
+      (animation) => animation.name !== 'pencil-draw' && animation.end !== Infinity,
+    );
     expect([...new Set(arrival.map((animation) => animation.name))].sort()).toEqual(ORBIT_ARRIVAL);
     for (const animation of arrival) {
       expect(animation.iterations, `${animation.name} plays once`).toBe(1);
@@ -397,7 +442,7 @@ test.describe('motion allowed', () => {
         })),
       ),
     );
-    expect(names).toHaveLength(serviceCards.length);
+    expect(names).toHaveLength(heroBenefits.length);
     for (const fades of names) {
       expect(
         fades.map((fade) => fade.name),
@@ -409,10 +454,11 @@ test.describe('motion allowed', () => {
     // Once drawn, the line stays. Once arrived, every icon rests in its place, upright and solid,
     // with its name showing.
     await hero(page).evaluate(async (section) => {
-      const playing = section
+      const ending = section
         .getAnimations({ subtree: true })
-        .filter((animation) => animation.playState !== 'paused');
-      await Promise.all(playing.map((animation) => animation.finished));
+        .filter((animation) => animation.playState !== 'paused')
+        .filter((animation) => Number(animation.effect?.getComputedTiming().endTime) < Infinity);
+      await Promise.all(ending.map((animation) => animation.finished));
     });
     await expect(underline(page).locator('path')).toHaveCSS('stroke-dashoffset', '0px');
     await expectChipsInPlace(page);
@@ -421,75 +467,85 @@ test.describe('motion allowed', () => {
     }
   });
 
-  test('a light circles the ring only under the pointer, and the icons stay where they are', async ({
+  test('a light circles the ring all the time, pointer or not, and the icons stay where they are', async ({
     page,
   }) => {
     await page.goto('/');
-    const light = orbit(page).locator('[data-orbit-light]');
 
-    // Applied and waiting, so a later visit can continue: dark, and nothing circles by itself.
-    const waiting = await orbitLight(page);
-    expect(waiting.count, 'one light, on the ring').toBe(1);
-    expect(waiting.playing, 'nothing circles at rest').toBe(false);
-    expect(waiting.time).toBe(0);
-    expect(waiting.brightness, 'dark at rest').toBe(0);
-    expect(
-      waiting.timing,
-      'a lap every ten seconds, at an even pace, for as long as the pointer stays',
-    ).toEqual({ duration: 10_000, easing: 'linear', iterations: Infinity });
-    // It fades, in both directions, as the buttons' aura does.
-    await expect(light).toHaveCSS('transition-property', 'opacity');
-    await expect(light).toHaveCSS('transition-duration', '0.4s');
+    // Circling from the start with no pointer near: one light, a lap every ten seconds at an even
+    // pace, without end.
+    const loaded = await orbitLight(page);
+    expect(loaded.count, 'one light, on the ring').toBe(1);
+    expect(loaded.playing, 'circling with no pointer').toBe(true);
+    expect(loaded.timing, 'a lap every ten seconds, at an even pace, without end').toEqual({
+      duration: 10_000,
+      easing: 'linear',
+      iterations: Infinity,
+    });
 
-    // A touch screen has no hover: a tap on the devices lights nothing.
-    if (!(await hasHover(page))) {
-      await devices(page).tap();
-      const tapped = await orbitLight(page);
-      expect(tapped.playing, 'still waiting after a tap').toBe(false);
-      expect(tapped.brightness, 'still dark after a tap').toBe(0);
-      return;
-    }
+    // It fades in only once the outer ring has opened, so it never lies on a ring still growing.
+    const { opened, lit } = await orbit(page).evaluate((frame) => {
+      const timing = (selector: string, name: string) =>
+        frame
+          .querySelector(selector)!
+          .getAnimations()
+          .find((animation) => (animation as CSSAnimation).animationName === name)!
+          .effect!.getComputedTiming();
+      return {
+        opened: Number(timing('[data-orbit-ring="outer"]', 'orbit-ring').endTime),
+        lit: Number(timing('[data-orbit-light]', 'orbit-fade').delay),
+      };
+    });
+    expect(lit, 'lit once the outer ring has opened').toBeGreaterThanOrEqual(opened);
 
-    await devices(page).hover();
-    await expect.poll(async () => (await orbitLight(page)).playing).toBe(true);
-    await expect.poll(async () => (await orbitLight(page)).brightness).toBe(1);
-    await expect.poll(async () => (await orbitLight(page)).time ?? 0).toBeGreaterThan(100);
-    const carried = (await orbitLight(page)).time ?? 0;
-
-    // Only the light moves. Skip to the end of the arrival (everything here that has an end):
-    // every icon is in its resting place.
+    // Skip to the end of the arrival (everything here that has an end): the light shines in full
+    // and goes on circling, and every icon is in its resting place.
     await orbit(page).evaluate((frame) => {
       for (const animation of frame.getAnimations({ subtree: true })) {
         const end = Number(animation.effect?.getComputedTiming().endTime);
         if (Number.isFinite(end)) animation.finish();
       }
     });
-    await expect.poll(async () => (await orbitLight(page)).playing, 'still circling').toBe(true);
+    await expect.poll(async () => (await orbitLight(page)).brightness).toBe(1);
+    const before = (await orbitLight(page)).time ?? 0;
+    await expect
+      .poll(async () => (await orbitLight(page)).time ?? 0, 'still circling')
+      .toBeGreaterThan(before);
     await expectChipsInPlace(page);
 
-    // The pointer leaves: the light fades out and stops where it is.
-    await page.mouse.move(0, 400);
-    await expect.poll(async () => (await orbitLight(page)).playing).toBe(false);
-    expect(
-      (await orbitLight(page)).time ?? 0,
-      'the light did not jump back to the start',
-    ).toBeGreaterThanOrEqual(carried);
-    await expect.poll(async () => (await orbitLight(page)).brightness).toBe(0);
+    // A pointer over the devices and away again, or a tap on touch, neither stops nor dims it.
+    if (await hasHover(page)) {
+      await devices(page).hover();
+      await page.mouse.move(0, 400);
+    } else {
+      await devices(page).tap();
+    }
+    const after = await orbitLight(page);
+    expect(after.playing, 'still circling').toBe(true);
+    expect(after.brightness, 'still lit').toBe(1);
+    expect(after.time ?? 0, 'it went on from where it was').toBeGreaterThan(before);
+  });
 
-    // Park it at a known place, then come back: it goes on from there and fades in again.
-    await light.evaluate((element) => {
-      for (const animation of element.getAnimations()) {
-        if ((animation as CSSAnimation).animationName === 'orbit-light') {
-          animation.currentTime = 4000;
+  test('the turning light never makes the page scroll sideways, at every width', async ({
+    page,
+  }) => {
+    for (const width of [320, 360, 390, 768, 1024, 1280, 1440, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      // Held an eighth of a lap round, 45 degrees, where a turned square reaches furthest.
+      await orbit(page).evaluate((frame) => {
+        for (const animation of frame.getAnimations({ subtree: true })) {
+          if ((animation as CSSAnimation).animationName === 'orbit-light') {
+            animation.pause();
+            animation.currentTime = 1250;
+          }
         }
-      }
-    });
-    await devices(page).hover();
-    await expect.poll(async () => (await orbitLight(page)).playing).toBe(true);
-    const resumed = (await orbitLight(page)).time ?? 0;
-    expect(resumed, 'the light continues from where it stopped').toBeGreaterThanOrEqual(4000);
-    expect(resumed, 'the light did not start over').toBeLessThan(9000);
-    await expect.poll(async () => (await orbitLight(page)).brightness).toBe(1);
+      });
+      const sideways = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(sideways, `${width}px: no sideways scroll`).toBeLessThanOrEqual(1);
+    }
   });
 
   test('the buttons change colour without transitions', async ({ page }) => {
@@ -565,7 +621,7 @@ test.describe('reduced motion', () => {
     await expect(path).toHaveCSS('stroke-dashoffset', '0px');
   });
 
-  test('the service icons and their names rest in place, and no light comes, even under the pointer', async ({
+  test('the benefit icons and their labels rest in place, and no light comes, even under the pointer', async ({
     page,
   }) => {
     await page.goto('/');

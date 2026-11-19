@@ -176,6 +176,32 @@ export const serviceCards: readonly ServiceCard[] = [
   },
 ];
 
+/** A benefit chip around the devices in the home hero (src/components/ui/ServiceOrbit.astro). */
+export interface HeroBenefit {
+  /** Lowercase and hyphenated, unique among the chips. */
+  readonly id: string;
+  /** Two words at most, so the label stays on one or two lines. */
+  readonly label: string;
+  readonly icon: IconName;
+  /** Yellow circle. The others are white. */
+  readonly accent: boolean;
+}
+
+/**
+ * Benefit labels for the chips around the home hero's devices (owner, 2026-11-18). They say what
+ * the work is for. They are not measured results: no figures, client names, or notifications
+ * belong here. The services strip and the service cards still list the services. Each chip keeps
+ * the place of the service it replaced; that order lives in ServiceOrbit, tuned to the devices.
+ */
+export const heroBenefits: readonly HeroBenefit[] = [
+  { id: 'more-sales', label: 'More sales', icon: 'trending-up', accent: true },
+  { id: 'new-inquiries', label: 'New inquiries', icon: 'message-circle', accent: false },
+  { id: 'more-bookings', label: 'More bookings', icon: 'calendar-check', accent: false },
+  { id: 'new-subscribers', label: 'New subscribers', icon: 'user-plus', accent: false },
+  { id: 'repeat-customers', label: 'Repeat customers', icon: 'repeat', accent: true },
+  { id: 'time-saved', label: 'Time saved', icon: 'clock', accent: false },
+];
+
 /** Something a visitor can see on a featured project's site, as checked on that site. */
 export interface ProjectFeature {
   readonly icon: IconName;
@@ -300,6 +326,39 @@ export const featuredProjects: readonly FeaturedProject[] = [
     },
     photoAlt: 'Woman in black activewear stretching in a butterfly pose on a studio floor',
   },
+];
+
+/** A kind of business in the home page's "Who we work with" directory. */
+export interface Industry {
+  readonly name: string;
+  /** Decorative, beside the name; the name carries the meaning. */
+  readonly icon: IconName;
+}
+
+/**
+ * The kinds of business in the home page's "Who we work with" directory
+ * (src/components/sections/WhoWeWorkWith.astro), in display order, read left to right across the
+ * rows (owner, 2026-11-19), each with its icon. They are businesses Auralink Studio can help, not a
+ * client list: no client names, logos, results, or claims of past work belong here. Plain text
+ * until a page for one of them exists.
+ */
+export const industries: readonly Industry[] = [
+  { name: 'Construction & Home Services', icon: 'hard-hat' },
+  { name: 'Healthcare & Medical', icon: 'activity' },
+  { name: 'Dental', icon: 'tooth' },
+  { name: 'Veterinary & Pet Care', icon: 'paw-print' },
+  { name: 'Med Spas, Salons & Wellness', icon: 'leaf' },
+  { name: 'Automotive', icon: 'car' },
+  { name: 'Food & Hospitality', icon: 'utensils' },
+  { name: 'Real Estate & Property Management', icon: 'house' },
+  { name: 'Retail & Consumer Brands', icon: 'shopping-bag' },
+  { name: 'Manufacturing & Industrial', icon: 'factory' },
+  { name: 'Arts, Culture & Entertainment', icon: 'palette' },
+  { name: 'Education & Community Organizations', icon: 'graduation-cap' },
+  { name: 'Nonprofits & Associations', icon: 'heart-handshake' },
+  { name: 'Lawyers & Law Firms', icon: 'scale' },
+  { name: 'Financial & Professional Services', icon: 'briefcase' },
+  { name: 'Technology & SaaS', icon: 'code' },
 ];
 
 /**

@@ -65,29 +65,31 @@ test.describe('below the desktop breakpoint', () => {
 
   test('content scrolled into view stops clear of the bar and the navbar', async ({ page }) => {
     await page.goto('/');
-    // The last link in the content starts below the screen, so reaching it scrolls the page.
-    const link = page.getByRole('main').getByRole('link').last();
-    await expect(link).not.toBeInViewport();
-    /** The smaller of the gaps between the link and the two bars; negative when one covers it. */
+    // The content's last list item starts below the screen, so reaching it scrolls the page. It
+    // takes focus as a link would: no link sits that far down while the buttons await their pages.
+    const item = page.getByRole('main').getByRole('listitem').last();
+    await item.evaluate((el) => el.setAttribute('tabindex', '-1'));
+    await expect(item).not.toBeInViewport();
+    /** The smaller of the gaps between the item and the two bars; negative when one covers it. */
     const clearance = async () => {
       const [target, cta, header] = [
-        await boxOf(link),
+        await boxOf(item),
         await boxOf(bar(page)),
         await boxOf(page.getByRole('banner')),
       ];
       return Math.min(cta.top - target.bottom, target.top - header.bottom);
     };
 
-    await link.evaluate((el: HTMLElement) => el.focus());
-    await expect(link).toBeFocused();
+    await item.evaluate((el: HTMLElement) => el.focus());
+    await expect(item).toBeFocused();
     await expect
-      .poll(clearance, 'the focused link sits between the navbar and the bar')
+      .poll(clearance, 'the focused item sits between the navbar and the bar')
       .toBeGreaterThanOrEqual(-0.5);
 
     // Chromium and WebKit centre what takes focus. A browser may instead scroll only as far as it
-    // must, which would leave the link under the bar without `scroll-padding-bottom`.
+    // must, which would leave the item under the bar without `scroll-padding-bottom`.
     await scrollTo(page, 0);
-    await link.evaluate((el) => el.scrollIntoView({ block: 'nearest', behavior: 'instant' }));
+    await item.evaluate((el) => el.scrollIntoView({ block: 'nearest', behavior: 'instant' }));
     await expect
       .poll(clearance, 'a shortest scroll stops above the bar, not under it')
       .toBeGreaterThanOrEqual(-0.5);

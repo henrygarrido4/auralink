@@ -4,8 +4,9 @@
  * utility from src/styles/global.css (`pop-out`), and call `revealOnScroll()` from the component's
  * script.
  *
- * Nothing is hidden unless this runs. It hides only elements that are off screen when it runs,
- * marking them `data-reveal="hidden"`. Each is marked `data-reveal="shown"`, which starts the
+ * Nothing is hidden unless this runs. Once the page has loaded and its stylesheet applies, it hides
+ * only elements that are off screen then, marking them `data-reveal="hidden"`. Each is marked
+ * `data-reveal="shown"`, which starts the
  * utility's transition, once its top passes the lower part of the viewport and the images it
  * displays have loaded, so the entrance never plays over empty frames (a fast scroll can outrun
  * lazy loading). Only displayed images count: a lazy image in an undisplayed panel never loads. An
@@ -31,7 +32,8 @@ function isOnScreen(element: Element): boolean {
 /**
  * Runs `callback` once the page has loaded and two frames have rendered with its stylesheet.
  * WebKit can style the page before the stylesheet applies; marking an element `shown` before that
- * turned the stylesheet's arrival into a transition, so elements on screen at load slid in.
+ * turned the stylesheet's arrival into a transition, and measuring the page before that measured
+ * it unstyled, many times taller, so elements on screen at load were hidden and slid in.
  */
 function afterStylesApply(callback: () => void): void {
   const twoFrames = () => requestAnimationFrame(() => requestAnimationFrame(callback));
@@ -69,15 +71,15 @@ export function revealOnScroll(root: ParentNode = document): void {
     { rootMargin: ENTRY_MARGIN },
   );
 
-  for (const element of root.querySelectorAll<HTMLElement>(SELECTOR)) {
-    if (isOnScreen(element)) {
-      // Nothing to reveal: it turns `shown` without moving, so later changes can animate.
-      afterStylesApply(() => {
+  afterStylesApply(() => {
+    for (const element of root.querySelectorAll<HTMLElement>(SELECTOR)) {
+      if (isOnScreen(element)) {
+        // Nothing to reveal: it turns `shown` without moving, so later changes can animate.
         element.dataset.reveal = 'shown';
-      });
-      continue;
+        continue;
+      }
+      element.dataset.reveal = 'hidden';
+      observer.observe(element);
     }
-    element.dataset.reveal = 'hidden';
-    observer.observe(element);
-  }
+  });
 }

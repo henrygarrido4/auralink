@@ -6,24 +6,30 @@ import type { ServiceCardLink } from '@/lib/service-cards';
 /**
  * One service as a tile from the Hub2B reference's "We care about visitors" section, which sets its
  * look: white, square-cornered, with no border or shadow, its icon drawn large in the primary colour
- * as a line icon, then its name (an h3) and a sentence, all centred, with generous padding above and
- * below. Plain utilities, not daisyUI's card: the reference has none of the card's radius, padding,
- * or title styles. Pure CSS, no JavaScript.
+ * as a line icon, then its name (an h3) and a sentence, with generous padding above and below.
+ * Hub2B centres them; here everything is left-aligned, as in the site's other sections (owner,
+ * 2026-11-18). Plain utilities, not daisyUI's card: the reference has none of the card's radius,
+ * padding, or title styles. Pure CSS, no JavaScript.
  *
  * Hover is Hub2B's too (owner, 2026-11-18): a 2px frame in the primary colour fades in on the tile's
  * edge over 300ms. It is a pseudo-element laid over the tile, so nothing moves or resizes. It shows
  * at once under reduced motion, and never on touch screens (Tailwind's `hover:` needs a hovering
  * pointer).
  *
- * With a `link`, the whole tile is a single <a>. Only this link affordance comes from High Scale
- * Media's "What we do" cards. A label and an arrow name the action at the bottom and show before any
- * hover, so touch screens see them too. The link's name is the service and the action ("Custom
- * Websites Discuss this service"), and the sentence is its description. Under the pointer or keyboard
- * focus the frame shows and the arrow slides 4px toward its point, over 150ms, skipped under reduced
- * motion. Keyboard focus adds the near-black ring the hero's buttons use, 4px out, inside the 30px
- * gap: the yellow frame alone is too faint to mark focus. Without a link the tile has no label or
- * arrow and keeps the default cursor; the frame is decoration and leads nowhere
- * (src/lib/service-cards.ts).
+ * Every tile ends with the arrow from the service cards of Johnny's Exclusive Barbershop's website
+ * (exclusivecutzz.netlify.app), the owner's own work (owner, 2026-11-18): a white 50px box with a
+ * soft shadow and the arrow in the accent colour. Under the pointer the box fills with that colour
+ * over 0.5s and the arrow changes colour with it, and nothing moves. Here the accent is the primary
+ * yellow, and the arrow on it turns near-black, not white: white on the yellow is 1.4:1. The arrow
+ * shows before any hover, so touch screens see it too. Every tile will lead to a page, so the arrow
+ * shows before that page exists (owner, 2026-11-18), as the hero's button does.
+ *
+ * With a `link`, the whole tile is a single <a>, and a label after the arrow names the action, the
+ * link affordance from High Scale Media's "What we do" cards. The link's name is the service and the
+ * action ("Custom Websites Discuss this service"), and the sentence is its description. Keyboard
+ * focus shows the frame, fills the arrow's box, and adds the near-black ring the hero's buttons use,
+ * 4px out, inside the 30px gap: the yellow frame alone is too faint to mark focus. Without a link
+ * the tile has no label, is no tab stop, and keeps the default cursor (src/lib/service-cards.ts).
  */
 interface Props {
   /** Unique on the page; prefixes the ids that name and describe the link. */
@@ -43,7 +49,15 @@ const frame =
   'before:pointer-events-none before:absolute before:inset-0 before:border-2 before:border-primary before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100';
 
 const linkStates =
-  'group focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral focus-visible:before:opacity-100';
+  'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral focus-visible:before:opacity-100';
+
+/**
+ * The barbershop's arrow box, its colours and their fade from `arrow-box` (src/styles/global.css).
+ * Its shadow (10px to the right, 60px blur, a 15% grey at 10%) has no Tailwind token; its 5px
+ * corners are `rounded-sm` (4px).
+ */
+const arrowBox =
+  'arrow-box grid size-12.5 place-items-center rounded-sm shadow-[10px_0_60px_rgb(38_38_38/0.1)] group-hover:arrow-box-active group-focus-visible:arrow-box-active';
 ---
 
 <Tag
@@ -51,7 +65,7 @@ const linkStates =
   aria-labelledby={link && `${ids.title} ${ids.action}`}
   aria-describedby={link && ids.description}
   class:list={[
-    'relative flex h-full flex-col items-center bg-base-100 px-4 py-10 text-center lg:py-16',
+    'group relative flex h-full flex-col bg-base-100 px-8 py-10 lg:py-16',
     frame,
     link && linkStates,
   ]}
@@ -59,8 +73,10 @@ const linkStates =
   {/*
    * Lucide draws inside a 2px margin of its 24px grid, so a 96px icon shows an 80px glyph, the
    * reference's icon size. Stroke 1.2 of 24 draws 4.8px lines there, the weight of its line icons.
+   * The margin is 8px at this size: the box starts that far left, so the drawing lines up with the
+   * text.
    */}
-  <Icon name={icon} class="size-24 text-primary" stroke-width="1.2" />
+  <Icon name={icon} class="-ml-2 size-24 text-primary" stroke-width="1.2" />
   <h3 id={link && ids.title} class="mt-5 text-3xl font-bold tracking-tight text-balance">
     {title}
   </h3>
@@ -70,13 +86,10 @@ const linkStates =
   >
     {description}
   </p>
-  {link && (
-    <span id={ids.action} class="mt-auto flex items-center gap-2 pt-6 text-sm font-bold">
-      {link.label}
-      <Icon
-        name="arrow-right"
-        class="size-5 motion-safe:transition-transform motion-safe:group-hover:translate-x-1 motion-safe:group-focus-visible:translate-x-1"
-      />
+  <span id={link && ids.action} class="mt-auto flex items-center gap-4 pt-8 text-sm font-bold">
+    <span class={arrowBox}>
+      <Icon name="arrow-right" class="size-5" />
     </span>
-  )}
+    {link?.label}
+  </span>
 </Tag>
