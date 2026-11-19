@@ -233,10 +233,10 @@ test('each card links where it should, or is not a link at all', async ({ page }
       const anchor = item.getByRole('link');
       await expect(anchor, `${card.title}: one link`).toHaveCount(1);
       await expect(anchor).toHaveAttribute('href', link.href);
+      // The name is the visible text, in order. A title-only name hides the sentence (WCAG 2.5.3).
       await expect(anchor).toHaveAccessibleName(
-        link.label ? `${card.title} ${link.label}` : card.title,
+        [card.title, card.description, link.label].filter(Boolean).join(' '),
       );
-      await expect(anchor).toHaveAccessibleDescription(card.description);
       if (link.label) {
         await expect(anchor.getByText(link.label, { exact: true })).toBeVisible();
       } else {

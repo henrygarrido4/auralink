@@ -680,14 +680,28 @@ test.describe('the hover', () => {
                 ];
               }),
             );
-            window.setTimeout(() => {
+            // Sample once the fade's own clock is past 70ms. A fixed timeout can run before
+            // the first interpolated frame, so the colour still reads as the start.
+            const sampleMid = () => {
+              const transition = item
+                .getAnimations()
+                .find(
+                  (anim): anim is CSSTransition =>
+                    anim instanceof CSSTransition && anim.transitionProperty === '--directory-fill',
+                );
+              const now = transition?.currentTime;
+              if (typeof now !== 'number' || now < 70) {
+                requestAnimationFrame(sampleMid);
+                return;
+              }
               mids.push({
                 start,
                 mid: getComputedStyle(item).backgroundColor,
                 iconStart,
                 iconMid: getComputedStyle(icon).color,
               });
-            }, 80);
+            };
+            requestAnimationFrame(sampleMid);
           },
           true,
         );
@@ -732,7 +746,9 @@ test.describe('the hover', () => {
         byName(fade),
         byName(fade),
       ]);
-      expect(ends, 'both directions run for 240ms').toEqual([0.24, 0.24]);
+      expect(ends, 'both directions run for 240ms').toHaveLength(2);
+      // Firefox reports 240ms as 0.23999999463558197s. That is still 240ms.
+      for (const elapsed of ends) expect(elapsed).toBeCloseTo(0.24, 3);
       for (const sample of mids) {
         expect(sample.mid, 'the fill is between its two colours').not.toBe(sample.start);
         expect(sample.iconMid, 'the icon colour is between its two colours').not.toBe(
