@@ -1,0 +1,23 @@
+---
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+---
+
+<section aria-labelledby="page-title" class="mx-auto max-w-site px-6 py-16 lg:px-8 lg:py-20">
+  <Eyebrow>Auralink Studio</Eyebrow>
+  <h1
+    id="page-title"
+    class="mt-5 text-5xl leading-tight font-bold tracking-tight text-balance sm:text-6xl"
+  >
+    {title}
+  </h1>
+  <div class="mt-6 h-0.5 w-24 bg-primary" aria-hidden="true"></div>
+  <p class="mt-6 max-w-3xl text-xl leading-relaxed text-pretty text-base-content/80">
+    {description}
+  </p>
+</section>

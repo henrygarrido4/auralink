@@ -1,0 +1,117 @@
+---
+import Logo from '@/assets/aura.svg';
+import FooterMap from '@/components/ui/FooterMap.astro';
+import { footerCompany, footerIndustries, footerServices } from '@/data/footer';
+import { site } from '@/data/site';
+
+const groups = [
+  { title: 'Services', links: footerServices, classes: 'lg:col-span-2' },
+  {
+    title: 'Industries',
+    links: footerIndustries,
+    classes: 'sm:order-3 lg:order-none lg:col-span-5',
+    columns: true,
+  },
+  { title: 'Company', links: footerCompany, classes: 'sm:order-2 lg:order-none lg:col-span-2' },
+];
+const focusRing =
+  'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary';
+---
+
+<footer class="relative isolate overflow-hidden bg-neutral text-neutral-content">
+  <FooterMap />
+  <div class="mx-auto max-w-site px-6 pt-16 pb-10 lg:px-8 lg:pt-20">
+    <div class="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-12">
+      <div class="sm:col-span-2 lg:col-span-3">
+        <a
+          href="/"
+          aria-label={`${site.name} home`}
+          class:list={['inline-block rounded-sm', focusRing]}
+        >
+          <Logo class="h-14 w-auto" aria-hidden="true" />
+        </a>
+        <p class="mt-6 max-w-xs text-base leading-relaxed text-neutral-content/80">
+          Websites that connect. Email that keeps them coming back.
+        </p>
+        <a
+          href="/contact/"
+          class:list={[
+            'mt-6 inline-block rounded-sm font-bold text-primary underline-offset-4 hover:underline',
+            focusRing,
+          ]}
+        >
+          Start a conversation
+        </a>
+      </div>
+      {groups.map((group) => (
+        <nav
+          aria-label={`Footer ${group.title.toLowerCase()}`}
+          class:list={[group.classes, group.columns && 'sm:col-span-2']}
+        >
+          <h2 class="inline-block border-b-2 border-primary pb-2 text-2xl font-bold text-primary">
+            {group.title}
+          </h2>
+          <ul
+            role="list"
+            class:list={[
+              'mt-7 grid content-start gap-x-6 gap-y-4',
+              group.columns && 'sm:grid-cols-2',
+            ]}
+          >
+            {group.links.map((item) => (
+              <li>
+                {item.href ? (
+                  <a
+                    href={item.href}
+                    class:list={[
+                      'flex items-start gap-2.5 rounded-sm text-base leading-snug font-bold underline-offset-4 transition-colors duration-200 hover:text-primary hover:underline',
+                      focusRing,
+                    ]}
+                  >
+                    <svg
+                      viewBox="0 0 6 10"
+                      class="mt-1.5 h-2.5 w-1.5 shrink-0 text-primary"
+                      fill="currentColor"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path d="M0 0 6 5 0 10Z"></path>
+                    </svg>
+                    <span>{item.label}</span>
+                  </a>
+                ) : (
+                  <span
+                    class="flex items-start gap-2.5 text-base leading-snug font-bold text-neutral-content/60"
+                    aria-disabled="true"
+                  >
+                    <svg
+                      viewBox="0 0 6 10"
+                      class="mt-1.5 h-2.5 w-1.5 shrink-0 text-primary"
+                      fill="currentColor"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path d="M0 0 6 5 0 10Z"></path>
+                    </svg>
+                    <span>{item.label}</span>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ))}
+    </div>
+    <div class="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-neutral-content/15 pt-6 text-sm text-neutral-content/70">
+      <p>
+        © {new Date().getFullYear()} {site.name}. All rights reserved.
+      </p>
+      <a
+        href="#top"
+        class:list={['rounded-sm underline-offset-4 hover:text-primary hover:underline', focusRing]}
+      >
+        Back to top
+      </a>
+    </div>
+  </div>
+</footer>

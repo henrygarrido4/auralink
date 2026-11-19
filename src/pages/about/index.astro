@@ -1,0 +1,20 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageIntro from '@/components/sections/PageIntro.astro';
+import AboutIntro from '@/components/sections/AboutIntro.astro';
+import WhyAuralink from '@/components/sections/WhyAuralink.astro';
+import PageSchema from '@/components/seo/PageSchema.astro';
+import { site } from '@/data/site';
+---
+
+<BaseLayout
+  title="About"
+  description="Learn about Auralink Studio's approach to connected websites, email marketing, and search visibility for business owners and marketing teams."
+>
+  <Fragment slot="head">
+    <PageSchema type="AboutPage" name={`About ${site.name}`} />
+  </Fragment>
+  <PageIntro title={`About ${site.name}`} description={site.summary} />
+  <AboutIntro id="about" showCta={false} />
+  <WhyAuralink id="why-auralink" />
+</BaseLayout>

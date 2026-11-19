@@ -175,3 +175,11 @@ Locked selected work sites: a project's site may ask visitors for a password. On
 - Patch and minor updates: run `npm run quality:full` afterwards.
 - Major updates (Astro, Tailwind, daisyUI, Vue, Playwright, Lighthouse, ESLint, TypeScript 7): propose separately with the migration guide linked and the breaking changes listed; never as part of a feature task.
 - No prerelease packages.
+
+## Footer and contact implementation (2026-11-19)
+
+`BaseLayout` now renders a separate `ContactBanner` at the end of `main`, then `SiteFooter` through its default footer slot. Set `showContactBanner={false}` on inquiry and utility pages. The footer uses shared catalogues in `src/data/footer.ts`, which derive service and industry links from `src/data/site.ts`. Do not duplicate the catalogues in markup. Footer fragments remain stable when changing copy.
+
+The navigation targets Services, Industries, and About hub pages; the inquiry action points to `/contact/`. Blog is intentionally a non-link until editorial content is ready. This supersedes the earlier deferred About, contact, service-hub, and footer notes. Individual service pages and final legal/privacy copy are still separate work.
+
+Enable Netlify form detection and check a deployed project-inquiry submission before launch. Static local preview does not process form submissions. No deployment was made as part of preparing this local implementation.

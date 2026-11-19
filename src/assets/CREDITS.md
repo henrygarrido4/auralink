@@ -134,3 +134,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## `contact/workspace.webp`
+
+- Used as the decorative photograph in `ContactBanner.astro` (`alt=""`).
+- Generated with OpenAI image generation on 2026-11-19 from the owner's approved contact-banner mockup. The standalone photo was made by removing the mockup's text, panel, and footer and reconstructing the desk scene. It is not a stock photograph or a real client or team member.
+- Monochrome scene: hands typing at an unbranded laptop, a mug, and a notebook. No identifiable face or brand endorsement.
+- Resized to 1920px wide and saved as WebP at quality 86 without metadata. Astro serves responsive AVIF and WebP versions.
+- The footer's simplified dotted world silhouette (`FooterMap.astro`) is original SVG artwork created for this implementation, with no third-party asset.

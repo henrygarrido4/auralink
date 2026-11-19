@@ -22,9 +22,11 @@ import { aboutCta, site } from '@/data/site';
 interface Props {
   /** Anchor for in-page links, such as the hero's "About us" button. */
   id: string;
+  /** Avoid a link back to itself when this section appears on the About page. */
+  showCta?: boolean;
 }
 
-const { id } = Astro.props;
+const { id, showCta = true } = Astro.props;
 const titleId = `${id}-title`;
 ---
 
@@ -54,17 +56,19 @@ const titleId = `${id}-title`;
          * page. The hidden words name the destination for screen readers and search engines, which
          * "Learn more" alone does not, and the name still starts with the visible label.
          */}
-        <div class="mt-8 text-base-content md:mt-12">
-          <Button
-            href={aboutCta.href}
-            size="lg"
-            aura="hover"
-            class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
-          >
-            {aboutCta.label}
-            <span class="sr-only"> about {site.name}</span>
-          </Button>
-        </div>
+        {showCta && (
+          <div class="mt-8 text-base-content md:mt-12">
+            <Button
+              href={aboutCta.href}
+              size="lg"
+              aura="hover"
+              class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+            >
+              {aboutCta.label}
+              <span class="sr-only"> about {site.name}</span>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/*

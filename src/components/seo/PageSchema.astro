@@ -1,0 +1,19 @@
+---
+import { site } from '@/data/site';
+
+interface Props {
+  type: 'AboutPage' | 'ContactPage' | 'CollectionPage';
+  name: string;
+}
+const { type, name } = Astro.props;
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': type,
+  name,
+  url: new URL(Astro.url.pathname, site.url).href,
+  isPartOf: { '@type': 'WebSite', name: site.name, url: site.url },
+  about: { '@type': 'Organization', name: site.name, url: site.url },
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(schema)} />

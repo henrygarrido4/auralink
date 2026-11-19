@@ -1,0 +1,25 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageIntro from '@/components/sections/PageIntro.astro';
+import Button from '@/components/ui/Button.astro';
+---
+
+<BaseLayout
+  title="Thank you"
+  description="Thank you for contacting Auralink Studio about your project. Explore the website services and email marketing options while you are here."
+  noindex
+  showContactBanner={false}
+>
+  <PageIntro
+    title="Thanks for getting in touch."
+    description="Your project inquiry has been submitted."
+  />
+  <div class="mx-auto flex max-w-site flex-wrap gap-5 px-6 pb-20 lg:px-8">
+    <Button href="/" size="lg">
+      Back to home
+    </Button>
+    <Button href="/services/" size="lg" variant="secondary">
+      Explore services
+    </Button>
+  </div>
+</BaseLayout>

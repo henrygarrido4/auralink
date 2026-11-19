@@ -16,13 +16,12 @@ const NAME = `${aboutCta.label} about ${site.name}`;
 const section = (page: Page) => page.getByRole('region', { name: HEADING });
 const button = (page: Page) => section(page).getByText(NAME, { exact: true });
 
-test('closes the home page, after the process', async ({ page }) => {
+test('follows the process, before the closing contact banner', async ({ page }) => {
   await page.goto('/');
   const order = await page.evaluate(() =>
     [...document.querySelectorAll('main > section')].map((section) => section.id),
   );
-  expect(order.at(-1)).toBe('about');
-  expect(order.at(-2)).toBe('process');
+  expect(order.slice(-3)).toEqual(['process', 'about', 'project-contact']);
 });
 
 /** The aura's own spin, not the glow copies, and how strongly the light shines. */

@@ -55,6 +55,9 @@ export type ServiceSlug = (typeof services)[number]['slug'];
  */
 export const plannedRoutes = [
   { path: '/', label: 'Home' },
+  { path: '/services/', label: 'Services' },
+  { path: '/industries/', label: 'Industries' },
+  { path: '/blog/', label: 'Blog' },
   { path: '/services/website-development/', label: 'Website Development' },
   { path: '/services/static-websites/', label: 'Static Website Development' },
   { path: '/services/wordpress-development/', label: 'WordPress Development' },
@@ -79,33 +82,26 @@ export interface NavItem {
  */
 export const primaryNav: readonly NavItem[] = [
   { label: 'Home', href: '/' },
-  { label: 'Services' },
-  { label: 'Work' },
-  { label: 'Insights' },
-  { label: 'About' },
+  { label: 'Services', href: '/services/' },
+  { label: 'Industries', href: '/industries/' },
+  { label: 'About', href: '/about/' },
+  { label: 'Blog' },
 ];
 
 /**
- * Navbar call to action. Add `href: '/contact/'` when the contact page ships. The home hero's
- * primary button follows it, and the service cards below fall back to it as their inquiry page.
+ * Navbar call to action. The home hero and service-card inquiry links share the contact page.
  */
-export const primaryCta: NavItem = { label: 'Book a free call' };
+export const primaryCta: NavItem = { label: 'Book a free call', href: '/contact/' };
 
 /**
- * The home introduction's call to action, under its text (owner, 2026-11-18). It leads to the
- * About page, `/about/` in docs/content-strategy.md, which is planned but not written. Add its
- * `href` when that page ships, along with the navbar's About entry; until then the button is a
- * placeholder, as the hero's primary is (src/components/ui/Button.astro).
+ * The home introduction's call to action, under its text, links to the built About page.
  */
-export const aboutCta: NavItem = { label: 'Learn more' };
+export const aboutCta: NavItem = { label: 'Learn more', href: '/about/' };
 
 /**
- * The home services section's call to action, under its introduction (owner, 2026-11-18). It
- * leads to a page listing every service, which docs/content-strategy.md does not plan yet: it plans
- * the service pages and a navbar menu for them. Add its `href` when that page ships; until then
- * the button is a placeholder, as the hero's primary is (src/components/ui/Button.astro).
+ * The home services introduction links to the services hub, which reuses the approved catalogue.
  */
-export const servicesCta: NavItem = { label: 'View all services' };
+export const servicesCta: NavItem = { label: 'View all services', href: '/services/' };
 
 /** A card in the home page's services section (src/components/sections/Services.astro). */
 export interface ServiceCard {

@@ -3,6 +3,7 @@ import Button from '@/components/ui/Button.astro';
 import Eyebrow from '@/components/ui/Eyebrow.astro';
 import Icon from '@/components/ui/Icon.astro';
 import { industries, primaryCta } from '@/data/site';
+import { industryAnchor } from '@/data/footer';
 
 /**
  * Home page "Who we work with", after Why Auralink Studio and before the process, in the place of the selected
@@ -53,7 +54,10 @@ const titleId = `${id}-title`;
       class="mt-10 grid auto-rows-fr gap-px bg-base-300 text-base-content sm:mt-12 sm:grid-cols-2 lg:grid-cols-4"
     >
       {industries.map((industry) => (
-        <li class="directory-cell flex min-h-20 items-center gap-4 p-6 lg:min-h-28">
+        <li
+          id={industryAnchor(industry.name)}
+          class="directory-cell flex min-h-20 items-center gap-4 p-6 lg:min-h-28"
+        >
           <Icon name={industry.icon} class="size-6 shrink-0" stroke-width="1.75" />
           {/* 16px from lg to xl, where four columns are narrowest, so no name runs past three lines. */}
           <span

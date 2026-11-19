@@ -1,0 +1,20 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageIntro from '@/components/sections/PageIntro.astro';
+import WhoWeWorkWith from '@/components/sections/WhoWeWorkWith.astro';
+import PageSchema from '@/components/seo/PageSchema.astro';
+---
+
+<BaseLayout
+  title="Industries"
+  description="Explore the businesses Auralink Studio can help with websites and email marketing, from home services and retail to professional services."
+>
+  <Fragment slot="head">
+    <PageSchema type="CollectionPage" name="Industries" />
+  </Fragment>
+  <PageIntro
+    title="Industries"
+    description="Websites and email marketing built around your business."
+  />
+  <WhoWeWorkWith id="who-we-work-with" />
+</BaseLayout>

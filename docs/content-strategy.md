@@ -184,3 +184,15 @@ Detailed content answers the reader's real questions: scope, process, timelines 
 2. Owner reviews facts and tone; supplies missing verified details.
 3. Owner sets `draft: false` (and `approvedByClient: true` for case studies).
 4. `npm run quality` passes; the page ships with the next deploy.
+
+## Closing contact section, footer, and navigation (2026-11-19)
+
+The owner approved the closing contact banner mockup and requested a separate footer in the style of Hub2B's agency page. `ContactBanner.astro` is a section inside `main`, after the page content, and `SiteFooter.astro` is a separate footer landmark. `BaseLayout` renders both by default; contact and thank-you pages omit the banner. Its approved copy is “Let's build what's next”, “Have a project in mind?”, “Websites and email marketing, built around your business.”, and “Let's talk”. The button links to `/contact/`.
+
+The footer has the real studio logo and approved positioning line, Services, Industries, and Company columns. Services derives the six home service-card labels from `serviceCards`; Industries derives all sixteen names from `industries`. The links lead to stable fragments on `/services/` and `/industries/`. The simplified dotted map is original decorative artwork, not a service-area claim. No unverified contact details, social accounts, or legal policies are displayed.
+
+Built routes now include `/services/`, `/industries/`, `/about/`, `/contact/`, and `/contact/thank-you/`. The first three reuse approved home content, not invented case studies or claims of industry experience. These built destinations supersede the earlier notes above describing the About and contact destinations as planned. Individual service and industry detail pages are still future work.
+
+Primary navigation is Home, Services, Industries, About, and Blog. The first four have real destinations. Blog is a non-link label until published editorial content supports `/blog/`; no empty blog route or fabricated articles are created. The intended editorial label is now Blog; existing `insights` collections are retained for future editorial implementation.
+
+The contact page contains a native HTML Netlify project-inquiry form and a noindex success page. It asks for name, email, optional business/website, service interest, and project details, without invented email addresses or telephone numbers. Delivery needs Netlify form detection enabled before deployment and an actual deployed submission check. Local browser checks must not send inquiries.

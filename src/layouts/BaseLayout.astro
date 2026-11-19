@@ -3,6 +3,8 @@ import { Font } from 'astro:assets';
 import '../styles/global.css';
 import Navbar from '../components/sections/Navbar.astro';
 import StickyCta from '../components/sections/StickyCta.astro';
+import ContactBanner from '../components/sections/ContactBanner.astro';
+import SiteFooter from '../components/sections/SiteFooter.astro';
 import { site } from '../data/site';
 
 interface Props {
@@ -17,9 +19,19 @@ interface Props {
   ogType?: 'website' | 'article';
   /** Keep a page out of search engines (drafts, thank-you pages). */
   noindex?: boolean;
+  /** Closing banner is separate from the footer; omit on the inquiry and success pages. */
+  showContactBanner?: boolean;
 }
 
-const { title, description, canonical, ogImage, ogType = 'website', noindex = false } = Astro.props;
+const {
+  title,
+  description,
+  canonical,
+  ogImage,
+  ogType = 'website',
+  noindex = false,
+  showContactBanner = true,
+} = Astro.props;
 
 const fullTitle = title === site.name ? site.name : `${title} | ${site.name}`;
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site ?? site.url).href;
@@ -56,7 +68,7 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : und
     <Font cssVariable="--font-headers" preload={[{ weight: 700 }]} />
     <slot name="head" />
   </head>
-  <body class="bg-base-100 text-base-content min-h-screen antialiased">
+  <body id="top" class="bg-base-100 text-base-content min-h-screen antialiased">
     <a
       href="#main-content"
       class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-base-100 focus:px-4 focus:py-2 focus:shadow"
@@ -68,8 +80,11 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : und
     </slot>
     <main id="main-content" tabindex="-1">
       <slot />
+      {showContactBanner && <ContactBanner />}
     </main>
-    <slot name="footer" />
+    <slot name="footer">
+      <SiteFooter />
+    </slot>
     <StickyCta />
   </body>
 </html>

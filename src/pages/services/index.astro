@@ -1,0 +1,18 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageIntro from '@/components/sections/PageIntro.astro';
+import Services from '@/components/sections/Services.astro';
+import PageSchema from '@/components/seo/PageSchema.astro';
+import { site } from '@/data/site';
+---
+
+<BaseLayout
+  title="Services"
+  description="Explore Auralink Studio's custom websites, WordPress, Shopify, email marketing and automation, SEO, and AI search visibility services."
+>
+  <Fragment slot="head">
+    <PageSchema type="CollectionPage" name="Services" />
+  </Fragment>
+  <PageIntro title="Services" description={site.summary} />
+  <Services id="services" showCta={false} />
+</BaseLayout>
