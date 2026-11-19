@@ -80,12 +80,12 @@ The photo pages are `https://www.pexels.com/photo/<id>/`. The sneakers' insoles 
 
 ## `icons/` (Lucide icons)
 
-- Files: `arrow-right.svg`, `arrow-up-right.svg`, `calendar-check.svg`, `code-xml.svg`, `file-pen-line.svg`, `globe.svg`, `key-round.svg`, `layout-grid.svg`, `list-filter.svg`, `lock.svg`, `mail-clock.svg`, `search.svg`, `shopping-bag.svg`, `sliders-horizontal.svg`, `sparkle.svg`, `sparkles.svg`.
-- Used in: the home page services strip, services, and selected work sections, `src/components/sections/ServiceStrip.astro`, `src/components/sections/Services.astro`, and `src/components/ui/ProjectCard.astro`, through `src/lib/icons.ts` and `src/components/ui/Icon.astro`.
+- Files: `arrow-right.svg`, `arrow-up-right.svg`, `calendar-check.svg`, `chart-column.svg`, `clipboard-list.svg`, `code-xml.svg`, `file-pen-line.svg`, `globe.svg`, `key-round.svg`, `layout-grid.svg`, `list-filter.svg`, `lock.svg`, `mail-clock.svg`, `messages-square.svg`, `monitor-cog.svg`, `move-right.svg`, `search.svg`, `shopping-bag.svg`, `sliders-horizontal.svg`, `sparkle.svg`, `sparkles.svg`.
+- Used in: the home page services strip, services, selected work, and process sections, `src/components/sections/ServiceStrip.astro`, `src/components/sections/Services.astro`, `src/components/ui/ProjectCard.astro`, and `src/components/sections/Process.astro`, through `src/lib/icons.ts` and `src/components/ui/Icon.astro`.
 - Source: Lucide, https://lucide.dev, from the `icons/` folder of the npm package `lucide-static` 1.67.0 (published 2026-11-03).
 - Licence: ISC, copyright Lucide Icons and Contributors. `arrow-right`, `arrow-up-right`, `lock`, `search`, and `shopping-bag` derive from Feather and are also under the MIT licence, copyright Cole Bemis (the package's `LICENSE` lists them). Both allow use, copying, and changes for any purpose, as long as the copyright and permission notices stay with the copies; both are reproduced below as the package ships them.
-- Retrieved: 2026-11-17; `arrow-up-right`, `calendar-check`, `globe`, `key-round`, `layout-grid`, `list-filter`, `lock`, `sliders-horizontal`, and `sparkle` on 2026-11-18, from the same release (its `arrow-right.svg` is byte-for-byte the copy already here).
-- Changes: none to the files, which are byte-for-byte copies. When Astro inlines an icon it drops `xmlns`, and `Icon.astro` replaces the `class` and adds `aria-hidden` and `focusable`. The services strip draws `sparkle` filled, by attribute, not by editing the file.
+- Retrieved: 2026-11-17; `arrow-up-right`, `calendar-check`, `chart-column`, `clipboard-list`, `globe`, `key-round`, `layout-grid`, `list-filter`, `lock`, `messages-square`, `monitor-cog`, `move-right`, `sliders-horizontal`, and `sparkle` on 2026-11-18, from the same release (its `arrow-right.svg` is byte-for-byte the copy already here).
+- Changes: none to the files, which are byte-for-byte copies. When Astro inlines an icon it drops `xmlns`, and `Icon.astro` replaces the `class` and adds `aria-hidden` and `focusable`. The services strip draws `sparkle` filled, by attribute, not by editing the file. The process section thins the strokes with CSS (`stroke-width`), also without editing the files.
 
 ```text
 ISC License

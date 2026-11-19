@@ -1,6 +1,8 @@
 import ArrowRight from '../assets/icons/arrow-right.svg';
 import ArrowUpRight from '../assets/icons/arrow-up-right.svg';
 import CalendarCheck from '../assets/icons/calendar-check.svg';
+import ChartColumn from '../assets/icons/chart-column.svg';
+import ClipboardList from '../assets/icons/clipboard-list.svg';
 import CodeXml from '../assets/icons/code-xml.svg';
 import FilePenLine from '../assets/icons/file-pen-line.svg';
 import Globe from '../assets/icons/globe.svg';
@@ -9,6 +11,9 @@ import LayoutGrid from '../assets/icons/layout-grid.svg';
 import ListFilter from '../assets/icons/list-filter.svg';
 import Lock from '../assets/icons/lock.svg';
 import MailClock from '../assets/icons/mail-clock.svg';
+import MessagesSquare from '../assets/icons/messages-square.svg';
+import MonitorCog from '../assets/icons/monitor-cog.svg';
+import MoveRight from '../assets/icons/move-right.svg';
 import Search from '../assets/icons/search.svg';
 import ShoppingBag from '../assets/icons/shopping-bag.svg';
 import SlidersHorizontal from '../assets/icons/sliders-horizontal.svg';
@@ -29,6 +34,8 @@ export const icons = {
   'arrow-right': ArrowRight,
   'arrow-up-right': ArrowUpRight,
   'calendar-check': CalendarCheck,
+  'chart-column': ChartColumn,
+  'clipboard-list': ClipboardList,
   'code-xml': CodeXml,
   'file-pen-line': FilePenLine,
   globe: Globe,
@@ -37,6 +44,9 @@ export const icons = {
   'list-filter': ListFilter,
   lock: Lock,
   'mail-clock': MailClock,
+  'messages-square': MessagesSquare,
+  'monitor-cog': MonitorCog,
+  'move-right': MoveRight,
   search: Search,
   'shopping-bag': ShoppingBag,
   'sliders-horizontal': SlidersHorizontal,

@@ -298,6 +298,19 @@
 }
 
 /*
+ * Lines behind the home page's steps (src/components/sections/Process.astro), after the band the
+ * owner named as the reference (fdicreative.com, "4 Easy Steps to Launch!", 2026-11-18): fine dark
+ * lines sweeping across a charcoal band. The section sets the band colour; this adds the lines,
+ * src/assets/process/lines.svg, this site's own drawing (design/process-lines/render.mjs). Covering
+ * keeps their spacing even at every width, and the file keeps each line one pixel wide.
+ */
+@utility process-lines {
+  background-image: url('../assets/process/lines.svg');
+  background-position: center;
+  background-size: cover;
+}
+
+/*
  * Home services strip (src/components/sections/ServiceStrip.astro). The only continuous text
  * motion on the site, and only here: the service names travel right to left, the way the WPRiders
  * logo row does (an open band, wide even gaps, no rules), with the names from `serviceCards`

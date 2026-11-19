@@ -301,3 +301,25 @@ export const featuredProjects: readonly FeaturedProject[] = [
     photoAlt: 'Woman in black activewear stretching in a butterfly pose on a studio floor',
   },
 ];
+
+/**
+ * One step in the home page's process section (src/components/sections/Process.astro), in order.
+ * Each step shows an icon, its number, and its title, as the reference the owner named does
+ * (fdicreative.com, "4 Easy Steps to Launch!"). The titles reword the owner's own (Free quote, A
+ * clear plan, We do the work, You see the results) with synonyms, at the owner's request
+ * (2026-11-18); the wording is a proposal. The owner's original titles and longer descriptions are
+ * kept in docs/content-strategy.md.
+ */
+export interface ProcessStep {
+  readonly title: string;
+  /** Decorative, above the number; the title carries the meaning. */
+  readonly icon: IconName;
+}
+
+/** The four steps, in the order they happen. */
+export const processSteps: readonly ProcessStep[] = [
+  { title: 'Free estimate', icon: 'messages-square' },
+  { title: 'A simple roadmap', icon: 'clipboard-list' },
+  { title: 'We get it done', icon: 'monitor-cog' },
+  { title: 'You track the outcomes', icon: 'chart-column' },
+];

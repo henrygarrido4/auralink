@@ -32,20 +32,20 @@ The home page introduction (`src/components/sections/AboutIntro.astro`, where th
 
 ## Information architecture (planned)
 
-| Route                                 | Purpose                                                                                                               | Primary call to action                | Content source               | Status                             |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------------- | ---------------------------------- |
-| `/`                                   | Position the agency, show the service groups, highlight real work once available, route visitors to the right service | Start a project inquiry               | `src/data/site.ts`, sections | Built: hero, intro, services, work |
-| `/services/website-development/`      | Hub comparing static, WordPress, and Shopify builds; helps the visitor choose                                         | Inquiry; links to the three sub-pages | `services` collection        | Planned                            |
-| `/services/static-websites/`          | Custom static websites: what, for whom, process, deliverables                                                         | Inquiry                               | `services` + `faqs`          | Planned                            |
-| `/services/wordpress-development/`    | WordPress builds: scope, approach, maintenance considerations                                                         | Inquiry                               | `services` + `faqs`          | Planned                            |
-| `/services/shopify-development/`      | Shopify stores: setup, theme development, integrations                                                                | Inquiry                               | `services` + `faqs`          | Planned                            |
-| `/services/email-marketing/`          | Email design and development plus lifecycle automation                                                                | Inquiry                               | `services` + `faqs`          | Planned                            |
-| `/services/seo-ai-search/`            | SEO, AEO, and GEO explained and offered as a programme                                                                | Inquiry                               | `services` + `faqs`          | Planned                            |
-| `/work/` and `/work/[id]/`            | Genuine case studies, each client-approved                                                                            | Inquiry; related service              | `work` collection            | Planned; requires approved entries |
-| `/about/`                             | Who Auralink Studio is, how it works, why clients choose it (verified facts only)                                     | Inquiry                               | page copy                    | Planned                            |
-| `/insights/` and `/insights/[id]/`    | Educational articles answering real client questions                                                                  | Related service; inquiry              | `insights` collection        | Planned                            |
-| `/contact/` and `/contact/thank-you/` | Project inquiry form (Netlify Forms) and confirmation                                                                 | Submit inquiry                        | page copy, form              | Planned                            |
-| `/404`                                | Helpful not-found page linking to hubs                                                                                | Hubs                                  | page copy                    | Planned                            |
+| Route                                 | Purpose                                                                                                               | Primary call to action                | Content source               | Status                                    |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------------- | ----------------------------------------- |
+| `/`                                   | Position the agency, show the service groups, highlight real work once available, route visitors to the right service | Start a project inquiry               | `src/data/site.ts`, sections | Built: hero, intro, services, work, steps |
+| `/services/website-development/`      | Hub comparing static, WordPress, and Shopify builds; helps the visitor choose                                         | Inquiry; links to the three sub-pages | `services` collection        | Planned                                   |
+| `/services/static-websites/`          | Custom static websites: what, for whom, process, deliverables                                                         | Inquiry                               | `services` + `faqs`          | Planned                                   |
+| `/services/wordpress-development/`    | WordPress builds: scope, approach, maintenance considerations                                                         | Inquiry                               | `services` + `faqs`          | Planned                                   |
+| `/services/shopify-development/`      | Shopify stores: setup, theme development, integrations                                                                | Inquiry                               | `services` + `faqs`          | Planned                                   |
+| `/services/email-marketing/`          | Email design and development plus lifecycle automation                                                                | Inquiry                               | `services` + `faqs`          | Planned                                   |
+| `/services/seo-ai-search/`            | SEO, AEO, and GEO explained and offered as a programme                                                                | Inquiry                               | `services` + `faqs`          | Planned                                   |
+| `/work/` and `/work/[id]/`            | Genuine case studies, each client-approved                                                                            | Inquiry; related service              | `work` collection            | Planned; requires approved entries        |
+| `/about/`                             | Who Auralink Studio is, how it works, why clients choose it (verified facts only)                                     | Inquiry                               | page copy                    | Planned                                   |
+| `/insights/` and `/insights/[id]/`    | Educational articles answering real client questions                                                                  | Related service; inquiry              | `insights` collection        | Planned                                   |
+| `/contact/` and `/contact/thank-you/` | Project inquiry form (Netlify Forms) and confirmation                                                                 | Submit inquiry                        | page copy, form              | Planned                                   |
+| `/404`                                | Helpful not-found page linking to hubs                                                                                | Hubs                                  | page copy                    | Planned                                   |
 
 Pages are built when their content is ready and pass the quality checks. Do not create empty placeholder routes. Update the status column when a route ships.
 
@@ -99,6 +99,32 @@ Each cover photo is a licensed stock photo of the project's industry (`src/asset
 Each card also has two cut-out props that pop out from behind it, as the plant and pencil cup do in Hub2B (the owner's choice, 2026-11-18: "props per project"). They are scissors and a comb for the barbershop, keys and a succulent for the apartments, and sneakers and a water bottle for the activewear store. All are cut from licensed stock photos chosen without logos or people. They are decorative, with empty alt text, and only suggest the industry: never the business's own tools, premises, or products.
 
 The section introduction is a proposal the owner has not confirmed. The owner suggested the eyebrow "Selected work", the heading "Different businesses. Thoughtful digital experiences.", and "Explore a selection of website and storefront projects, each shaped around a different audience and purpose." The introduction above already promises "thoughtful digital experiences", and the first service card is "shaped around your business". So the proposal keeps the eyebrow and the heading's first half: "Different businesses. Different reasons to visit." Then it says plainly what follows: "Three projects on three platforms: a custom static website for a barbershop, a WordPress demo for an apartment community, and a Shopify recreation of an activewear store."
+
+## How a project starts, on the home page
+
+The home page's process section (`src/components/sections/Process.astro`, built 2026-11-18, `#process`) sits directly under selected work. The owner pointed at another agency's "4 Easy steps to launch" (fdicreative.com) and asked for that kind of section, with their own four steps. Later that day they asked for each step to show an icon, a number, and a title as that section does, so the page shows titles only. Then they asked for the titles to be reworded with synonyms. The current titles, defined once in `processSteps` in `src/data/site.ts`, are that rewording, a proposal for the owner to confirm:
+
+| Owner's title       | On the page now        |
+| ------------------- | ---------------------- |
+| Free quote          | Free estimate          |
+| A clear plan        | A simple roadmap       |
+| We do the work      | We get it done         |
+| You see the results | You track the outcomes |
+
+"Free" stays because its synonyms (no-cost, complimentary) read stiffly. The new titles keep each meaning and add no claim: "You track the outcomes" says the client can follow what happens, not what the outcomes will be.
+
+The owner also wrote a sentence for each step. They are no longer on the page and are kept here, under the owner's original titles, in case they return:
+
+1. Free quote. Tell us about your business, where you work, and what kind of jobs you want more of.
+2. A clear plan. We tell you what we'd do first, what it costs, and what to expect. Nothing starts until you say yes.
+3. We do the work. You approve it before anything goes live.
+4. You see the results. Calls, form fills, and booked jobs, every month.
+
+If they return, the earlier notes still apply. "What it costs" says the plan includes a cost; it does not publish one. "Every month" can read as a promise that those results arrive, so the owner should confirm it. "What kind of jobs you want more of" frames the offer toward businesses that book jobs, which is narrower than the verified audience (business owners and marketing teams).
+
+The titles name no price, client, statistic, or measured outcome. Each step's icon (Lucide: conversation, clipboard list, monitor with a cog, bar chart) is decorative and was chosen to suit the title; the chart's bars are not data.
+
+Only the heading sits above the steps: "Four easy steps. From quote to live work.", a proposal that keeps the spirit of the section the owner pointed at without copying its wording. The owner had the rest removed (2026-11-18): the eyebrow "Getting started", the rule under the heading, the sentence "You approve the plan before anything starts, and the work before it goes live.", and the "Book a free call" button that ended the section. The section no longer says anywhere that the client approves the plan and the work before they go ahead.
 
 ## Content types and collections
 

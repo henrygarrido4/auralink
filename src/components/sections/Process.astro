@@ -1,0 +1,106 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import { processSteps } from '@/data/site';
+
+/**
+ * Home page process, directly under selected work, with the four steps in `processSteps`
+ * (src/data/site.ts). The owner named the reference on 2026-11-18: fdicreative.com's "4 Easy Steps
+ * to Launch!". Each step is an icon, its number, and its title, and the band behind them is the
+ * reference's: charcoal, crossed by fine dark lines. Above the steps there is only the heading:
+ * no eyebrow, rule, sentence, or button (owner, 2026-11-18).
+ *
+ * Measured from the reference at 1440: white line icons about 116px tall; numbers 64px tall, extra
+ * bold, in a faint grey with a full stop in the brand colour, 31px under the icon; 25px titles 25px
+ * under the numbers; a long grey arrow between steps, in the gap between icon and number. From md
+ * the steps share one row, at smaller sizes until lg, as the reference scales its row on tablets.
+ * Below md they stack, centred, with the arrow turned to point down. The band is `neutral` at 90%
+ * over the white page, which renders the reference's #212121, and `process-lines`
+ * (src/styles/global.css) draws the lines.
+ *
+ * Adapted to this site: Lucide icons in `neutral-content`, Mukta numbers and titles, the full stop
+ * in `primary`. Mukta's figures are shorter than the reference's, so the numbers are set at 96px to
+ * match its digit height, and Lucide pads its glyphs, so the icons are 128px boxes. The reference's
+ * numbers are 1.5:1 against the band; ours are `neutral-content` at 40%, 3.2:1, just over the 3:1
+ * WCAG asks of text this large. The heading keeps this site's bold and light lines, in light text.
+ *
+ * The list is a subgrid from md: every step but the last spans two columns, its own and the arrow
+ * after it, and three shared rows, so icons, numbers, and titles line up across the row however
+ * the titles wrap. Icons, numbers, and arrows are decorative; each heading says "Step N" where
+ * only assistive technology reads it, and the list is ordered. Nothing moves, and there is no
+ * client-side JavaScript.
+ */
+interface Props {
+  /** Anchor for in-page links. */
+  id: string;
+}
+
+const { id } = Astro.props;
+const titleId = `${id}-title`;
+
+/** Two digits, matching the numbers under the project cards. */
+const stepNumber = (index: number) => String(index + 1).padStart(2, '0');
+---
+
+<section id={id} aria-labelledby={titleId} class="process-lines bg-neutral/90 text-neutral-content">
+  <div class="mx-auto max-w-site px-6 pt-16 pb-20 sm:pt-20 sm:pb-24 lg:px-8 lg:py-24">
+    <h2
+      id={titleId}
+      class="mx-auto max-w-3xl text-center text-3xl font-bold tracking-tight text-balance sm:text-4xl xl:text-5xl"
+    >
+      {/* The explicit space keeps the two lines apart in the heading's text. */}
+      <span class="block">Four easy steps.</span>{' '}
+      <span class="block font-light">From quote to live work.</span>
+    </h2>
+
+    {/*
+     * role="list": Safari drops the list role from lists styled without markers. From md, seven
+     * columns (four steps, three arrows) and three rows: the icon, the number, the title.
+     */}
+    <ol
+      role="list"
+      class="mt-14 grid list-none text-center sm:mt-16 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] md:grid-rows-[auto_auto_auto] xl:mt-20"
+    >
+      {processSteps.map((step, index) => {
+        const last = index === processSteps.length - 1;
+        return (
+          <li
+            class:list={[
+              'grid justify-items-center md:row-span-3 md:grid-cols-subgrid md:grid-rows-subgrid',
+              last ? 'md:col-span-1' : 'md:col-span-2',
+            ]}
+          >
+            {/* 0.65 of Lucide's 24-unit grid draws the reference's 3.5px lines at 128px. */}
+            <Icon
+              name={step.icon}
+              class="size-32 stroke-[0.65] md:col-start-1 md:row-start-1 md:size-26 lg:size-32"
+            />
+            <span
+              aria-hidden="true"
+              class="mt-2 font-(family-name:--font-headers) text-[6rem] leading-none font-bold text-neutral-content/40 md:col-start-1 md:row-start-2 md:text-[4rem] lg:text-[6rem]"
+            >
+              {stepNumber(index)}
+              <span class="text-primary">.</span>
+            </span>
+            <h3 class="text-2xl font-bold text-balance md:col-start-1 md:row-start-3 md:px-2 md:text-lg lg:text-2xl">
+              <span class="sr-only">Step {index + 1}. </span>
+              {step.title}
+            </h3>
+            {/*
+             * Down between stacked steps, with the reference's open band around it: about 50px
+             * under the title and 32px over the next icon. From md it points across, in the gap
+             * between the icon and the number as in the reference: centred on those two rows,
+             * then 20px lower. The stroke widths keep the line near the reference's 3-4px.
+             */}
+            {!last && (
+              <Icon
+                name="move-right"
+                data-step-arrow
+                class="mt-10 mb-5 size-16 rotate-90 stroke-1 text-neutral-content/40 md:col-start-2 md:row-span-2 md:row-start-1 md:mx-3 md:my-0 md:size-12 md:translate-y-5 md:rotate-0 md:self-center lg:mx-2 lg:size-24 lg:stroke-[0.85] xl:mx-6 xl:size-28"
+              />
+            )}
+          </li>
+        );
+      })}
+    </ol>
+  </div>
+</section>
