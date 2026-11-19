@@ -1,0 +1,129 @@
+---
+import { Picture } from 'astro:assets';
+import desk from '@/assets/why/desk.webp';
+import Icon from '@/components/ui/Icon.astro';
+import { whyPillars } from '@/data/site';
+
+/**
+ * Home page "Why Auralink Studio?", directly under the services and before who we work with.
+ * The owner's approved mockup (2026-11-19) sets the look, with Hub2B's "Coworking Subscriptions"
+ * as the earlier reference for a dark band and three flat cards, the centre one in the brand
+ * yellow. The copy is `whyPillars` (src/data/site.ts): an eyebrow, one heading, one sentence, and
+ * exactly three cards. No button, link, price, or badge, and nothing is clickable.
+ *
+ * Behind the copy is the desk photograph the owner supplied (src/assets/why/desk.webp). It is
+ * decorative. A `neutral` wash over it keeps the heading readable; `neutral` itself shows until
+ * the photo has loaded. The file is 1024px wide, so wider screens scale it rather than a larger
+ * source.
+ * The introduction sits on the container's left edge, like the other sections: the eyebrow,
+ * the heading, a short primary rule, and the sentence. The sentence keeps a readable measure
+ * (`max-w-2xl`, the same as the other supporting sentences) and is not centred. From lg the
+ * cards share one row and a subgrid, so the category, the two-line heading, the description,
+ * and the checklist each line up across the three cards however the description wraps. Those
+ * four are left-aligned, and every card uses the same padding: 32px from lg, so "Measurable
+ * progress." stays on one line, and 48px from xl, where the cards are wider. Below lg they
+ * stack in the same order, only as tall as their own text. Corners stay square and nothing
+ * casts a shadow.
+ * The checklist marks
+ * are decorative: a green circle in the mockup's green, around Lucide's check in white.
+ * daisyUI's `success` is too light for a white check. No client-side JavaScript.
+ */
+interface Props {
+  /** Anchor for in-page links. */
+  id: string;
+}
+
+const { id } = Astro.props;
+const titleId = `${id}-title`;
+---
+
+<section id={id} aria-labelledby={titleId} class="relative isolate bg-neutral text-neutral-content">
+  {/*
+   * Decorative. object-top keeps the laptop and notebook, which sit along the top of the frame;
+   * a tall phone crops the sides and shows the dark desktop. Widths stop at the 1024px source.
+   * The wash is half `neutral`: the photograph is already near-black, and a heavier wash hid it.
+   */}
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+    <Picture
+      src={desk}
+      alt=""
+      formats={['avif']}
+      fallbackFormat="webp"
+      quality={80}
+      widths={[480, 768, 1024]}
+      sizes="100vw"
+      loading="lazy"
+      pictureAttributes={{ class: 'absolute inset-0 block size-full' }}
+      class="size-full object-cover object-top"
+    />
+    <div class="absolute inset-0 bg-neutral/50"></div>
+  </div>
+
+  <div class="relative mx-auto max-w-site px-6 py-16 sm:py-20 lg:px-8 lg:py-24 xl:py-28">
+    {/*
+     * The shared eyebrow locks a dark colour for the light sections. Here the label is the
+     * primary yellow, so it is set directly, with the same size and tracking. It, the heading,
+     * the rule, and the sentence start on this container's left edge, the same edge as the cards.
+     */}
+    <p class="text-sm font-bold tracking-[0.16em] text-primary uppercase">How we're different</p>
+    <h2
+      id={titleId}
+      class="mt-4 text-3xl font-bold tracking-tight text-balance sm:mt-5 sm:text-4xl xl:text-5xl"
+    >
+      <span class="font-light">Why</span> Auralink Studio?
+    </h2>
+    <div class="mt-5 h-0.5 w-12 bg-primary" aria-hidden="true"></div>
+    <p class="mt-5 max-w-2xl text-lg leading-relaxed text-pretty sm:mt-6">
+      Thoughtful websites. Connected email journeys. A partner invested in your business.
+    </p>
+
+    {/*
+     * role="list": Safari drops the list role from lists styled without markers.
+     * Three columns from lg. The row gap is the space between a card's category, heading,
+     * description, and checklist, shared through the subgrid.
+     */}
+    <ul
+      role="list"
+      class="mt-12 grid gap-6 sm:mt-14 lg:mt-16 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-5 xl:mt-20 xl:gap-x-7"
+    >
+      {whyPillars.map((pillar) => (
+        <li
+          data-why-card
+          data-accent={pillar.accent || undefined}
+          class:list={[
+            'grid min-w-0 grid-rows-[auto_auto_auto_auto] gap-5 rounded-none p-8 text-left text-base-content shadow-none sm:p-10 lg:row-span-4 lg:grid-rows-subgrid lg:gap-y-5 lg:p-8 xl:p-12',
+            pillar.accent ? 'bg-primary' : 'bg-base-100',
+          ]}
+        >
+          <p class="text-xs font-bold tracking-[0.14em] uppercase sm:text-sm">{pillar.category}</p>
+          <h3 class="text-2xl leading-tight font-bold tracking-tight sm:text-3xl lg:text-2xl xl:text-[2rem] xl:leading-tight">
+            <span class="block">{pillar.title[0]}</span>{' '}
+            <span class="block">{pillar.title[1]}</span>
+          </h3>
+          <p class="text-base leading-relaxed text-pretty text-base-content/80">
+            {pillar.description}
+          </p>
+          <ul role="list" data-why-points class="grid gap-3">
+            {pillar.points.map((point) => (
+              <li class="flex items-start gap-3">
+                {/*
+                 * #32a464 is the green of the checks in the approved mockup. Not a brand
+                 * colour: daisyUI's success is too light for a white check.
+                 */}
+                <span
+                  class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[#32a464] text-base-100"
+                  aria-hidden="true"
+                >
+                  <Icon name="check" class="size-3.5" stroke-width="3" />
+                </span>
+                <span class="min-w-0 text-base leading-snug font-medium lg:text-sm xl:text-base">
+                  {point}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

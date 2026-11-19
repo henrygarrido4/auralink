@@ -4,6 +4,7 @@ import ArrowUpRight from '../assets/icons/arrow-up-right.svg';
 import Briefcase from '../assets/icons/briefcase.svg';
 import CalendarCheck from '../assets/icons/calendar-check.svg';
 import Car from '../assets/icons/car.svg';
+import Check from '../assets/icons/check.svg';
 import ChartColumn from '../assets/icons/chart-column.svg';
 import ClipboardList from '../assets/icons/clipboard-list.svg';
 import Clock from '../assets/icons/clock.svg';
@@ -58,6 +59,7 @@ export const icons = {
   briefcase: Briefcase,
   'calendar-check': CalendarCheck,
   car: Car,
+  check: Check,
   'chart-column': ChartColumn,
   'clipboard-list': ClipboardList,
   clock: Clock,

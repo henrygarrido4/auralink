@@ -4,18 +4,19 @@ import { expect, test, type Page } from '@playwright/test';
 import { industries, primaryCta } from '../../src/data/site';
 
 /**
- * Home page "Who we work with" (src/components/sections/WhoWeWorkWith.astro), between the services
- * and the process, where selected work was until 2026-11-18, after the owner's mockup of
+ * Home page "Who we work with" (src/components/sections/WhoWeWorkWith.astro), after Why Auralink
+ * Studio and before the process, where selected work was until 2026-11-18, after the owner's mockup of
  * 2026-11-19. On the `primary` band: the eyebrow, the heading, and the sentence on the shared
  * container's left edge; the kinds of business in `industries` as one flat white directory, four
  * columns from lg, two from sm, one on phones, filled row by row, its cells touching across 1px
  * grey rules and every row as tall as the others (105-115px from lg); in each cell the entry's
  * decorative 24px icon, 16px before the name and centred beside it; then, 40px below, "Don't see
  * your business here?" and the flat charcoal "Let's talk", which follows the navbar's call to
- * action (`primaryCta`). Under a hovering pointer the cell beneath it, and only that one, turns a
- * very pale yellow and underlines its name over 250ms (at once under reduced motion), moving
- * nothing; at rest every cell is white, Automotive included. No industry page exists, so nothing
- * in the list is a link or a tab stop. No client-side JavaScript.
+ * action (`primaryCta`). Under a fine hovering pointer the cell beneath it, and only that one,
+ * fills `#141817` and turns its name, icon, and underline white over 240ms (at once under reduced
+ * motion), moving nothing; a coarse pointer never sees that hover. At rest every cell is white,
+ * Automotive included. No industry page exists, so nothing in the list is a link or a tab stop.
+ * No client-side JavaScript.
  *
  * Boxes and styles are read in one `evaluate` on a CSS-located container: Playwright's Firefox
  * crashes on `evaluateAll` inside a region found by its name (testing-playwright.mdc). The layout
@@ -29,8 +30,9 @@ const SENTENCE = 'Websites and email marketing built around your business.';
 const QUESTION = "Don't see your business here?";
 const ACTION = "Let's talk";
 const NAMES = industries.map(({ name }) => name);
-/** The hover fill, mixed as `directory-cell-active` in src/styles/global.css mixes it. */
-const PALE_YELLOW = 'color-mix(in oklab, var(--color-primary) 14%, var(--color-base-100))';
+/** The hover fill and ink, the secondary pair in src/styles/global.css (`#141817` on white). */
+const HOVER_FILL = '#141817';
+const HOVER_INK = '#ffffff';
 /** Every width the layout suite checks, the first at two columns, and the last before xl. */
 const WIDTHS = [360, 390, 640, 768, 1024, 1279, 1280, 1440, 1920];
 
@@ -39,7 +41,8 @@ const list = (page: Page) => page.locator('#who-we-work-with ul');
 const cells = (page: Page) => page.locator('#who-we-work-with li');
 /** One column on phones, two from sm (640px), four from lg (1024px). */
 const columnsAt = (width: number) => (width >= 1024 ? 4 : width >= 640 ? 2 : 1);
-const canHover = (page: Page) => page.evaluate(() => matchMedia('(hover: hover)').matches);
+const canHover = (page: Page) =>
+  page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
 
 function near(actual: number, expected: number, message: string, tolerance = 0.5) {
   expect(
@@ -84,28 +87,112 @@ const paint = (page: Page, values: string[]) =>
     return bytes;
   }, values);
 
-/** Every cell's fill and its name's underline, in list order, read in one frame, as painted. */
+/**
+ * Every cell's fill, underline, label, and icon, in list order, read in one frame, as painted.
+ * The icon is compared with the label: its stroke is `currentColor`, so the two colours match,
+ * or the stroke is still the keyword. `fill` on the svg stays `none` (outline icons).
+ */
 const looks = async (page: Page) => {
   const computed = await list(page).evaluate((element) =>
-    Array.from(element.children, (item) => [
-      getComputedStyle(item).backgroundColor,
-      getComputedStyle(item.querySelector('[data-directory-name]')!).textDecorationColor,
-    ]),
+    Array.from(element.children, (item) => {
+      const name = item.querySelector('[data-directory-name]')!;
+      const icon = item.querySelector('svg')!;
+      const itemStyle = getComputedStyle(item);
+      const nameStyle = getComputedStyle(name);
+      const iconStyle = getComputedStyle(icon);
+      return {
+        colors: [
+          itemStyle.backgroundColor,
+          nameStyle.textDecorationColor,
+          nameStyle.color,
+          iconStyle.color,
+        ],
+        strokeFollows:
+          iconStyle.stroke === iconStyle.color || iconStyle.stroke.toLowerCase() === 'currentcolor',
+        iconFill: iconStyle.fill,
+      };
+    }),
   );
-  const bytes = await paint(page, computed.flat());
-  return computed.map((_, i) => ({ fill: bytes[2 * i], underline: bytes[2 * i + 1] }));
+  const bytes = await paint(
+    page,
+    computed.flatMap((cell) => cell.colors),
+  );
+  return computed.map((cell, i) => ({
+    fill: bytes[i * 4],
+    underline: bytes[i * 4 + 1],
+    ink: bytes[i * 4 + 2],
+    icon: bytes[i * 4 + 3],
+    strokeFollows: cell.strokeFollows,
+    iconFill: cell.iconFill,
+  }));
 };
 
-/** The look of a cell at rest and under the pointer, as `looks` reports them. */
+/** Decoration and motion on every cell, separate from the painted colours `looks` compares. */
+const chrome = (page: Page) =>
+  list(page).evaluate((element) =>
+    Array.from(element.children, (item) => {
+      const style = getComputedStyle(item);
+      const name = getComputedStyle(item.querySelector('[data-directory-name]')!);
+      return {
+        shadow: style.boxShadow,
+        transform: style.transform,
+        cursor: style.cursor,
+        decoration: [
+          name.textDecorationLine,
+          name.textDecorationThickness,
+          name.textUnderlineOffset,
+        ],
+      };
+    }),
+  );
+
+/** The look of a cell at rest and under the pointer, as `looks` reports the painted colours. */
 const directoryLooks = async (page: Page) => {
-  const [white, clear, pale, ink] = await paint(page, [
+  const [white, clear, charcoal, dark, paper, secondary, secondaryInk] = await paint(page, [
     'var(--color-base-100)',
     'transparent',
-    PALE_YELLOW,
     'var(--color-base-content)',
+    HOVER_FILL,
+    HOVER_INK,
+    'var(--color-secondary)',
+    'var(--color-secondary-content)',
   ]);
-  return { rest: { fill: white, underline: clear }, active: { fill: pale, underline: ink } };
+  expect(secondary, 'secondary is #141817').toEqual(dark);
+  expect(secondaryInk, 'secondary label is pure white').toEqual(paper);
+  return {
+    rest: { fill: white, underline: clear, ink: charcoal, icon: charcoal },
+    active: { fill: dark, underline: paper, ink: paper, icon: paper },
+  };
 };
+
+/** The painted colours of one cell, without the icon's stroke check. */
+const coloursOf = ({
+  fill,
+  underline,
+  ink,
+  icon,
+}: {
+  fill: number[];
+  underline: number[];
+  ink: number[];
+  icon: number[];
+}) => ({ fill, underline, ink, icon });
+
+interface DirectoryWindow extends Window {
+  directoryRuns: { prop: string; duration: number; easing: string }[][];
+  directoryMids: { start: string; mid: string; iconStart: string; iconMid: string }[];
+  directoryEnds: number[];
+}
+
+/** How many lines each name occupies. The name is a flex item, so its own box is one rect; a range counts the lines. */
+const lineCounts = (page: Page) =>
+  list(page).evaluate((element) =>
+    Array.from(element.querySelectorAll('[data-directory-name]'), (name) => {
+      const range = document.createRange();
+      range.selectNodeContents(name);
+      return range.getClientRects().length;
+    }),
+  );
 
 /**
  * Every cell's box relative to the list, in one frame. Relative, because hovering scrolls a cell
@@ -139,7 +226,7 @@ const pathsOf = (icon: string) =>
     ([, d]) => d,
   );
 
-test('sits between the services and the process, in the place of selected work', async ({
+test('sits between why auralink and the process, in the place of selected work', async ({
   page,
 }) => {
   await page.goto('/');
@@ -148,7 +235,7 @@ test('sits between the services and the process, in the place of selected work',
     Array.from(document.querySelectorAll('section[id]'), (element) => element.id),
   );
   const at = ids.indexOf('who-we-work-with');
-  expect(ids[at - 1], 'after the services').toBe('services');
+  expect(ids[at - 1], 'after why auralink').toBe('why-auralink');
   expect(ids[at + 1], 'before the process').toBe('process');
   await expect(page.locator('#work')).toHaveCount(0);
 });
@@ -479,56 +566,179 @@ test.describe('the hover', () => {
       await page.goto('/');
       await page.mouse.move(0, 0);
       const { rest } = await directoryLooks(page);
-      expect(await looks(page)).toEqual(NAMES.map(() => rest));
+      const seen = await looks(page);
+      expect(seen.map(coloursOf)).toEqual(NAMES.map(() => rest));
+      for (const [index, cell] of seen.entries()) {
+        expect(cell.strokeFollows, `${NAMES[index]}: the icon uses currentColor`).toBe(true);
+        expect(cell.iconFill, `${NAMES[index]}: an outline icon`).toBe('none');
+      }
+      const still = {
+        shadow: 'none',
+        transform: 'none',
+        cursor: 'auto',
+        decoration: ['underline', '1px', '5px'],
+      };
+      expect(await chrome(page)).toEqual(NAMES.map(() => still));
       const timing = await cells(page).evaluateAll((items) =>
         items.map((item) => {
           const style = getComputedStyle(item);
-          const name = getComputedStyle(item.querySelector('[data-directory-name]')!);
           return [
             style.transitionProperty,
             style.transitionDuration,
             style.transitionTimingFunction,
-            style.cursor,
-            name.textDecorationLine,
-            name.textDecorationThickness,
           ];
         }),
       );
       for (const [index, values] of timing.entries()) {
-        expect(values, `${NAMES[index]}: fades over 250ms, an ordinary cursor`).toEqual([
-          '--directory-fill, --directory-rule',
-          '0.25s',
-          'ease',
-          'auto',
-          'underline',
-          '1px',
-        ]);
+        const [property, duration, timingFunction] = values;
+        expect(property, `${NAMES[index]}: only the fill, ink, and underline`).toBe(
+          '--directory-fill, --directory-ink, --directory-rule',
+        );
+        expect(new Set(duration.split(', ')), `${NAMES[index]}: 240ms`).toEqual(new Set(['0.24s']));
+        expect(new Set(timingFunction.split(', ')), `${NAMES[index]}: ease`).toEqual(
+          new Set(['ease']),
+        );
       }
     });
 
-    test('under the pointer each cell, and only that one, fades to pale yellow and underlines its name, and nothing moves', async ({
+    test('under the pointer each cell, and only that one, fills near-black and turns its name and icon white, and nothing moves', async ({
       page,
     }) => {
       await page.goto('/');
       test.skip(!(await canHover(page)), 'Touch screens have no hover; every cell stays white.');
+      await page.setViewportSize({ width: 1024, height: 900 });
+      await page.evaluate(() => document.fonts.ready);
       const { rest, active } = await directoryLooks(page);
-      const [red, green, blue] = active.fill;
-      expect(Math.min(red, green), 'very pale').toBeGreaterThanOrEqual(245);
-      expect(red - blue, 'warm: a tint of the primary yellow').toBeGreaterThanOrEqual(12);
+      const lines = await lineCounts(page);
+      const wrappedAt = lines.findIndex((count) => count > 1);
+      expect(wrappedAt, 'a name wraps onto more than one line').toBeGreaterThanOrEqual(0);
 
       await page.mouse.move(0, 0);
       const before = await boxes(page);
       for (const [index, name] of NAMES.entries()) {
         await cells(page).nth(index).hover();
         await expect
-          .poll(() => looks(page), `${name} under the pointer, every other cell at rest`)
+          .poll(async () => (await looks(page)).map(coloursOf), {
+            message: `${name} under the pointer, every other cell at rest`,
+          })
           .toEqual(NAMES.map((_, i) => (i === index ? active : rest)));
+        const seen = await looks(page);
+        expect(seen[index].strokeFollows, `${name}: the icon turns white with the label`).toBe(
+          true,
+        );
+        expect(seen[index].iconFill, `${name}: the icon stays an outline`).toBe('none');
+        expect((await chrome(page))[index], `${name}: underlined, still, ordinary cursor`).toEqual({
+          shadow: 'none',
+          transform: 'none',
+          cursor: 'auto',
+          decoration: ['underline', '1px', '5px'],
+        });
+        expect((await lineCounts(page))[index], `${name}: the underline does not reflow`).toBe(
+          lines[index],
+        );
         expectSamePlace(await boxes(page), before, `${name}: no cell moves or resizes`);
       }
       await page.mouse.move(0, 0);
       await expect
-        .poll(() => looks(page), 'every cell at rest once the pointer leaves')
+        .poll(async () => (await looks(page)).map(coloursOf), {
+          message: 'every cell at rest once the pointer leaves',
+        })
         .toEqual(NAMES.map(() => rest));
+    });
+
+    test('the fill, the ink, and the underline fade in and back out over 240ms', async ({
+      page,
+    }) => {
+      await page.goto('/');
+      test.skip(!(await canHover(page)), 'Touch screens have no hover; nothing fades.');
+      await page.evaluate(() => {
+        const runs: { prop: string; duration: number; easing: string }[][] = [];
+        const mids: { start: string; mid: string; iconStart: string; iconMid: string }[] = [];
+        const ends: number[] = [];
+        Object.assign(window, { directoryRuns: runs, directoryMids: mids, directoryEnds: ends });
+        const cellOf = (target: EventTarget | null) =>
+          target instanceof HTMLElement && target.matches('#who-we-work-with li') ? target : null;
+        document.addEventListener(
+          'transitionrun',
+          (event) => {
+            const item = cellOf(event.target);
+            if (!item || event.propertyName !== '--directory-fill') return;
+            const icon = item.querySelector('svg');
+            if (!icon) return;
+            const start = getComputedStyle(item).backgroundColor;
+            const iconStart = getComputedStyle(icon).color;
+            runs.push(
+              item.getAnimations().flatMap((anim) => {
+                if (!(anim instanceof CSSTransition) || !anim.effect) return [];
+                const { duration, easing } = anim.effect.getTiming();
+                return [
+                  {
+                    prop: anim.transitionProperty,
+                    duration: typeof duration === 'number' ? duration : -1,
+                    easing: String(easing),
+                  },
+                ];
+              }),
+            );
+            window.setTimeout(() => {
+              mids.push({
+                start,
+                mid: getComputedStyle(item).backgroundColor,
+                iconStart,
+                iconMid: getComputedStyle(icon).color,
+              });
+            }, 80);
+          },
+          true,
+        );
+        document.addEventListener(
+          'transitionend',
+          (event) => {
+            if (!cellOf(event.target) || event.propertyName !== '--directory-fill') return;
+            ends.push(event.elapsedTime);
+          },
+          true,
+        );
+      });
+      const trace = () =>
+        page.evaluate(() => {
+          const recorded = window as unknown as DirectoryWindow;
+          return {
+            mids: recorded.directoryMids.length,
+            ends: recorded.directoryEnds.length,
+          };
+        });
+      const automotive = cells(page).nth(NAMES.indexOf('Automotive'));
+      await automotive.hover();
+      await expect.poll(trace, { message: 'the fade in finishes' }).toEqual({ mids: 1, ends: 1 });
+      await page.mouse.move(0, 0);
+      await expect.poll(trace, { message: 'the fade out finishes' }).toEqual({ mids: 2, ends: 2 });
+      const { runs, mids, ends } = await page.evaluate(() => {
+        const recorded = window as unknown as DirectoryWindow;
+        return {
+          runs: recorded.directoryRuns,
+          mids: recorded.directoryMids,
+          ends: recorded.directoryEnds,
+        };
+      });
+      const fade = [
+        { prop: '--directory-fill', duration: 240, easing: 'ease' },
+        { prop: '--directory-ink', duration: 240, easing: 'ease' },
+        { prop: '--directory-rule', duration: 240, easing: 'ease' },
+      ];
+      const byName = (list: { prop: string; duration: number; easing: string }[]) =>
+        [...list].sort((a, b) => a.prop.localeCompare(b.prop));
+      expect(runs.map(byName), 'entering and leaving each fade the same three properties').toEqual([
+        byName(fade),
+        byName(fade),
+      ]);
+      expect(ends, 'both directions run for 240ms').toEqual([0.24, 0.24]);
+      for (const sample of mids) {
+        expect(sample.mid, 'the fill is between its two colours').not.toBe(sample.start);
+        expect(sample.iconMid, 'the icon colour is between its two colours').not.toBe(
+          sample.iconStart,
+        );
+      }
     });
 
     test('no cell fades anything in on load, even as the stylesheet arrives', async ({ page }) => {
@@ -568,10 +778,18 @@ test.describe('the hover', () => {
       if (await canHover(page)) {
         const { active } = await directoryLooks(page);
         await automotive.hover();
-        expect((await looks(page))[NAMES.indexOf('Automotive')]).toEqual(active);
+        expect((await looks(page)).map(coloursOf)[NAMES.indexOf('Automotive')]).toEqual(active);
       }
     });
   });
+});
+
+test('a coarse pointer does not leave a cell dark', async ({ page }) => {
+  await page.goto('/');
+  test.skip(await canHover(page), 'A fine hovering pointer is covered with the other hover tests.');
+  const { rest } = await directoryLooks(page);
+  await cells(page).first().click();
+  expect((await looks(page)).map(coloursOf)).toEqual(NAMES.map(() => rest));
 });
 
 test.describe('without JavaScript', () => {

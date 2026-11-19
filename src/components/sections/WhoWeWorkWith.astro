@@ -5,7 +5,7 @@ import Icon from '@/components/ui/Icon.astro';
 import { industries, primaryCta } from '@/data/site';
 
 /**
- * Home page "Who we work with", between the services and the process, in the place of the selected
+ * Home page "Who we work with", after Why Auralink Studio and before the process, in the place of the selected
  * work it replaced (owner, 2026-11-18) and on that section's `primary` band. The owner's mockup of
  * 2026-11-19 sets the look: an eyebrow, a heading, and a sentence on the container's left edge,
  * like the other sections; the kinds of business in `industries` (src/data/site.ts) as one compact
@@ -17,10 +17,11 @@ import { industries, primaryCta } from '@/data/site';
  * as tall as the tallest (`auto-rows-fr`), at least 112px from lg, and grows when a name needs more
  * lines. Each cell is a decorative icon centred beside its name, in charcoal.
  *
- * Under a hovering pointer a cell turns a very pale yellow and its name gains a fine charcoal
- * underline, both over 250ms, with nothing moving (`directory-cell` in src/styles/global.css). No
- * page exists for any of these businesses yet, so the names are not links: the hover is decoration,
- * no cell is a tab stop, and the cursor stays as it is. "Let's talk" is the flat charcoal button,
+ * Under a fine hovering pointer a cell fills with the secondary near-black and its name and icon
+ * turn white, the name underlined in white, all over 240ms, with nothing moving (`directory-cell`
+ * in src/styles/global.css). A coarse pointer never sees that hover. No page exists for any of
+ * these businesses yet, so the names are not links: the hover is decoration, no cell is a tab stop,
+ * and the cursor stays as it is. "Let's talk" is the flat charcoal button,
  * following the navbar's call to action (`primaryCta`): a link to the inquiry page once that ships,
  * a placeholder until then. There is no client-side JavaScript.
  */
@@ -52,7 +53,7 @@ const titleId = `${id}-title`;
       class="mt-10 grid auto-rows-fr gap-px bg-base-300 text-base-content sm:mt-12 sm:grid-cols-2 lg:grid-cols-4"
     >
       {industries.map((industry) => (
-        <li class="directory-cell flex min-h-20 items-center gap-4 p-6 hover:directory-cell-active lg:min-h-28">
+        <li class="directory-cell flex min-h-20 items-center gap-4 p-6 lg:min-h-28">
           <Icon name={industry.icon} class="size-6 shrink-0" stroke-width="1.75" />
           {/* 16px from lg to xl, where four columns are narrowest, so no name runs past three lines. */}
           <span

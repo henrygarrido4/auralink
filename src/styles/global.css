@@ -287,13 +287,28 @@
 
 /*
  * A cell of the home page's business directory (src/components/sections/WhoWeWorkWith.astro):
- * white, and while the pointer is over it (`directory-cell-active`) a very pale tint of the primary
- * yellow, with a fine charcoal underline under its name (`data-directory-name`). Both fade in and
- * out over 250ms with `ease`, through registered properties, for the reason given at `arrow-box`.
- * The underline is always there, transparent at rest. It is painted, not laid out, so nothing
- * moves. Forced colours would paint it in the text colour for good, so it is dropped there.
+ * white, its name and icon in charcoal. Under a fine pointer that can hover, that cell alone fills
+ * with the secondary near-black (#141817) and its name and icon turn pure white. The name keeps a
+ * 1px underline, 5px under the text on every line when the name wraps, transparent at rest and
+ * white under the pointer.
+ *
+ * Fill, ink, and underline fade both ways over 240ms with `ease`. They fade through registered
+ * properties, not through `background-color`, `color`, or `text-decoration-color`, for the reason
+ * given at `arrow-box`: `--directory-fill` is the background, `--directory-ink` is the colour (the
+ * icon's stroke is `currentColor`, so it follows), and `--directory-rule` is the underline. Only
+ * those three are listed. The colour change itself sits inside `@media (hover: hover) and (pointer:
+ * fine)`, so a tap cannot leave a cell dark; the fade stays on the cell so leaving still eases.
+ * The underline is painted, not laid out, so nothing moves. Forced colours would paint a
+ * transparent underline in the text colour for good, so it is dropped there. Reduced motion, in
+ * the base layer below, gives the fade no duration.
  */
 @property --directory-fill {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: transparent;
+}
+
+@property --directory-ink {
   syntax: '<color>';
   inherits: false;
   initial-value: transparent;
@@ -307,27 +322,32 @@
 
 @utility directory-cell {
   --directory-fill: var(--color-base-100);
+  --directory-ink: var(--color-base-content);
   --directory-rule: transparent;
   background-color: var(--directory-fill);
-  transition-property: --directory-fill, --directory-rule;
-  transition-duration: 0.25s;
+  color: var(--directory-ink);
+  transition-property: --directory-fill, --directory-ink, --directory-rule;
+  transition-duration: 240ms;
   transition-timing-function: ease;
 
   & [data-directory-name] {
     text-decoration-line: underline;
     text-decoration-color: var(--directory-rule);
     text-decoration-thickness: 1px;
-    text-underline-offset: 0.25em;
+    text-underline-offset: 5px;
 
     @media (forced-colors: active) {
       text-decoration-line: none;
     }
   }
-}
 
-@utility directory-cell-active {
-  --directory-fill: color-mix(in oklab, var(--color-primary) 14%, var(--color-base-100));
-  --directory-rule: var(--color-base-content);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      --directory-fill: var(--color-secondary);
+      --directory-ink: var(--color-secondary-content);
+      --directory-rule: var(--color-secondary-content);
+    }
+  }
 }
 
 /*

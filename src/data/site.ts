@@ -328,6 +328,57 @@ export const featuredProjects: readonly FeaturedProject[] = [
   },
 ];
 
+/**
+ * One pillar in the home page's "Why Auralink Studio?" section
+ * (src/components/sections/WhyAuralink.astro). Copy is the owner's, from the approved mockup of
+ * 2026-11-19. It describes how the studio works. It names no client, price, statistic, or result.
+ */
+export interface WhyPillar {
+  readonly id: string;
+  readonly category: string;
+  /** Two lines, in order. Each stays its own line. */
+  readonly title: readonly [string, string];
+  readonly description: string;
+  readonly points: readonly string[];
+  /** The centre card, on the primary yellow. The other two stay white. */
+  readonly accent?: boolean;
+}
+
+/** The three pillars, in display order: white, yellow, white. */
+export const whyPillars: readonly WhyPillar[] = [
+  {
+    id: 'personal-partnership',
+    category: 'Personal partnership',
+    title: ['Direct access.', 'Clear answers.'],
+    description: 'Work directly with the person planning, designing, and building your project.',
+    points: ['Direct communication', 'Clear scope and timelines', 'Support beyond launch'],
+  },
+  {
+    id: 'connected-expertise',
+    category: 'Connected expertise',
+    title: ['Web + email.', 'Working together.'],
+    description: 'Connect your website and email marketing into one consistent customer journey.',
+    points: [
+      'Web design and development',
+      'Email campaigns and automation',
+      'Consistent brand experience',
+    ],
+    accent: true,
+  },
+  {
+    id: 'purposeful-execution',
+    category: 'Purposeful execution',
+    title: ['Clear goals.', 'Measurable progress.'],
+    description:
+      'Build around your business goals, with testing and reporting to guide what comes next.',
+    points: [
+      'Conversion-focused decisions',
+      'Testing and performance tracking',
+      'Practical, ongoing improvements',
+    ],
+  },
+];
+
 /** A kind of business in the home page's "Who we work with" directory. */
 export interface Industry {
   readonly name: string;
