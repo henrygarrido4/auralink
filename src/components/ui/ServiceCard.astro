@@ -24,13 +24,15 @@ import type { ServiceCardLink } from '@/lib/service-cards';
  * shows before any hover, so touch screens see it too. Every tile will lead to a page, so the arrow
  * shows before that page exists (owner, 2026-11-18), as the hero's button does.
  *
- * With a `link`, the whole tile is a single <a>, and a label after the arrow names the action, the
- * link affordance from High Scale Media's "What we do" cards. The link's name is the service and the
- * action ("Custom Websites Discuss this service"), and the sentence is its description. Keyboard
- * focus shows the frame, fills the arrow's box, and adds the near-black ring the hero's buttons use,
- * 4px out, inside the 30px gap: the yellow frame alone is too faint to mark focus on a light tile,
- * and on the lead tile the ring sits on the grey band, outside the near-black fill. Without a link
- * the tile has no label, is no tab stop, and keeps the default cursor (src/lib/service-cards.ts).
+ * With a `link`, the whole tile is a single <a>. A label after the arrow names the action only when
+ * the link has one ("Learn more" on a card's own page), the affordance from High Scale Media's
+ * "What we do" cards. The inquiry fallback has no label (owner, 2026-11-19), so the link's name is
+ * the service alone; with a label, the name is the service and the action. The sentence is its
+ * description. Keyboard focus shows the frame, fills the arrow's box, and adds the near-black ring
+ * the hero's buttons use, 4px out, inside the 30px gap: the yellow frame alone is too faint to mark
+ * focus on a light tile, and on the lead tile the ring sits on the grey band, outside the near-black
+ * fill. Without a link the tile has no label, is no tab stop, and keeps the default cursor
+ * (src/lib/service-cards.ts).
  *
  * `featured` is the lead tile, Custom Websites (owner, 2026-11-19): the same square, borderless
  * tile, filled `neutral` instead of white, so it is the dark one in the row. The icon and the title
@@ -55,6 +57,8 @@ interface Props {
 const { id, title, description, icon, link, featured = false } = Astro.props;
 const ids = { title: `${id}-title`, description: `${id}-description`, action: `${id}-action` };
 const Tag = link ? 'a' : 'div';
+/** The service, plus the action when the link names one beside the arrow. */
+const labelledBy = link ? (link.label ? `${ids.title} ${ids.action}` : ids.title) : undefined;
 
 /** Hub2B's hover: its frame, 2px in the primary colour, on the tile's edge, faded in. */
 const frame =
@@ -80,7 +84,7 @@ const arrowBox = [
 <Tag
   id={id}
   href={link?.href}
-  aria-labelledby={link && `${ids.title} ${ids.action}`}
+  aria-labelledby={labelledBy}
   aria-describedby={link && ids.description}
   class:list={[
     'group relative flex h-full flex-col px-8 py-10 lg:py-16',
@@ -111,7 +115,10 @@ const arrowBox = [
   >
     {description}
   </p>
-  <span id={link && ids.action} class="mt-auto flex items-center gap-4 pt-8 text-sm font-bold">
+  <span
+    id={link?.label && ids.action}
+    class="mt-auto flex items-center gap-4 pt-8 text-sm font-bold"
+  >
     <span class={arrowBox}>
       <Icon name="arrow-right" class="size-5" />
     </span>

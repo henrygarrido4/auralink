@@ -115,7 +115,7 @@ export interface ServiceCard {
   /**
    * The card's own service page. Add it when that page ships (planned routes:
    * docs/content-strategy.md). Until then the card leads to the inquiry page, `primaryCta.href`,
-   * labelled for that; with neither, it is not a link (src/lib/service-cards.ts).
+   * with no action label; with neither, it is not a link (src/lib/service-cards.ts).
    */
   readonly href?: string;
 }

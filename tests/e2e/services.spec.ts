@@ -9,7 +9,8 @@ import { serviceCardLink } from '../../src/lib/service-cards';
  * four-column grid with the introduction in its first two cells, two tiles beside it and four
  * below. The introduction and everything on the cards are left-aligned at every width. Under the
  * pointer every card fades in Hub2B's frame. Each card links where src/lib/service-cards.ts says
- * (its service page, else the inquiry page) or, with nowhere to go, is no link at all. Every card
+ * (its service page, labelled "Learn more", else the inquiry page with no action label) or, with
+ * nowhere to go, is no link at all. Every card
  * ends with an arrow box, shown before any hover. The others are the barbershop's: white with a
  * primary arrow, filling with primary over 0.5s as the arrow turns near-black. Custom Websites, the
  * lead card, is a near-black tile with a yellow title and a white sentence. Its arrow box has the
@@ -232,9 +233,17 @@ test('each card links where it should, or is not a link at all', async ({ page }
       const anchor = item.getByRole('link');
       await expect(anchor, `${card.title}: one link`).toHaveCount(1);
       await expect(anchor).toHaveAttribute('href', link.href);
-      await expect(anchor).toHaveAccessibleName(`${card.title} ${link.label}`);
+      await expect(anchor).toHaveAccessibleName(
+        link.label ? `${card.title} ${link.label}` : card.title,
+      );
       await expect(anchor).toHaveAccessibleDescription(card.description);
-      await expect(anchor.getByText(link.label, { exact: true })).toBeVisible();
+      if (link.label) {
+        await expect(anchor.getByText(link.label, { exact: true })).toBeVisible();
+      } else {
+        await expect(anchor.getByText(ACTION_LABEL), `${card.title}: no action label`).toHaveCount(
+          0,
+        );
+      }
       // The whole card is the link: it fills its list item exactly (measured in one frame).
       const gaps = await item.evaluate((li) => {
         const outer = li.getBoundingClientRect();
