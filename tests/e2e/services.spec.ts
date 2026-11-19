@@ -10,10 +10,13 @@ import { serviceCardLink } from '../../src/lib/service-cards';
  * below. The introduction and everything on the cards are left-aligned at every width. Under the
  * pointer every card fades in Hub2B's frame. Each card links where src/lib/service-cards.ts says
  * (its service page, else the inquiry page) or, with nowhere to go, is no link at all. Every card
- * ends with the barbershop site's arrow box, shown before any hover: white with a primary arrow, it
- * fills with primary over 0.5s and the arrow turns near-black, under the pointer and under keyboard
- * focus on a linked card, at once under reduced motion, while nothing moves or resizes, and nothing
- * fades in on load. The section needs no client-side JavaScript.
+ * ends with an arrow box, shown before any hover. The others are the barbershop's: white with a
+ * primary arrow, filling with primary over 0.5s as the arrow turns near-black. Custom Websites, the
+ * lead card, is a near-black tile with a yellow title and a white sentence. Its arrow box has the
+ * same 0.25rem corners, and it starts filled primary (near-black glyph) and turns white, the glyph
+ * staying near-black. Both change under the pointer and under keyboard focus on a linked card, at once
+ * under reduced motion, while nothing moves or resizes, and nothing fades in on load. The section
+ * needs no client-side JavaScript.
  *
  * The link tests run only once a card has a destination; until then they are skipped with the
  * reason, and the plain-card tests run instead.
@@ -75,17 +78,32 @@ const arrowColours = async (card: Locator) => {
   return { fill, arrow };
 };
 
-/** The fill and arrow colours at rest (white, primary) and under the pointer or focus. */
-const arrowBoxColours = async (page: Page) => ({
-  rest: {
-    fill: await tokenColour(page, '--color-base-100'),
-    arrow: await tokenColour(page, '--color-primary'),
-  },
-  active: {
-    fill: await tokenColour(page, '--color-primary'),
-    arrow: await tokenColour(page, '--color-primary-content'),
-  },
-});
+/** Custom Websites is the lead tile: near-black, with the same 0.25rem arrow box. */
+const LEAD_CARD = 'custom-websites';
+
+/**
+ * Arrow colours at rest and under the pointer or focus. The other cards are white with a primary
+ * arrow, then primary with a near-black arrow. The lead card starts on that filled state and turns
+ * white, the arrow staying near-black.
+ */
+const arrowPalettes = async (page: Page) => {
+  const white = await tokenColour(page, '--color-base-100');
+  const primary = await tokenColour(page, '--color-primary');
+  const ink = await tokenColour(page, '--color-primary-content');
+  return {
+    standard: {
+      rest: { fill: white, arrow: primary },
+      active: { fill: primary, arrow: ink },
+    },
+    lead: {
+      rest: { fill: primary, arrow: ink },
+      active: { fill: white, arrow: ink },
+    },
+  };
+};
+
+const paletteFor = (cardId: string, palettes: Awaited<ReturnType<typeof arrowPalettes>>) =>
+  cardId === LEAD_CARD ? palettes.lead : palettes.standard;
 
 const canHover = (page: Page) => page.evaluate(() => matchMedia('(hover: hover)').matches);
 
@@ -242,16 +260,24 @@ test('every card ends with the arrow, shown before any hover, on touch screens t
   page,
 }) => {
   await page.goto('/');
-  const { rest } = await arrowBoxColours(page);
+  const palettes = await arrowPalettes(page);
   for (const [index, { card }] of cards.entries()) {
     const tile = surface(items(page).nth(index));
     const arrow = arrowOf(tile);
     await expect(arrow, card.title).toBeVisible();
     await expect(arrow).toHaveAttribute('aria-hidden', 'true');
-    // The barbershop's box: 50px square and white, with the arrow in the primary colour.
+    // 50px either way, with the same 0.25rem corners on every card.
     const box = await arrowBoxOf(tile).boundingBox();
     expect([box!.width, box!.height], `${card.title}: a 50px box`).toEqual([50, 50]);
-    expect(await arrowColours(tile), `${card.title}: white, with a primary arrow`).toEqual(rest);
+    const shape = await arrowBoxOf(tile).evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { radius: parseFloat(style.borderTopLeftRadius), shadow: style.boxShadow };
+    });
+    expect(shape.radius, `${card.title}: 0.25rem corners`).toBe(4);
+    expect(await arrowColours(tile), card.title).toEqual(paletteFor(card.id, palettes).rest);
+    if (card.id === LEAD_CARD) {
+      expect(shape.shadow, `${card.title}: no shadow on the dark tile`).toBe('none');
+    }
   }
   // Under each card's sentence, and as far above its bottom edge on every card: at its foot.
   const feet = await section(page)
@@ -368,6 +394,8 @@ test('cards keep the reference look: white, square, borderless, under a large ic
   await page.goto('/');
   const white = await tokenColour(page, '--color-base-100');
   const primary = await tokenColour(page, '--color-primary');
+  const neutral = await tokenColour(page, '--color-neutral');
+  const neutralContent = await tokenColour(page, '--color-neutral-content');
   for (const [index, card] of serviceCards.entries()) {
     const look = await surface(items(page).nth(index)).evaluate((el) => {
       const start = (target: Element) => {
@@ -380,22 +408,32 @@ test('cards keep the reference look: white, square, borderless, under a large ic
       const [icon, arrow] = [icons[0], icons[icons.length - 1]];
       const glyph = icon.getBoundingClientRect();
       const edge = el.getBoundingClientRect().left + parseFloat(style.paddingLeft);
+      const heading = el.querySelector('h3')!;
+      const sentence = el.querySelector('p')!;
       return {
         background: style.backgroundColor,
         radius: style.borderRadius,
         shadow: style.boxShadow,
         border: style.borderTopWidth,
+        title: getComputedStyle(heading).color,
+        sentence: getComputedStyle(sentence).color,
         icon: [glyph.width, glyph.height, getComputedStyle(icon).color],
         // The icon's drawing starts inside Lucide's 2px margin (2 of 24, 8px at 96px).
         starts: [
           glyph.left + glyph.width / 12,
-          start(el.querySelector('h3')!),
-          start(el.querySelector('p')!),
+          start(heading),
+          start(sentence),
           arrow.parentElement!.getBoundingClientRect().left,
         ].map((left) => left - edge),
       };
     });
-    expect(look.background, card.title).toBe(white);
+    if (card.id === LEAD_CARD) {
+      expect(look.background, `${card.title}: the lead tile`).toBe(neutral);
+      expect(look.title, `${card.title}: a yellow title`).toBe(primary);
+      expect(look.sentence, `${card.title}: a white sentence`).toBe(neutralContent);
+    } else {
+      expect(look.background, card.title).toBe(white);
+    }
     expect([look.radius, look.shadow, look.border], card.title).toEqual(['0px', 'none', '0px']);
     // Lucide's 24px grid keeps a 2px margin: a 96px icon draws the reference's 80px glyph.
     expect(look.icon, `${card.title}: icon`).toEqual([96, 96, primary]);
@@ -474,14 +512,15 @@ test.describe('the arrow box', () => {
   test.describe('motion allowed', () => {
     test.use({ reducedMotion: 'no-preference' });
 
-    test('under the pointer every box fills with primary over 0.5s, its arrow turns near-black, and nothing moves', async ({
+    test('under the pointer every arrow box changes colour over 0.5s, and nothing moves', async ({
       page,
     }) => {
       await page.goto('/');
-      test.skip(!(await canHover(page)), 'Touch screens have no hover; the box stays white.');
-      const colours = await arrowBoxColours(page);
+      test.skip(!(await canHover(page)), 'Touch screens have no hover; each box stays at rest.');
+      const palettes = await arrowPalettes(page);
 
       for (const [index, { card }] of cards.entries()) {
+        const colours = paletteFor(card.id, palettes);
         const tile = surface(items(page).nth(index));
         expect(await arrowBoxLook(tile), `${card.title} at rest`).toEqual({
           ...colours.rest,
@@ -544,12 +583,18 @@ test.describe('the arrow box', () => {
 
     test('the box fills at once, without fading', async ({ page }) => {
       await page.goto('/');
-      const { active } = await arrowBoxColours(page);
-      const tile = surface(items(page).first());
-      expect((await arrowBoxLook(tile)).fade).toBe('0s');
+      const palettes = await arrowPalettes(page);
+      const leadIndex = serviceCards.findIndex((card) => card.id === LEAD_CARD);
+      const lead = surface(items(page).nth(leadIndex));
+      const other = surface(items(page).nth(leadIndex === 0 ? 1 : 0));
+      expect((await arrowBoxLook(lead)).fade).toBe('0s');
+      expect((await arrowBoxLook(other)).fade).toBe('0s');
       if (await canHover(page)) {
-        await tile.hover();
-        expect(await arrowColours(tile)).toEqual(active);
+        await lead.hover();
+        expect(await arrowColours(lead)).toEqual(palettes.lead.active);
+        await page.mouse.move(0, 0);
+        await other.hover();
+        expect(await arrowColours(other)).toEqual(palettes.standard.active);
       }
     });
   });
@@ -594,12 +639,14 @@ test.describe('linked cards', () => {
       browserName,
     }) => {
       await page.goto('/');
-      const { active } = await arrowBoxColours(page);
+      const palettes = await arrowPalettes(page);
       const anchor = items(page).nth(firstLinked).getByRole('link');
       const rest = { arrow: await arrowOffset(anchor), boxes: await cardBoxes(page) };
 
       await tabTo(page, anchor, browserName);
-      await expect.poll(() => arrowColours(anchor), 'the box fills').toEqual(active);
+      await expect
+        .poll(() => arrowColours(anchor), 'the box fills')
+        .toEqual(paletteFor(cards[firstLinked].card.id, palettes).active);
       expectSamePlace([await arrowOffset(anchor)], [rest.arrow], 'the arrow stays');
       expectSamePlace(await cardBoxes(page), rest.boxes, 'no card moves or resizes');
       await expect.poll(async () => (await frameOf(anchor)).opacity, "Hub2B's frame").toBe('1');
@@ -614,11 +661,13 @@ test.describe('linked cards', () => {
       browserName,
     }) => {
       await page.goto('/');
-      const { active } = await arrowBoxColours(page);
+      const palettes = await arrowPalettes(page);
       const anchor = items(page).nth(firstLinked).getByRole('link');
 
       await tabTo(page, anchor, browserName);
-      expect(await arrowColours(anchor)).toEqual(active);
+      expect(await arrowColours(anchor)).toEqual(
+        paletteFor(cards[firstLinked].card.id, palettes).active,
+      );
       await expect(anchor).toHaveCSS('outline-style', 'solid');
     });
   });

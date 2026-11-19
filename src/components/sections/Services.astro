@@ -18,6 +18,8 @@ import { serviceCardLink } from '@/lib/service-cards';
  * primary call to view all services (`servicesCta`), a placeholder until a page lists them. Under
  * the pointer each tile shows Hub2B's hover, and the arrow box at its foot, from the service cards
  * of Johnny's Exclusive Barbershop's website, fills with the primary colour (ServiceCard.astro).
+ * The first tile, Custom Websites, is the lead (owner, 2026-11-19): the same tile filled near-black,
+ * with a yellow title, a white sentence, and the same 0.25rem arrow box, starting filled yellow.
  * High Scale Media's "What we do" cards inform only the action named beside it on a linked tile.
  * Each tile links to its service page, or to the inquiry page until that exists, or nowhere
  * (src/lib/service-cards.ts). No client-side JavaScript.
@@ -89,6 +91,7 @@ const titleId = `${id}-title`;
             description={card.description}
             icon={card.icon}
             link={serviceCardLink(card)}
+            featured={card.id === 'custom-websites'}
           />
         </li>
       ))}

@@ -7,8 +7,8 @@ import { aboutCta, site } from '@/data/site';
 
 /**
  * Home page introduction, after the process and the target of the hero's "About us" button: who
- * Auralink Studio works with and what it brings together, beside a photo of a business owner at
- * work. Laid out after the "Space for Freelancers and Creative People" section of the Hub2B
+ * Auralink Studio works with and what it brings together, beside the portrait the owner supplied.
+ * Laid out after the "Space for Freelancers and Creative People" section of the Hub2B
  * reference: from lg the photo sits left on a frame in the primary colour, offset down and to the
  * right, with the copy beside it; below lg the copy comes first and the photo follows. Where
  * Hub2B's copy ends with its large "Read more" button, ours ends with the primary call to learn
@@ -16,8 +16,8 @@ import { aboutCta, site } from '@/data/site';
  * button's aura fades and circles under the pointer or keyboard focus, and resumes where it
  * stopped. There is no client-side JavaScript.
  *
- * The photo is a licensed stock image, credited in src/assets/CREDITS.md. It only illustrates the
- * audience: never caption it, name the person, or present them as a client or team member.
+ * The photo is the portrait the owner supplied on 2026-11-19, recorded in src/assets/CREDITS.md.
+ * It is not captioned or named, and it is not presented as a client or a testimonial.
  */
 interface Props {
   /** Anchor for in-page links, such as the hero's "About us" button. */
@@ -80,14 +80,18 @@ const titleId = `${id}-title`;
         <div class="relative">
           {/*
            * `sizes` is the photo's rendered width at each breakpoint, worked out from the container
-           * padding, column gap, and frame padding above: change it whenever they change.
+           * padding, column gap, and frame padding above: change it whenever they change. Widths
+           * stop at the 1086px source. The file is 1086×1168: 280px of empty wall is cropped
+           * from the top. Quality 80: the image service's default AVIF quality is 50,
+           * which softened this portrait.
            */}
           <Picture
             src={photo}
-            alt="Woman leaning over a laptop in a craft studio, with shelves of yarn and ceramics behind her"
+            alt="Man with glasses sitting at a laptop, hands clasped, with a lamp and a plant behind him"
             formats={['avif']}
             fallbackFormat="webp"
-            widths={[480, 640, 800, 1024, 1280, 1600]}
+            quality={80}
+            widths={[480, 640, 800, 1086]}
             sizes="(min-width: 1408px) 584px, (min-width: 1280px) calc(50vw - 120px), (min-width: 1024px) calc(50vw - 104px), (min-width: 720px) 648px, (min-width: 640px) calc(100vw - 72px), calc(100vw - 64px)"
             class="block h-auto w-full"
           />

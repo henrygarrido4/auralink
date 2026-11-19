@@ -269,6 +269,23 @@
 }
 
 /*
+ * The lead service card (Custom Websites, ServiceCard.astro `featured`): its arrow starts where
+ * the others arrive under the pointer, a primary box with a near-black glyph, and under the
+ * pointer or keyboard focus (`arrow-box-lead-active`) the box turns white while the glyph stays
+ * near-black. A primary glyph on white is 1.4:1, so this arrow never turns yellow. Same
+ * registered properties and the same 0.5s ease as `arrow-box`, so nothing fades in on load.
+ */
+@utility arrow-box-lead {
+  --arrow-box-fill: var(--color-primary);
+  --arrow-box-ink: var(--color-primary-content);
+}
+
+@utility arrow-box-lead-active {
+  --arrow-box-fill: var(--color-base-100);
+  --arrow-box-ink: var(--color-primary-content);
+}
+
+/*
  * A cell of the home page's business directory (src/components/sections/WhoWeWorkWith.astro):
  * white, and while the pointer is over it (`directory-cell-active`) a very pale tint of the primary
  * yellow, with a fine charcoal underline under its name (`data-directory-name`). Both fade in and

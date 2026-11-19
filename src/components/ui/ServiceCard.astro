@@ -28,8 +28,18 @@ import type { ServiceCardLink } from '@/lib/service-cards';
  * link affordance from High Scale Media's "What we do" cards. The link's name is the service and the
  * action ("Custom Websites Discuss this service"), and the sentence is its description. Keyboard
  * focus shows the frame, fills the arrow's box, and adds the near-black ring the hero's buttons use,
- * 4px out, inside the 30px gap: the yellow frame alone is too faint to mark focus. Without a link
+ * 4px out, inside the 30px gap: the yellow frame alone is too faint to mark focus on a light tile,
+ * and on the lead tile the ring sits on the grey band, outside the near-black fill. Without a link
  * the tile has no label, is no tab stop, and keeps the default cursor (src/lib/service-cards.ts).
+ *
+ * `featured` is the lead tile, Custom Websites (owner, 2026-11-19): the same square, borderless
+ * tile, filled `neutral` instead of white, so it is the dark one in the row. The icon and the title
+ * are `primary` and the sentence is `neutral-content` (white). Yellow on this near-black is the
+ * inverse of the primary button's label, which clears the large-text minimum; the sentence uses the
+ * neutral pair. Its arrow box is the same 50px square with 0.25rem corners as the others, and it
+ * has no shadow: that grey shadow does not show on the near-black tile. The box starts filled
+ * `primary` with a near-black arrow (`arrow-box-lead`) and turns white under the pointer, the arrow
+ * staying near-black (`arrow-box-lead-active`).
  */
 interface Props {
   /** Unique on the page; prefixes the ids that name and describe the link. */
@@ -38,9 +48,11 @@ interface Props {
   description: string;
   icon: IconName;
   link?: ServiceCardLink;
+  /** Near-black lead tile. The home services section sets this on Custom Websites. */
+  featured?: boolean;
 }
 
-const { id, title, description, icon, link } = Astro.props;
+const { id, title, description, icon, link, featured = false } = Astro.props;
 const ids = { title: `${id}-title`, description: `${id}-description`, action: `${id}-action` };
 const Tag = link ? 'a' : 'div';
 
@@ -53,11 +65,16 @@ const linkStates =
 
 /**
  * The barbershop's arrow box, its colours and their fade from `arrow-box` (src/styles/global.css).
- * Its shadow (10px to the right, 60px blur, a 15% grey at 10%) has no Tailwind token; its 5px
- * corners are `rounded-sm` (4px).
+ * Its shadow (10px to the right, 60px blur, a 15% grey at 10%) has no Tailwind token; its corners
+ * are `rounded-sm` (0.25rem). The lead tile uses the same box and the same arrow, with
+ * `arrow-box-lead` for its colours and no shadow.
  */
-const arrowBox =
-  'arrow-box grid size-12.5 place-items-center rounded-sm shadow-[10px_0_60px_rgb(38_38_38/0.1)] group-hover:arrow-box-active group-focus-visible:arrow-box-active';
+const arrowBox = [
+  'arrow-box grid size-12.5 place-items-center rounded-sm',
+  featured
+    ? 'arrow-box-lead group-hover:arrow-box-lead-active group-focus-visible:arrow-box-lead-active'
+    : 'shadow-[10px_0_60px_rgb(38_38_38/0.1)] group-hover:arrow-box-active group-focus-visible:arrow-box-active',
+].join(' ');
 ---
 
 <Tag
@@ -65,7 +82,8 @@ const arrowBox =
   aria-labelledby={link && `${ids.title} ${ids.action}`}
   aria-describedby={link && ids.description}
   class:list={[
-    'group relative flex h-full flex-col bg-base-100 px-8 py-10 lg:py-16',
+    'group relative flex h-full flex-col px-8 py-10 lg:py-16',
+    featured ? 'bg-neutral text-neutral-content' : 'bg-base-100',
     frame,
     link && linkStates,
   ]}
@@ -77,12 +95,18 @@ const arrowBox =
    * text.
    */}
   <Icon name={icon} class="-ml-2 size-24 text-primary" stroke-width="1.2" />
-  <h3 id={link && ids.title} class="mt-5 text-3xl font-bold tracking-tight text-balance">
+  <h3
+    id={link && ids.title}
+    class:list={['mt-5 text-3xl font-bold tracking-tight text-balance', featured && 'text-primary']}
+  >
     {title}
   </h3>
   <p
     id={link && ids.description}
-    class="mt-3 text-base leading-relaxed text-pretty text-base-content/80"
+    class:list={[
+      'mt-3 text-base leading-relaxed text-pretty',
+      featured ? 'text-neutral-content' : 'text-base-content/80',
+    ]}
   >
     {description}
   </p>

@@ -23,12 +23,10 @@ Not files in this folder. Astro's font support downloads them at build time and 
 ## `about/business-owner-laptop.webp`
 
 - Used in: the home page introduction, `src/components/sections/AboutIntro.astro`.
-- Photo: "Woman Using a Laptop" by Mikhail Nilov, Pexels photo 8871889.
-- Photo page: https://www.pexels.com/photo/woman-using-a-laptop-8871889/
-- Photographer: https://www.pexels.com/@mikhail-nilov/
-- Licence: Pexels License, https://www.pexels.com/license/ (read 2026-11-17). Free to use and to modify; attribution is not required; the licence page names websites, e-commerce shops, and marketing campaigns among its uses. Not allowed: implying that the people shown endorse a product, or showing identifiable people in a bad light. The page says nothing about model releases, so keep the photo purely illustrative.
-- Retrieved: 2026-11-17, the original 5991×3999 JPEG from https://images.pexels.com/photos/8871889/pexels-photo-8871889.jpeg. The photo page lists a Nikon D750, taken 2021-06-07 and published 2021-07-23.
-- Changes: full frame kept; resized to 2000×1335 and saved as WebP at quality 92 without metadata. The build serves AVIF and WebP versions made from this file.
+- Supplied by the owner on 2026-11-19, replacing "Woman Using a Laptop" by Mikhail Nilov (Pexels photo 8871889). The file used is the PNG named `Retrato de hombre con gafas y portátil`. A JPEG of the same picture at 768×1024 was attached in chat the same day; that copy is what made the portrait look soft, so it was not used. No photographer, stock page, or licence document came with the file.
+- It shows a man with glasses at a laptop, hands clasped, with a lamp and a plant behind him. The page does not name him, and the photo is not a client or a testimonial.
+- The laptop shows Apple's logo. The photo does not say that Apple endorses Auralink Studio.
+- Original: 1086×1448 PNG. Changes: 280px cropped from the top, the empty wall above the plant and his head, leaving 1086×1168; saved as WebP at quality 92 without metadata. The build serves AVIF and WebP at quality 80, at 1086px and three smaller widths, so nothing is enlarged.
 
 ## `work/` (selected work covers)
 
