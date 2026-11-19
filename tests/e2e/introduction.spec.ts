@@ -3,11 +3,11 @@ import { aboutCta, site } from '../../src/data/site';
 
 /**
  * Home page introduction (src/components/sections/AboutIntro.astro), where the hero's About us
- * button lands. Its copy ends with the primary call to learn more: a link to the About page once
- * `aboutCta.href` is set and a placeholder until then, named for that page by words only assistive
- * technology reads, and spaced and sized like the "Read more" of the Hub2B section it follows. It
- * changes colour at once, and its aura stays unlit until the pointer reaches it, then fades out
- * and resumes where it stopped.
+ * button lands. It closes the home page, after the process. Its copy ends with the primary call
+ * to learn more: a link to the About page once `aboutCta.href` is set and a placeholder until
+ * then, named for that page by words only assistive technology reads, and spaced and sized like
+ * the "Read more" of the Hub2B section it follows. It changes colour at once, and its aura stays
+ * unlit until the pointer reaches it, then fades out and resumes where it stopped.
  */
 const HEADING = 'A digital presence built around your goals.';
 /** The button's whole text: the visible label, then the hidden words naming its destination. */
@@ -15,6 +15,15 @@ const NAME = `${aboutCta.label} about ${site.name}`;
 
 const section = (page: Page) => page.getByRole('region', { name: HEADING });
 const button = (page: Page) => section(page).getByText(NAME, { exact: true });
+
+test('closes the home page, after the process', async ({ page }) => {
+  await page.goto('/');
+  const order = await page.evaluate(() =>
+    [...document.querySelectorAll('main > section')].map((section) => section.id),
+  );
+  expect(order.at(-1)).toBe('about');
+  expect(order.at(-2)).toBe('process');
+});
 
 /** The aura's own spin, not the glow copies, and how strongly the light shines. */
 const auraSpin = (aura: Locator) =>

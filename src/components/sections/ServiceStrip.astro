@@ -2,12 +2,12 @@
 import { serviceCards } from '@/data/site';
 
 /**
- * Home page services strip, directly below the hero and above the introduction. Its look follows
+ * Home page services strip, directly below the hero and above the services. Its look follows
  * the band under the hero of the reference the owner sent on 2026-11-18: a full-width band in the
  * primary yellow with the names in near-black, over a second band in the navbar's neutral, tilted
  * so that it shows above the yellow on the right and below it on the left. The names run off both
  * edges of the screen. The section's upper half carries on the hero's background and its lower
- * half the page's, so the change between them hides behind the yellow. The service-card titles
+ * half the services band, so the change between them hides behind the yellow. The service-card titles
  * are set as a line of type in the heading face: the first word bold, the rest light, with the
  * reference's eight-point asterisk between one name and the next (owner, 2026-11-18). Lucide has
  * no mark of that shape (its asterisk is six strokes), so the divider is drawn here. High Scale
@@ -37,7 +37,7 @@ const split = (title: string) => {
 <section
   data-service-strip
   aria-labelledby="service-strip-title"
-  class="service-strip bg-linear-to-b from-base-200 from-50% to-base-100 to-50%"
+  class="service-strip bg-linear-to-b from-base-200 from-50% to-base-300/70 to-50%"
 >
   <h2 id="service-strip-title" class="sr-only">
     Services

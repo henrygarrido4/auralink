@@ -4,7 +4,7 @@ import { SERVICE_STRIP_SPEED_PX_PER_SECOND } from '../../src/lib/service-strip';
 
 /**
  * Home services strip (src/components/sections/ServiceStrip.astro), between the hero and the
- * introduction: the service-card titles as one line of type, the first word bold and the rest
+ * services: the service-card titles as one line of type, the first word bold and the rest
  * light, with a small eight-point asterisk before each, near-black on a yellow band. Behind the yellow lies a
  * neutral band tilted 2.2 degrees, showing above it on the right and below it on the left, as in
  * the owner's reference (2026-11-18). The titles scroll slowly right to left in one continuous
@@ -142,7 +142,7 @@ const itemBoxes = (page: Page) =>
 test.describe('services strip', () => {
   test.use({ reducedMotion: 'no-preference' });
 
-  test('lists each service once, between the hero and the introduction, with no links', async ({
+  test('lists each service once, between the hero and the services, with no links', async ({
     page,
   }) => {
     await page.goto('/');
@@ -173,11 +173,12 @@ test.describe('services strip', () => {
     const order = await page.evaluate(() => {
       const hero = document.querySelector('[aria-labelledby="hero-title"]');
       const band = document.querySelector('[data-service-strip]');
-      const about = document.getElementById('about');
-      if (!hero || !band || !about) return 'missing';
+      const services = document.getElementById('services');
+      if (!hero || !band || !services) return 'missing';
       const afterHero = hero.compareDocumentPosition(band) & Node.DOCUMENT_POSITION_FOLLOWING;
-      const beforeAbout = band.compareDocumentPosition(about) & Node.DOCUMENT_POSITION_FOLLOWING;
-      return afterHero && beforeAbout ? 'between' : 'elsewhere';
+      const beforeServices =
+        band.compareDocumentPosition(services) & Node.DOCUMENT_POSITION_FOLLOWING;
+      return afterHero && beforeServices ? 'between' : 'elsewhere';
     });
     expect(order).toBe('between');
   });
@@ -272,7 +273,7 @@ test.describe('services strip', () => {
 
     // The tilted band shows as a wedge as deep as the section's padding at each edge of the
     // screen: half the width times tan(2.2deg). The section's top continues the hero's
-    // background and its bottom the page's, so no seam shows beside the wedges.
+    // background and its bottom the services band, so no seam shows beside the wedges.
     await band.evaluate((element) =>
       element.scrollIntoView({ block: 'center', behavior: 'instant' }),
     );
@@ -298,8 +299,8 @@ test.describe('services strip', () => {
     sameColour(topLeft, await srgb(page, 'var(--color-base-200)'), "the hero's background above");
     sameColour(
       bottomRight,
-      await srgb(page, 'var(--color-base-100)'),
-      "the page's background below",
+      await srgb(page, 'color-mix(in oklab, var(--color-base-300) 70%, var(--color-base-100))'),
+      'the services band below',
     );
   });
 
