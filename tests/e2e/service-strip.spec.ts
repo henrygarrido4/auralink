@@ -59,6 +59,23 @@ const travel = (track: Locator, ms: number) =>
 const pageOverflow = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
+/**
+ * Where each named item sits, read in one `evaluate` over the strip's list. Not with
+ * `strip(page).getByRole('listitem').evaluateAll(...)`: in Playwright 1.65's Firefox (159), an
+ * `evaluateAll` on a locator inside a region found by its name crashes the page once anything has
+ * queried that region before (a count, an expect, an evaluate). Seen in CI and reproduced on Linux,
+ * 2026-11-18. An `evaluate` on one element does not crash.
+ */
+const itemBoxes = (page: Page) =>
+  strip(page)
+    .getByRole('list')
+    .evaluate((list) =>
+      [...list.querySelectorAll(':scope > li')].map((item) => {
+        const rect = item.getBoundingClientRect();
+        return { top: rect.top, left: rect.left, right: rect.right };
+      }),
+    );
+
 test.describe('services strip', () => {
   test.use({ reducedMotion: 'no-preference' });
 
@@ -179,9 +196,7 @@ test.describe('services strip', () => {
       await page.goto('/');
       const band = strip(page);
       await expect(band).toHaveAttribute('data-running', '');
-      const tops = await band
-        .getByRole('listitem')
-        .evaluateAll((items) => items.map((item) => item.getBoundingClientRect().top));
+      const tops = (await itemBoxes(page)).map((box) => box.top);
       expect(Math.max(...tops) - Math.min(...tops), `${width}px stays one line`).toBeLessThan(2);
       expect(await pageOverflow(page), `${width}px page overflow`).toBeLessThanOrEqual(1);
       const fontSize = await band
@@ -201,7 +216,12 @@ test.describe('services strip', () => {
 
     await band.hover();
     await expect.poll(() => playState(track)).toBe('paused');
-    expect(Math.abs(await travel(track, 300)), 'still under the pointer').toBeLessThan(0.5);
+    // WebKit can still move the row a pixel or so just after the animation reports the pause
+    // (CI, 2026-11-18: 1.1px in the next 300ms), so measure again until it holds still. A row
+    // that never stops still fails.
+    await expect
+      .poll(async () => Math.abs(await travel(track, 300)), { message: 'still under the pointer' })
+      .toBeLessThan(0.5);
 
     // The sticky navbar is always in view and never over the band.
     await page.getByRole('banner').hover({ position: { x: 4, y: 4 } });
@@ -246,12 +266,7 @@ test.describe('services strip, reduced motion', () => {
       expect(await edgeFade(page), `${width}px no fade on a static row`).toBe('none');
       expect(await pageOverflow(page), `${width}px page overflow`).toBeLessThanOrEqual(1);
 
-      const boxes = await band.getByRole('listitem').evaluateAll((items) =>
-        items.map((item) => {
-          const rect = item.getBoundingClientRect();
-          return { top: rect.top, left: rect.left, right: rect.right };
-        }),
-      );
+      const boxes = await itemBoxes(page);
       const viewportWidth = page.viewportSize()?.width ?? width;
       for (const box of boxes) {
         expect(box.left).toBeGreaterThanOrEqual(-1);
@@ -260,9 +275,7 @@ test.describe('services strip, reduced motion', () => {
     }
 
     await page.setViewportSize({ width: 360, height: 800 });
-    const tops = await strip(page)
-      .getByRole('listitem')
-      .evaluateAll((items) => items.map((item) => item.getBoundingClientRect().top));
+    const tops = (await itemBoxes(page)).map((box) => box.top);
     expect(Math.max(...tops) - Math.min(...tops), 'the narrow row wraps').toBeGreaterThan(8);
   });
 });
@@ -286,12 +299,7 @@ test.describe('services strip, without JavaScript', () => {
     expect(await edgeFade(page), 'no fade on a static row').toBe('none');
     await expect(band.locator('[data-service-strip-clone]')).toBeHidden();
 
-    const boxes = await band.getByRole('listitem').evaluateAll((items) =>
-      items.map((item) => {
-        const rect = item.getBoundingClientRect();
-        return { top: rect.top, left: rect.left, right: rect.right };
-      }),
-    );
+    const boxes = await itemBoxes(page);
     expect(
       Math.max(...boxes.map((box) => box.top)) - Math.min(...boxes.map((box) => box.top)),
     ).toBeGreaterThan(8);

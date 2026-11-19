@@ -518,6 +518,17 @@
   }
 
   /*
+   * The names are placed to the pixel beside their chips, so they must measure the same on every
+   * system. Chromium on Linux hints small type, rounding each letter up to whole pixels: at 11px
+   * bold it set "WordPress" about a sixth wider than on a Mac, past the edge of a 320px screen
+   * (CI, 2026-11-18). geometricPrecision turns the hinting off, so every system sets the names
+   * at their designed widths.
+   */
+  & [data-orbit-name] {
+    text-rendering: geometricPrecision;
+  }
+
+  /*
    * A name sits next to its chip, so the ring's line and the pointer's light pass behind it. An
    * outline in the hero's background colour, painted under the letters, keeps both 2px clear of
    * them. On that background the outline itself cannot be seen. Only where the outline can go
