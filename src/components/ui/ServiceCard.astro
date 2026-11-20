@@ -16,13 +16,20 @@ import type { ServiceCardLink } from '@/lib/service-cards';
  * at once under reduced motion, and never on touch screens (Tailwind's `hover:` needs a hovering
  * pointer).
  *
- * Every tile ends with the arrow from the service cards of Johnny's Exclusive Barbershop's website
- * (exclusivecutzz.netlify.app), the owner's own work (owner, 2026-11-18): a white 50px box with a
- * soft shadow and the arrow in the accent colour. Under the pointer the box fills with that colour
- * over 0.5s and the arrow changes colour with it, and nothing moves. Here the accent is the primary
- * yellow, and the arrow on it turns near-black, not white: white on the yellow is 1.4:1. The arrow
- * shows before any hover, so touch screens see it too. Every tile will lead to a page, so the arrow
- * shows before that page exists (owner, 2026-11-18), as the hero's button does.
+ * Every tile ends with an arrow box. It began as the arrow of the service cards on Johnny's
+ * Exclusive Barbershop's website (exclusivecutzz.netlify.app; `.card_btn` in its css/style.css),
+ * the owner's own work, which the owner asked for (2026-11-18), and it keeps that arrow's place
+ * and shape: a 50px box with 0.25rem corners. Its look and hover are this site's own, made when
+ * the owner asked for a modern hover (2026-11-19; `arrow-box` in src/styles/global.css): white,
+ * with a hairline edge, a small shadow, and a near-black arrow. Under the pointer the box fills
+ * with the primary yellow over 0.3s, in step with the frame, while the arrow slides out to the
+ * right and the same arrow slides in from the left. The arrow is near-black in both states
+ * (19.9:1 on the white, 14.3:1 on the yellow) and never changes colour: an earlier fade from
+ * yellow to near-black left a dark mark behind after the frame had gone, and the barbershop's own
+ * swap, to a white arrow on the accent, is 1.4:1 with this yellow. Only the arrows move, inside
+ * the box: the box and the tile stay where they are. The arrow shows before any hover, so touch
+ * screens see it too. Every tile will lead to a page, so the arrow shows before that page exists
+ * (owner, 2026-11-18), as the hero's button does.
  *
  * With a `link`, the whole tile is a single <a>. A label after the arrow names the action only when
  * the link has one ("Learn more" on a card's own page), the affordance from High Scale Media's
@@ -31,7 +38,7 @@ import type { ServiceCardLink } from '@/lib/service-cards';
  * one is shown. It is not set with aria-labelledby. Doing so either drops the sentence from the
  * name, or, when the sentence is included, axe still fails WCAG 2.5.3: its visible-text walk glues
  * the heading to the sentence ("WebsitesFast") while the name keeps the space. Keyboard focus shows
- * the frame, fills the arrow's box, and adds the near-black ring
+ * the frame, fills the arrow's box as its arrow slides through, and adds the near-black ring
  * the hero's buttons use, 4px out, inside the 30px gap: the yellow frame alone is too faint to mark
  * focus on a light tile, and on the lead tile the ring sits on the grey band, outside the near-black
  * fill. Without a link the tile has no label, is no tab stop, and keeps the default cursor
@@ -42,9 +49,9 @@ import type { ServiceCardLink } from '@/lib/service-cards';
  * are `primary` and the sentence is `neutral-content` (white). Yellow on this near-black is the
  * inverse of the primary button's label, which clears the large-text minimum; the sentence uses the
  * neutral pair. Its arrow box is the same 50px square with 0.25rem corners as the others, and it
- * has no shadow: that grey shadow does not show on the near-black tile. The box starts filled
- * `primary` with a near-black arrow (`arrow-box-lead`) and turns white under the pointer, the arrow
- * staying near-black (`arrow-box-lead-active`).
+ * has no shadow: a grey shadow does not show on the near-black tile. The box starts filled
+ * `primary` with a near-black arrow (`arrow-box-lead`), where the other cards arrive, and turns
+ * white under the pointer as its arrow slides through (`arrow-box-lead-active`).
  */
 interface Props {
   /** Unique on the page. The card's element id. */
@@ -68,16 +75,16 @@ const linkStates =
   'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral focus-visible:before:opacity-100';
 
 /**
- * The barbershop's arrow box, its colours and their fade from `arrow-box` (src/styles/global.css).
- * Its shadow (10px to the right, 60px blur, a 15% grey at 10%) has no Tailwind token; its corners
- * are `rounded-sm` (0.25rem). The lead tile uses the same box and the same arrow, with
- * `arrow-box-lead` for its colours and no shadow.
+ * The arrow box. Its colours, its edge, and the slide come from `arrow-box`
+ * (src/styles/global.css). A small shadow lifts it off the white tile, and its corners are
+ * `rounded-sm` (0.25rem). The lead tile uses the same box, with `arrow-box-lead` for its colours
+ * and no shadow.
  */
 const arrowBox = [
-  'arrow-box grid size-12.5 place-items-center rounded-sm',
+  'arrow-box size-12.5 shrink-0 rounded-sm',
   featured
     ? 'arrow-box-lead group-hover:arrow-box-lead-active group-focus-visible:arrow-box-lead-active'
-    : 'shadow-[10px_0_60px_rgb(38_38_38/0.1)] group-hover:arrow-box-active group-focus-visible:arrow-box-active',
+    : 'shadow-md group-hover:arrow-box-active group-focus-visible:arrow-box-active',
 ].join(' ');
 ---
 
@@ -113,7 +120,15 @@ const arrowBox = [
   </p>
   <span class="mt-auto flex items-center gap-4 pt-8 text-sm font-bold">
     <span class={arrowBox}>
-      <Icon name="arrow-right" class="size-5" />
+      {/*
+       * The track `arrow-box` slides. In source order, the first arrow waits outside the box, to
+       * the left, and the second is the one in the box at rest. Under the pointer the waiting
+       * arrow takes its place.
+       */}
+      <span data-arrow-track>
+        <Icon name="arrow-right" class="size-5" />
+        <Icon name="arrow-right" class="size-5" />
+      </span>
     </span>
     {link?.label}
   </span>

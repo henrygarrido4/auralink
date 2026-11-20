@@ -233,13 +233,40 @@
 }
 
 /*
- * The arrow box at the foot of each home service card (src/components/ui/ServiceCard.astro), from
- * the service cards of Johnny's Exclusive Barbershop's website: white with a primary arrow, and
- * while its card has the pointer or keyboard focus (`arrow-box-active`) filled with the primary
- * colour, its arrow near-black, over 0.5s with `ease`. The colours fade through two registered
- * properties, never through `background-color` and `color`: WebKit styles the page once before the
- * stylesheet arrives, and a colour transition then faded every box in from the browser's defaults
- * on load. These properties have no value until the stylesheet registers them, so nothing fades.
+ * The arrow box at the foot of each home service card (src/components/ui/ServiceCard.astro). It
+ * began as the `.card_btn` of the service cards on Johnny's Exclusive Barbershop's website, the
+ * arrow the owner asked for (2026-11-18), and it keeps that box's place and shape: 50px, with
+ * 0.25rem corners. Its look and its hover are this site's own, made when the owner asked for a
+ * modern hover (2026-11-19): white with a hairline edge and a near-black arrow, and while its
+ * card has the pointer or keyboard focus (`arrow-box-active`) the box fills with the primary
+ * yellow as the arrow slides out to the right and the same arrow slides in from the left.
+ *
+ * Colour. The arrow is near-black (`primary-content`) in every state, 19.9:1 on the white and
+ * 14.3:1 on the yellow, and it never changes colour. Two earlier versions changed it. One faded
+ * it from yellow to near-black, which passes through dark olive, so when the pointer left the
+ * arrow stayed a dark mark after the frame and the fill had settled: the fault the owner saw. The
+ * other swapped yellow for white, the barbershop's own hover, and both of its states were 1.4:1
+ * here. With one ink only the fill fades, between two light colours. The edge is the fill's own
+ * colour, a shade darker, so it follows the fill with no transition of its own, and it keeps the
+ * box's outline in forced colours, which drop the fill and the shadow.
+ *
+ * Slide. A track twice as wide as the box holds two arrows, one centred in each half, and hangs
+ * from the box's right edge. At rest its right half fills the box and its left half waits
+ * outside, clipped. `--arrow-box-travel` moves the track right by one box, so the arrow in the
+ * box leaves as the waiting one arrives, and they slide back when the pointer leaves. Only the
+ * track moves, inside the box: the box and the card around it never move or resize.
+ *
+ * Timing. The fill takes 0.3s on the curve of the card's frame (Tailwind's default, set in
+ * ServiceCard.astro), so the two change as one. The slide takes 0.4s on the same curve: when the
+ * frame and the fill finish, the arrow is within 2px of its place, so nothing is left behind when
+ * the pointer leaves. Reduced motion, in the base layer below, gives both no duration: the box
+ * fills at once, with the waiting arrow already in place.
+ *
+ * Both run through registered properties, never through `background-color` or `translate`
+ * themselves. WebKit styles the page once before the stylesheet arrives, and a transition on
+ * either would then start on load, from the browser's defaults, as the fill's once did. These
+ * properties have no value until the stylesheet registers them, so nothing fades or slides in.
+ * Where @property is not supported both states still show, without the motion.
  */
 @property --arrow-box-fill {
   syntax: '<color>';
@@ -247,42 +274,57 @@
   initial-value: transparent;
 }
 
-@property --arrow-box-ink {
-  syntax: '<color>';
-  inherits: false;
-  initial-value: transparent;
+/* How far the track has slid: 0 at rest, 1 once the waiting arrow has taken the other's place. */
+@property --arrow-box-travel {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
 }
 
 @utility arrow-box {
   --arrow-box-fill: var(--color-base-100);
-  --arrow-box-ink: var(--color-primary);
+  --arrow-box-travel: 0;
+  position: relative;
+  overflow: clip;
+  border: 1px solid color-mix(in oklab, var(--arrow-box-fill), var(--color-neutral) 8%);
   background-color: var(--arrow-box-fill);
-  color: var(--arrow-box-ink);
-  transition-property: --arrow-box-fill, --arrow-box-ink;
-  transition-duration: 0.5s;
-  transition-timing-function: ease;
+  color: var(--color-primary-content);
+  transition-property: --arrow-box-fill, --arrow-box-travel;
+  transition-duration: 0.3s, 0.4s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Half the track's width is one box: the percentages follow the box if its size changes. */
+  & [data-arrow-track] {
+    position: absolute;
+    inset-block: 0;
+    right: 0;
+    display: flex;
+    width: 200%;
+    align-items: center;
+    justify-content: space-around;
+    translate: calc(var(--arrow-box-travel) * 50%) 0;
+  }
 }
 
 @utility arrow-box-active {
   --arrow-box-fill: var(--color-primary);
-  --arrow-box-ink: var(--color-primary-content);
+  --arrow-box-travel: 1;
 }
 
 /*
- * The lead service card (Custom Websites, ServiceCard.astro `featured`): its arrow starts where
- * the others arrive under the pointer, a primary box with a near-black glyph, and under the
- * pointer or keyboard focus (`arrow-box-lead-active`) the box turns white while the glyph stays
- * near-black. A primary glyph on white is 1.4:1, so this arrow never turns yellow. Same
- * registered properties and the same 0.5s ease as `arrow-box`, so nothing fades in on load.
+ * The lead service card (Custom Websites, ServiceCard.astro `featured`): its arrow starts filled,
+ * a primary box with a near-black arrow, the pairing of the primary button, where the other cards
+ * arrive under the pointer. Under the pointer or keyboard focus (`arrow-box-lead-active`) the box
+ * turns white and the arrow slides through, as on the other cards. Same registered properties
+ * and timing as `arrow-box`, so nothing fades or slides in on load.
  */
 @utility arrow-box-lead {
   --arrow-box-fill: var(--color-primary);
-  --arrow-box-ink: var(--color-primary-content);
 }
 
 @utility arrow-box-lead-active {
   --arrow-box-fill: var(--color-base-100);
-  --arrow-box-ink: var(--color-primary-content);
+  --arrow-box-travel: 1;
 }
 
 /*
@@ -346,6 +388,37 @@
       --directory-fill: var(--color-secondary);
       --directory-ink: var(--color-secondary-content);
       --directory-rule: var(--color-secondary-content);
+    }
+  }
+}
+
+/*
+ * A link in the footer's three lists (src/components/sections/SiteFooter.astro): the footer's
+ * light text, which turns primary under a pointer that can hover, where the markup's
+ * `hover:underline` underlines it. The colour fades both ways over 200ms on Tailwind's default
+ * curve, as it did with `transition-colors duration-200`.
+ *
+ * It fades through a registered property, `--footer-link-ink`, not through `color`, for the reason
+ * given at `arrow-box`. With `transition-colors`, WebKit faded every one of these links in on
+ * load from the browser's link blue, 2.1:1 on the footer's near-black, and the accessibility scan
+ * of the home page could catch the labels on the way (mobile WebKit, 2026-11-19). The underline
+ * takes the text colour, so it follows the ink. Reduced motion, in the base layer below, gives
+ * the fade no duration.
+ */
+@property --footer-link-ink {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: transparent;
+}
+
+@utility footer-link {
+  --footer-link-ink: var(--color-neutral-content);
+  color: var(--footer-link-ink);
+  transition: --footer-link-ink 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  @media (hover: hover) {
+    &:hover {
+      --footer-link-ink: var(--color-primary);
     }
   }
 }
