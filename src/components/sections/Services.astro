@@ -2,7 +2,7 @@
 import Button from '@/components/ui/Button.astro';
 import Eyebrow from '@/components/ui/Eyebrow.astro';
 import ServiceCard from '@/components/ui/ServiceCard.astro';
-import { serviceCards, servicesCta } from '@/data/site';
+import { serviceCards, servicesCta, servicesPageCards } from '@/data/site';
 import { serviceCardLink } from '@/lib/service-cards';
 
 /**
@@ -26,16 +26,27 @@ import { serviceCardLink } from '@/lib/service-cards';
  * no action (owner, 2026-11-19).
  * Each tile links to its service page, or to the inquiry page until that exists, or nowhere
  * (src/lib/service-cards.ts). No client-side JavaScript.
+ *
+ * The services page (`variant="page"`, owner 2026-11-19) keeps the heading: the eyebrow, the title,
+ * and the rule. It drops the sentence and the button. Under that heading are the six home tiles
+ * plus `servicesPageCards`, nine in all: one column on phones, two from sm, and three from lg.
  */
 interface Props {
   /** Anchor for in-page links. */
   id: string;
   /** The services hub already is the destination of this link. */
   showCta?: boolean;
+  /**
+   * `home` is the band above. `page` is the services hub: the heading stays, the sentence does
+   * not, and the tiles are three across.
+   */
+  variant?: 'home' | 'page';
 }
 
-const { id, showCta = true } = Astro.props;
+const { id, showCta = true, variant = 'home' } = Astro.props;
 const titleId = `${id}-title`;
+const page = variant === 'page';
+const cards = page ? [...serviceCards, ...servicesPageCards] : serviceCards;
 ---
 
 {/*
@@ -48,11 +59,17 @@ const titleId = `${id}-title`;
    * From xl one four-column grid holds the introduction and the list. The list spans both rows and
    * passes the grid's tracks to its items (subgrid), so tiles and introduction share row heights
    * and gaps. The first tile starts in column 3, beside the introduction, and the other five follow.
-   * Built for six tiles: a seventh would need a new arrangement.
+   * Built for six tiles: a seventh would need a new arrangement. The page variant does not use this
+   * grid: the heading is a block above the list, and the list is three columns from lg.
    */}
-  <div class="mx-auto grid max-w-site gap-12 px-6 pt-16 pb-24 sm:pt-20 lg:px-8 xl:grid-cols-4 xl:gap-7.5 xl:pt-18 xl:pb-40">
+  <div
+    class:list={[
+      'mx-auto max-w-site px-6 pt-16 pb-24 sm:pt-20 lg:px-8 xl:pt-18 xl:pb-40',
+      !page && 'grid gap-12 xl:grid-cols-4 xl:gap-7.5',
+    ]}
+  >
     {/* `relative` keeps it above the list, which overlaps its cells from xl, so its text stays selectable. */}
-    <div class="xl:relative xl:col-span-2 xl:col-start-1 xl:row-start-1 xl:pt-4">
+    <div class:list={[!page && 'xl:relative xl:col-span-2 xl:col-start-1 xl:row-start-1 xl:pt-4']}>
       <Eyebrow>Our services</Eyebrow>
       <h2
         id={titleId}
@@ -63,15 +80,17 @@ const titleId = `${id}-title`;
         <span class="block font-light">Connect the rest.</span>
       </h2>
       <div class="mt-6 h-0.5 w-24 bg-primary" aria-hidden="true"></div>
-      <p class="mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
-        Each service works on its own and is planned to fit with the others, so whatever you add
-        next builds on what is already in place.
-      </p>
+      {!page && (
+        <p class="mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
+          Each service works on its own and is planned to fit with the others, so whatever you add
+          next builds on what is already in place.
+        </p>
+      )}
       {/*
        * The large size, the same as the other primary buttons. The aura shines in this text
        * colour: dark, so it shows on the grey band.
        */}
-      {showCta && (
+      {showCta && !page && (
         <div class="mt-8 text-base-content">
           <Button
             href={servicesCta.href}
@@ -88,10 +107,15 @@ const titleId = `${id}-title`;
     {/* role="list": Safari drops the list role from lists styled without markers. */}
     <ul
       role="list"
-      class="grid gap-7.5 sm:grid-cols-2 xl:col-span-full xl:col-start-1 xl:row-span-2 xl:row-start-1 xl:grid-cols-subgrid xl:grid-rows-subgrid"
+      class:list={[
+        'grid gap-7.5',
+        page
+          ? 'mt-12 sm:mt-14 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3'
+          : 'sm:grid-cols-2 xl:col-span-full xl:col-start-1 xl:row-span-2 xl:row-start-1 xl:grid-cols-subgrid xl:grid-rows-subgrid',
+      ]}
     >
-      {serviceCards.map((card) => (
-        <li class="xl:first:col-start-3">
+      {cards.map((card) => (
+        <li class:list={[!page && 'xl:first:col-start-3']}>
           <ServiceCard
             id={`${id}-${card.id}`}
             title={card.title}

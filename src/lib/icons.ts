@@ -25,6 +25,8 @@ import ListFilter from '../assets/icons/list-filter.svg';
 import Lock from '../assets/icons/lock.svg';
 import Mail from '../assets/icons/mail.svg';
 import MailClock from '../assets/icons/mail-clock.svg';
+import MapPin from '../assets/icons/map-pin.svg';
+import Megaphone from '../assets/icons/megaphone.svg';
 import MessageCircle from '../assets/icons/message-circle.svg';
 import MessagesSquare from '../assets/icons/messages-square.svg';
 import MonitorCog from '../assets/icons/monitor-cog.svg';
@@ -41,6 +43,7 @@ import Tooth from '../assets/icons/tooth.svg';
 import TrendingUp from '../assets/icons/trending-up.svg';
 import UserPlus from '../assets/icons/user-plus.svg';
 import Utensils from '../assets/icons/utensils.svg';
+import Workflow from '../assets/icons/workflow.svg';
 
 /**
  * The site's icon set, by name. Every icon but one is from Lucide (https://lucide.dev), copied
@@ -82,6 +85,8 @@ export const icons = {
   lock: Lock,
   mail: Mail,
   'mail-clock': MailClock,
+  'map-pin': MapPin,
+  megaphone: Megaphone,
   'message-circle': MessageCircle,
   'messages-square': MessagesSquare,
   'monitor-cog': MonitorCog,
@@ -98,6 +103,7 @@ export const icons = {
   'trending-up': TrendingUp,
   'user-plus': UserPlus,
   utensils: Utensils,
+  workflow: Workflow,
 };
 
 export type IconName = keyof typeof icons;

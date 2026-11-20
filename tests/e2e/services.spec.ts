@@ -1,5 +1,12 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { aboutCta, serviceCards, services, servicesCta, site } from '../../src/data/site';
+import {
+  aboutCta,
+  serviceCards,
+  services,
+  servicesCta,
+  servicesPageCards,
+  site,
+} from '../../src/data/site';
 import { serviceCardLink } from '../../src/lib/service-cards';
 
 /**
@@ -26,6 +33,10 @@ import { serviceCardLink } from '../../src/lib/service-cards';
  *
  * The link tests run only once a card has a destination; until then they are skipped with the
  * reason, and the plain-card tests run instead.
+ *
+ * The services page keeps the same heading and drops the sentence and the button. It shows the
+ * six home cards plus `servicesPageCards`, nine in all: one column on phones, two from 640px,
+ * and three from 1024px, three rows of three. Those three extra cards are absent from the home page.
  */
 const HEADING = 'Start with one service. Connect the rest.';
 const ACTION_LABEL = /^(Learn more|Discuss this service)$/;
@@ -449,6 +460,67 @@ test('one card per row on phones, two on tablets, and on desktops four, beside t
     expect(x + w, `${width}px: and ends before column 3`).toBeLessThanOrEqual(lefts[2]);
     expect(y, `${width}px: it sits in row one`).toBeGreaterThan(rowOne - 0.01);
     expect(y + h, `${width}px: above row two`).toBeLessThanOrEqual(rowTwo);
+  }
+});
+
+const SENTENCE =
+  'Each service works on its own and is planned to fit with the others, so whatever you add next builds on what is already in place.';
+
+const hubCards = [...serviceCards, ...servicesPageCards];
+
+test('the services page keeps the heading and lays nine cards in three rows of three', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  for (const card of servicesPageCards) {
+    await expect(page.getByRole('heading', { level: 3, name: card.title })).toHaveCount(0);
+  }
+
+  const layouts = [
+    [360, 1],
+    [390, 1],
+    [640, 2],
+    [768, 2],
+    [1024, 3],
+    [1280, 3],
+    [1440, 3],
+    [1920, 3],
+  ] as const;
+  for (const [width, columns] of layouts) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/services/');
+    const region = section(page);
+    await expect(region.getByRole('heading', { level: 2 })).toHaveText(HEADING);
+    await expect(region.getByText('Our services', { exact: true })).toBeVisible();
+    await expect(region.getByText(SENTENCE, { exact: true })).toHaveCount(0);
+    await expect(region.getByText(servicesCta.label, { exact: true })).toHaveCount(0);
+    await expect(items(page)).toHaveCount(hubCards.length);
+    await expect(region.getByRole('heading', { level: 3 })).toHaveText(
+      hubCards.map((card) => card.title),
+    );
+
+    const { intro, cards } = await layout(page);
+    const lefts = [...new Set(cards.map(([x]) => Math.round(x)))].sort((a, b) => a - b);
+    expect(lefts, `${width}px: columns`).toHaveLength(columns);
+    if (columns === 3) {
+      const rows = [...new Set(cards.map(([, y]) => Math.round(y)))].sort((a, b) => a - b);
+      expect(rows, `${width}px: three rows`).toHaveLength(3);
+      for (const row of rows) {
+        expect(
+          cards.filter(([, y]) => Math.round(y) === row),
+          `${width}px: three cards in the row`,
+        ).toHaveLength(3);
+      }
+    }
+    expect(new Set(cards.map(([, , w]) => Math.round(w))).size, `${width}px: equal widths`).toBe(1);
+    const [x, y, , h] = intro;
+    expect(y + h, `${width}px: the heading comes first`).toBeLessThanOrEqual(0);
+    expect(Math.round(x), `${width}px: the heading starts with the cards`).toBe(0);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth - innerWidth),
+      `${width}px: no sideways scroll`,
+    ).toBeLessThanOrEqual(0);
   }
 });
 

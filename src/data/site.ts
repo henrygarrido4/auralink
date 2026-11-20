@@ -181,6 +181,41 @@ export const serviceCards: readonly ServiceCard[] = [
   },
 ];
 
+/**
+ * Cards for the services page only (owner, 2026-11-19). They are not catalogue services, so they
+ * stay off the home page, the services strip, the footer, and the inquiry form. The sentences
+ * describe the work and wait for the owner to confirm the wording.
+ */
+export interface ServicesPageCard {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly icon: IconName;
+  readonly href?: string;
+}
+
+export const servicesPageCards: readonly ServicesPageCard[] = [
+  {
+    id: 'local-seo',
+    title: 'Local SEO + Google Business Profile',
+    description:
+      'A Google Business Profile and local pages that describe your business and where you work.',
+    icon: 'map-pin',
+  },
+  {
+    id: 'meta-google-ads',
+    title: 'Meta + Google Ads',
+    description: 'Ads on Google, Facebook, and Instagram for the services you want to promote.',
+    icon: 'megaphone',
+  },
+  {
+    id: 'gohighlevel',
+    title: 'GoHighLevel',
+    description: 'A GoHighLevel setup for enquiries, follow-up, and booking.',
+    icon: 'workflow',
+  },
+];
+
 /** A benefit chip around the devices in the home hero (src/components/ui/ServiceOrbit.astro). */
 export interface HeroBenefit {
   /** Lowercase and hyphenated, unique among the chips. */
