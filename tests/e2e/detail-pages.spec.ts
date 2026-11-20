@@ -181,7 +181,14 @@ test.describe('without JavaScript', () => {
     await page.goto(industryRoutes[0].route);
     await expect(page.locator('main astro-island')).toHaveCount(0);
     const first = faqs(page).first();
+    const answer = first.locator('p');
+    await expect(answer).toBeHidden();
     await first.locator('summary').click();
-    await expect(first).toHaveJSProperty('open', true);
+    // Read the state from the `open` attribute the browser sets and from the answer showing, not
+    // from the `open` property: `toHaveJSProperty` is the one matcher Playwright evaluates in the
+    // page's own script world, which Firefox does not provide while JavaScript is off, so it never
+    // answers and the test ran into its timeout in CI (run 44825131550, 2026-11-20).
+    await expect(first).toHaveAttribute('open', '');
+    await expect(answer).toBeVisible();
   });
 });
