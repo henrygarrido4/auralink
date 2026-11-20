@@ -196,3 +196,9 @@ Built routes now include `/services/`, `/industries/`, `/about/`, `/contact/`, a
 Primary navigation is Home, Services, Industries, About, and Blog. The first four have real destinations. Blog is a non-link label until published editorial content supports `/blog/`; no empty blog route or fabricated articles are created. The intended editorial label is now Blog; existing `insights` collections are retained for future editorial implementation.
 
 The contact page contains a native HTML Netlify project-inquiry form and a noindex success page. It asks for name, email, optional business/website, service interest, and project details, without invented email addresses or telephone numbers. Delivery needs Netlify form detection enabled before deployment and an actual deployed submission check. Local browser checks must not send inquiries.
+
+## Inner-page hero (2026-11-19)
+
+Every page except the home page opens with the same dark hero (`src/components/sections/PageIntro.astro`), which the owner asked for on 2026-11-19: a dark band, text in yellow and white, and the logo's mark (`src/assets/aura-hero.svg`, the owner's artwork) at a corner or side. The redesign added no copy and changed none. Each hero shows the eyebrow, title, and description its page already had, and the art is decorative, with no text.
+
+Which words of a title are yellow is a proposal the owner has not confirmed yet: "Auralink Studio" in "About Auralink Studio", "your project." in "Let's talk about your project.", and "getting in touch." in "Thanks for getting in touch.". "Services" and "Industries" are one word each and stay white. A page sets its yellow words with the `highlight` prop, which must repeat words of the title as written; the title's text, and so the `h1` that search engines and screen readers read, stays the same.

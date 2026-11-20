@@ -841,6 +841,168 @@
   }
 }
 
+/*
+ * Inner-page hero (src/components/sections/PageIntro.astro, the owner's request of 2026-11-19):
+ * the logo's mark resting on the bottom edge of the dark band, at the right, in front of a glow
+ * and three rings centred on that edge, which cuts them in half: the home hero's orbit as a sun
+ * on the horizon. Three pixels like the mark's own sit on the outer ring. This utility is the
+ * geometry and the motion. The component's classes are the paint.
+ *
+ * Geometry. The art's box is a size container: below lg a row 10rem tall under the copy, from lg
+ * a column beside the copy, as tall as the band. The disc is the largest circle whose upper half
+ * fits the box, 100cqw across or 176cqh, which keeps its top an eighth of the box's height clear
+ * of the box's top. It is centred on the box's bottom edge and held against its right edge, so
+ * the mark stays in the band's bottom right corner at every width. Everything else is a fraction
+ * of the disc and keeps its place whatever the disc's size: the mark is 62% of it wide and
+ * centred on it, its tip just inside the outer ring, and the pixels are given by their angle on
+ * that ring. The box clips the disc's lower half. Nothing reaches past the box sideways, so
+ * nothing reaches past the screen.
+ *
+ * Motion. On load the glow fades in and the rings open from the centre outward, with the home
+ * orbit's keyframes, while the mark rises into place. The pixels pop onto the outer ring once it
+ * has opened. All of it is over after 2.3s, and nothing moves after that. Only `opacity`, `scale`,
+ * and `translate` change, so nothing is laid out again. Under reduced motion none of this
+ * applies: everything rests where it belongs.
+ */
+@utility page-hero {
+  & [data-page-hero-art] {
+    --page-hero-disc: min(100cqw, 176cqh);
+    /* 5px at least: on a phone the disc is half as wide, and a smaller pixel is a speck. */
+    --page-hero-pixel: max(0.3125rem, 1.7%);
+    position: relative;
+    height: calc(var(--spacing) * 40);
+    overflow: clip;
+    container-type: size;
+  }
+
+  /* From lg (64rem). 40vw leaves the copy the wider column; 38rem is the widest the mark needs. */
+  @media (width >= 64rem) {
+    & [data-page-hero-art] {
+      width: clamp(24rem, 40vw, 38rem);
+      height: auto;
+    }
+  }
+
+  & [data-page-hero-disc] {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: var(--page-hero-disc);
+    height: var(--page-hero-disc);
+    translate: 0 50%;
+  }
+
+  & [data-page-hero-glow],
+  & [data-page-hero-ring],
+  & [data-page-hero-pixel] {
+    position: absolute;
+  }
+
+  /* The glow fades out at the outer ring. The inner rings are fractions of the disc. */
+  & [data-page-hero-glow],
+  & [data-page-hero-ring='outer'] {
+    inset: 0;
+  }
+
+  & [data-page-hero-ring='middle'] {
+    inset: 12%;
+  }
+
+  & [data-page-hero-ring='inner'] {
+    inset: 24%;
+  }
+
+  /*
+   * A square stood on its corner, like the mark's pixels, centred on a point of the outer ring:
+   * 50% + 50% * cos(angle) across and 50% - 50% * sin(angle) down, the angle counted
+   * anticlockwise from three o'clock. Written out, so they hold where cos() is not supported.
+   */
+  & [data-page-hero-pixel] {
+    width: var(--page-hero-pixel);
+    height: var(--page-hero-pixel);
+    margin: calc(var(--page-hero-pixel) / -2);
+    rotate: 45deg;
+  }
+
+  /* 140 degrees. */
+  & [data-page-hero-pixel='left'] {
+    top: 17.86%;
+    left: 11.7%;
+  }
+
+  /* 64 degrees. */
+  & [data-page-hero-pixel='top'] {
+    top: 5.06%;
+    left: 71.92%;
+  }
+
+  /* 20 degrees. */
+  & [data-page-hero-pixel='right'] {
+    top: 32.9%;
+    left: 96.98%;
+  }
+
+  /*
+   * 62% of the disc wide, so 19% in from its right edge centres it. Its viewBox is 1500 by 1050,
+   * so it is 43.4% of the disc tall, and resting 3.5% above the edge its tip is 46.9% up: just
+   * inside the outer ring, whose top is 50% up.
+   */
+  & [data-page-hero-mark] {
+    position: absolute;
+    right: calc(var(--page-hero-disc) * 0.19);
+    bottom: calc(var(--page-hero-disc) * 0.035);
+    width: calc(var(--page-hero-disc) * 0.62);
+    height: auto;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    & [data-page-hero-glow] {
+      animation: orbit-fade 1.2s ease-out 0.1s both;
+    }
+
+    & [data-page-hero-ring] {
+      animation: orbit-ring 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    & [data-page-hero-ring='inner'] {
+      animation-delay: 0.15s;
+    }
+
+    & [data-page-hero-ring='middle'] {
+      animation-delay: 0.3s;
+    }
+
+    & [data-page-hero-ring='outer'] {
+      animation-delay: 0.45s;
+    }
+
+    & [data-page-hero-mark] {
+      animation: page-hero-rise 1s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+    }
+
+    /* Once the outer ring has opened (0.45s + 1s), so never onto a ring still growing. */
+    & [data-page-hero-pixel] {
+      animation: orbit-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1.45s both;
+    }
+
+    & [data-page-hero-pixel='top'] {
+      animation-delay: 1.55s;
+    }
+
+    & [data-page-hero-pixel='right'] {
+      animation-delay: 1.65s;
+    }
+  }
+}
+
+/* The mark comes up from behind the band's bottom edge, which clips it, and fades in on the way. */
+@keyframes page-hero-rise {
+  from {
+    opacity: 0;
+    translate: 0 30%;
+  }
+}
+
 @layer base {
   html {
     font-family: var(--font-main);

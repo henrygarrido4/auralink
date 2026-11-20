@@ -1,23 +1,116 @@
 ---
-import Eyebrow from '@/components/ui/Eyebrow.astro';
+import Mark from '@/assets/aura-hero.svg';
 
+/**
+ * The hero of every page except the home page, which has its own (Hero.astro): a dark band
+ * straight under the navbar, in the navbar's `neutral`, so the two read as one masthead. The
+ * owner asked for it on 2026-11-19: a dark hero whose text mixes yellow and white, with the
+ * logo's mark at a corner or side.
+ *
+ * The copy starts on the container's left edge like every other section: the yellow eyebrow of
+ * the dark sections, the page's one `h1` in white with `highlight` in the primary yellow, the
+ * short primary rule, and the description in the band's light text. A title with no `highlight`
+ * is all white.
+ *
+ * The art is the mark the owner supplied (src/assets/aura-hero.svg), inlined at build time, so it
+ * costs no request. It rests on the band's bottom edge at the right: beside the copy from lg, and
+ * in a row of its own under the copy below lg, so it is never behind text. Behind it are a primary
+ * glow and three rings centred on that edge, which cuts them in half, the home hero's orbit as a
+ * sun on the horizon, and three pixels like the mark's own on the outer ring. All of it is
+ * decorative and hidden from assistive technology.
+ *
+ * The `page-hero` utility (src/styles/global.css) holds the geometry and the motion; the classes
+ * here are the paint. On load the glow fades in, the rings open, the mark rises into place, and
+ * the pixels pop in, all within 2.3s. The copy never moves, and nothing moves under reduced
+ * motion. No JavaScript.
+ */
 interface Props {
   title: string;
+  /** The words of `title` to set in the primary yellow. They must occur in `title` as written. */
+  highlight?: string;
   description: string;
 }
-const { title, description } = Astro.props;
+
+const { title, highlight, description } = Astro.props;
+
+const start = highlight ? title.indexOf(highlight) : -1;
+if (highlight && start < 0) {
+  throw new Error(`PageIntro: the highlight "${highlight}" is not part of the title "${title}".`);
+}
+/** The title in order, split around the highlight. Rendered back to back, so its text is `title`. */
+const parts = (
+  highlight
+    ? [
+        { text: title.slice(0, start), accent: false },
+        { text: highlight, accent: true },
+        { text: title.slice(start + highlight.length), accent: false },
+      ]
+    : [{ text: title, accent: false }]
+).filter((part) => part.text);
+
+/** From the centre outward. */
+const rings = ['inner', 'middle', 'outer'] as const;
+/** Where each sits on the outer ring is in the utility. The last is dimmer, as if further off. */
+const pixels = [
+  { place: 'left', paint: 'bg-primary' },
+  { place: 'top', paint: 'bg-primary' },
+  { place: 'right', paint: 'bg-primary/60' },
+] as const;
 ---
 
-<section aria-labelledby="page-title" class="mx-auto max-w-site px-6 py-16 lg:px-8 lg:py-20">
-  <Eyebrow>Auralink Studio</Eyebrow>
-  <h1
-    id="page-title"
-    class="mt-5 text-5xl leading-tight font-bold tracking-tight text-balance sm:text-6xl"
-  >
-    {title}
-  </h1>
-  <div class="mt-6 h-0.5 w-24 bg-primary" aria-hidden="true"></div>
-  <p class="mt-6 max-w-3xl text-xl leading-relaxed text-pretty text-base-content/80">
-    {description}
-  </p>
+<section aria-labelledby="page-title" class="page-hero bg-neutral text-neutral-content">
+  {/* From lg the copy takes the room the art's column leaves; that column sets its own width. */}
+  <div class="mx-auto grid max-w-site px-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-x-12 lg:px-8">
+    <div class="min-w-0 pt-16 pb-6 lg:py-20">
+      {/*
+       * The shared eyebrow locks a dark colour for the light sections. Here the label is the
+       * primary yellow, so it is set directly, with the same size and tracking.
+       */}
+      <p class="text-sm font-bold tracking-[0.16em] text-primary uppercase">Auralink Studio</p>
+      {/* White, like the logo's wordmark above it: the band's own light text is a shade greyer. */}
+      <h1
+        id="page-title"
+        class="mt-5 text-5xl leading-tight font-bold tracking-tight text-balance text-base-100 sm:text-6xl"
+      >
+        {parts.map((part) =>
+          part.accent ? <span class="text-primary">{part.text}</span> : part.text,
+        )}
+      </h1>
+      <div class="mt-6 h-0.5 w-24 bg-primary" aria-hidden="true"></div>
+      <p class="mt-6 max-w-3xl text-xl leading-relaxed text-pretty text-neutral-content/80">
+        {description}
+      </p>
+    </div>
+
+    <div data-page-hero-art aria-hidden="true">
+      <div data-page-hero-disc>
+        {/* A radial gradient reaches a square's corners, so 70% is the circle's edge. */}
+        <span
+          data-page-hero-glow
+          class="rounded-full bg-radial from-primary/40 via-primary/15 via-40% to-transparent to-70%"
+        ></span>
+        {rings.map((ring) => (
+          <span
+            data-page-hero-ring={ring}
+            class="rounded-full border border-neutral-content/15"
+          ></span>
+        ))}
+        {pixels.map((pixel) => (
+          <span data-page-hero-pixel={pixel.place} class={pixel.paint}></span>
+        ))}
+      </div>
+      {/*
+       * The file is used as supplied. Its artwork spans y 225.8 to 1274.2 of a 1500 square, so
+       * this viewBox only trims the empty band above and below, and the mark can then be placed
+       * by its own edges.
+       */}
+      <Mark
+        data-page-hero-mark
+        viewBox="0 225 1500 1050"
+        width="1500"
+        height="1050"
+        focusable="false"
+      />
+    </div>
+  </div>
 </section>

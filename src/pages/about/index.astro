@@ -14,7 +14,7 @@ import { site } from '@/data/site';
   <Fragment slot="head">
     <PageSchema type="AboutPage" name={`About ${site.name}`} />
   </Fragment>
-  <PageIntro title={`About ${site.name}`} description={site.summary} />
+  <PageIntro title={`About ${site.name}`} highlight={site.name} description={site.summary} />
   <AboutIntro id="about" showCta={false} />
   <WhyAuralink id="why-auralink" />
 </BaseLayout>
