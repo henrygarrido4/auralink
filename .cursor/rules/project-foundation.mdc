@@ -39,7 +39,7 @@ The public website for **Auralink Studio** (https://auralinkstudio.com): an agen
 
 ```
 src/
-  pages/            routes (.astro); dynamic routes read content collections
+  pages/            routes (.astro); dynamic routes read content collections or the typed data in src/data
   layouts/          BaseLayout.astro owns <head>, metadata, skip link, main landmark
   components/
     ui/             small Astro primitives built on daisyUI classes
@@ -50,6 +50,8 @@ src/
   content/          Markdown collections: services, work, insights, faqs
   content.config.ts collection schemas (Zod)
   data/site.ts      verified business facts, service catalogue, service cards, planned routes
+  data/detail-pages.ts, data/service-pages/, data/industry-pages/
+                    typed, proposed copy of the nine service and sixteen industry detail pages
   lib/              utils.ts cn() class merger, icons.ts icon set, service-cards.ts card links
   styles/global.css Tailwind + daisyUI + tokens
   assets/           images processed by astro:assets

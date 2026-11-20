@@ -32,14 +32,15 @@ The Playwright `seo` suite enforces the measurable parts of this table on every 
 
 Use JSON-LD through typed components in `src/components/seo/`. Only describe what is visible. Use `src/data/site.ts` for the organisation's facts so every page agrees.
 
-| Page       | Types                                                      | Required facts                                                                        |
-| ---------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Home       | `Organization`, `WebSite`                                  | name, url; `logo` and `sameAs` only when real assets and profiles exist               |
-| Service    | `Service` with `provider` (Organization), `BreadcrumbList` | name, description matching the page, `serviceType`, `areaServed` only once verified   |
-| Case study | `Article` or `CreativeWork`, `BreadcrumbList`              | headline, datePublished, author (Organization), about (the client) only with approval |
-| Article    | `Article`                                                  | headline, description, datePublished, dateModified, author                            |
-| About      | `AboutPage` + `Organization`                               | verified facts only                                                                   |
-| Contact    | `ContactPage`                                              | contact details only once verified                                                    |
+| Page       | Types                                                                                                                                              | Required facts                                                                                                             |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Home       | `Organization`, `WebSite`                                                                                                                          | name, url; `logo` and `sameAs` only when real assets and profiles exist                                                    |
+| Service    | `Service` with `provider` (Organization), `BreadcrumbList`, `FAQPage` for the four visible questions (`src/components/seo/DetailPageSchema.astro`) | name (the service card's title), description matching the meta description, `serviceType`, `areaServed` only once verified |
+| Industry   | `WebPage` with `audience` (`BusinessAudience`, the industry's name), `BreadcrumbList`, `FAQPage` (same component)                                  | name, description matching the meta description; no client, result, or area claim                                          |
+| Case study | `Article` or `CreativeWork`, `BreadcrumbList`                                                                                                      | headline, datePublished, author (Organization), about (the client) only with approval                                      |
+| Article    | `Article`                                                                                                                                          | headline, description, datePublished, dateModified, author                                                                 |
+| About      | `AboutPage` + `Organization`                                                                                                                       | verified facts only                                                                                                        |
+| Contact    | `ContactPage`                                                                                                                                      | contact details only once verified                                                                                         |
 
 Example for the home page (values from `site`):
 
@@ -109,8 +110,8 @@ Goal: be understood and cited correctly by generative engines.
 
 ## Internal linking model
 
-- Hubs (`/services/website-development/`, `/services/seo-ai-search/`, `/work/`, `/insights/`) link down to every child.
-- Children link up to their hub, sideways to one or two related pages, and forward to `/contact/`.
+- Hubs (`/services/`, `/industries/`, and later `/work/` and `/insights/`) link down to every child: the service cards to the nine service pages, the directory to the sixteen industry pages.
+- Children link up to their hub (the hero's breadcrumbs), sideways to one or two related pages, and forward to `/contact/`. An industry page links to its three or four recommended services in the body; the services hub and the footer list all six.
 - Articles link to the relevant service page; service pages link to supporting articles and approved case studies.
 - Every page is reachable within three clicks from the home page.
 

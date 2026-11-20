@@ -1,0 +1,47 @@
+---
+import type { DirectoryBlock } from '@/data/detail-pages';
+
+/**
+ * A `directory` block of a detail page's module (src/data/detail-pages.ts): grouped lists, such
+ * as the trades a construction and home services website might belong to, so a visitor
+ * recognises their business. Each group is a title, what sets it apart, and its items as quiet
+ * grey labels, which are text, not links or filters. Four groups share a row from lg, two from
+ * sm. Plain HTML.
+ */
+interface Props {
+  block: DirectoryBlock;
+}
+
+const { block } = Astro.props;
+const columns = block.groups.length <= 2 ? 'md:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-4';
+---
+
+<div>
+  <div class="max-w-3xl">
+    <h3 class="text-2xl font-bold tracking-tight text-balance text-base-content">
+      {block.heading}
+    </h3>
+    {block.intro && (
+      <p class="mt-3 text-base leading-relaxed text-pretty text-base-content/75">{block.intro}</p>
+    )}
+  </div>
+
+  <div class:list={['mt-8 grid gap-x-8 gap-y-10', columns]}>
+    {block.groups.map((group) => (
+      <div class="min-w-0 border-t border-base-300 pt-5">
+        <h4 class="text-lg font-bold tracking-tight text-balance text-base-content">
+          {group.title}
+        </h4>
+        <p class="mt-2 text-sm leading-relaxed text-pretty text-base-content/75">{group.text}</p>
+        {/* role="list": Safari drops the list role from lists styled without markers. */}
+        <ul role="list" class="mt-4 flex flex-wrap gap-2">
+          {group.items.map((item) => (
+            <li class="rounded-md bg-base-200 px-2.5 py-1 text-sm font-medium text-base-content">
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+</div>

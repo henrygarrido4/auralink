@@ -1,5 +1,7 @@
 ---
 import Mark from '@/assets/aura-hero.svg';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/lib/icons';
 
 /**
  * The hero of every page except the home page, which has its own (Hero.astro): a dark band
@@ -7,10 +9,15 @@ import Mark from '@/assets/aura-hero.svg';
  * owner asked for it on 2026-11-19: a dark hero whose text mixes yellow and white, with the
  * logo's mark at a corner or side.
  *
- * The copy starts on the container's left edge like every other section: the yellow eyebrow of
- * the dark sections, the page's one `h1` in white with `highlight` in the primary yellow, the
- * short primary rule, and the description in the band's light text. A title with no `highlight`
- * is all white.
+ * The copy starts on the container's left edge like every other section, in this order: the
+ * breadcrumbs, when the page has a parent (the industry and service detail pages, since the
+ * owner's request of 2026-11-20): Home and the hub as links, the page itself as plain text marked
+ * `aria-current`, in a breadcrumb landmark with decorative separators, wrapping on narrow screens;
+ * the page's small outline icon from the site's set, when it has one, in the primary yellow; the
+ * yellow eyebrow, which is the page's name as it appears in navigation (the owner's request of
+ * 2026-11-20, replacing the fixed site name); the page's one `h1` in white with `highlight` in the
+ * primary yellow; the short primary rule; and the description in the band's light text. A title
+ * with no `highlight` is all white.
  *
  * The art is the mark the owner supplied (src/assets/aura-hero.svg), inlined at build time, so it
  * costs no request. It rests on the band's bottom edge at the right: beside the copy from lg, and
@@ -24,18 +31,42 @@ import Mark from '@/assets/aura-hero.svg';
  * the pixels pop in, all within 2.3s. The copy never moves, and nothing moves under reduced
  * motion. No JavaScript.
  */
+/** One step of the trail from the home page. The last step is the page itself and has no `href`. */
+export interface Crumb {
+  label: string;
+  href?: string;
+}
+
 interface Props {
+  /** The small label above the title: the page's name as it appears in navigation. */
+  eyebrow: string;
   title: string;
   /** The words of `title` to set in the primary yellow. They must occur in `title` as written. */
   highlight?: string;
   description: string;
+  /** The page's own icon from the site's set, drawn small above the eyebrow. */
+  icon?: IconName;
+  /** The trail from the home page to this page, for pages with a parent hub. */
+  breadcrumbs?: readonly Crumb[];
 }
 
-const { title, highlight, description } = Astro.props;
+const { eyebrow, title, highlight, description, icon, breadcrumbs } = Astro.props;
 
 const start = highlight ? title.indexOf(highlight) : -1;
 if (highlight && start < 0) {
   throw new Error(`PageIntro: the highlight "${highlight}" is not part of the title "${title}".`);
+}
+if (breadcrumbs) {
+  const last = breadcrumbs.length - 1;
+  if (
+    last < 1 ||
+    breadcrumbs[last].href ||
+    breadcrumbs.some((crumb, i) => i < last && !crumb.href)
+  ) {
+    throw new Error(
+      'PageIntro: breadcrumbs need at least one linked parent and end with the current page, which has no href.',
+    );
+  }
 }
 /** The title in order, split around the highlight. Rendered back to back, so its text is `title`. */
 const parts = (
@@ -63,10 +94,48 @@ const pixels = [
   <div class="mx-auto grid max-w-site px-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-x-12 lg:px-8">
     <div class="min-w-0 pt-16 pb-6 lg:py-20">
       {/*
+       * The trail wraps on a narrow screen. Each link is at least 44px tall, so the row is a
+       * comfortable target; the separator after a step is decorative and sits inside that step's
+       * item, so the list counts only the steps. Hover and focus change at once, with no transition.
+       */}
+      {breadcrumbs && (
+        <nav aria-label="Breadcrumb" class="mb-5">
+          <ol class="flex flex-wrap items-center gap-x-3 text-sm font-bold tracking-[0.12em] uppercase">
+            {breadcrumbs.map((crumb, index) => (
+              <li class="flex min-h-11 items-center gap-3">
+                {crumb.href ? (
+                  <a
+                    href={crumb.href}
+                    class="inline-flex min-h-11 items-center rounded-sm text-neutral-content/80 underline decoration-neutral-content/40 underline-offset-4 hover:text-base-100 hover:decoration-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                  >
+                    {crumb.label}
+                  </a>
+                ) : (
+                  <span aria-current="page" class="text-base-100">
+                    {crumb.label}
+                  </span>
+                )}
+                {index < breadcrumbs.length - 1 && (
+                  <span aria-hidden="true" class="text-neutral-content/60">
+                    /
+                  </span>
+                )}
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )}
+      {/* The page's icon, decorative: the eyebrow under it names the page. Stroke 1.5 of 24 at 40px. */}
+      {icon && <Icon name={icon} class="size-10 text-primary" stroke-width="1.5" />}
+      {/*
        * The shared eyebrow locks a dark colour for the light sections. Here the label is the
        * primary yellow, so it is set directly, with the same size and tracking.
        */}
-      <p class="text-sm font-bold tracking-[0.16em] text-primary uppercase">Auralink Studio</p>
+      <p
+        class:list={['text-sm font-bold tracking-[0.16em] text-primary uppercase', icon && 'mt-5']}
+      >
+        {eyebrow}
+      </p>
       {/* White, like the logo's wordmark above it: the band's own light text is a shade greyer. */}
       <h1
         id="page-title"

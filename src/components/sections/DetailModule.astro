@@ -1,0 +1,54 @@
+---
+import ModuleComparison from '@/components/ui/ModuleComparison.astro';
+import ModuleDirectory from '@/components/ui/ModuleDirectory.astro';
+import ModuleExample from '@/components/ui/ModuleExample.astro';
+import ModuleJourney from '@/components/ui/ModuleJourney.astro';
+import ModuleNote from '@/components/ui/ModuleNote.astro';
+import ModulePaths from '@/components/ui/ModulePaths.astro';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import type { Module } from '@/data/detail-pages';
+
+/**
+ * The distinctive module of an industry or service detail page: the one section that gives the
+ * page its own structure, composed from the blocks in src/data/detail-pages.ts (pathways, a
+ * journey, a directory, a comparison, a note, an example). The other sections support it rather
+ * than repeat it. Blocks stack with generous space between them; every block heading is an h3
+ * under the section's h2, and a block's own items go one level down. Plain HTML.
+ */
+interface Props {
+  id: string;
+  module: Module;
+}
+
+const { id, module } = Astro.props;
+const titleId = `${id}-title`;
+---
+
+<section id={id} aria-labelledby={titleId} class="bg-base-100">
+  <div class="mx-auto max-w-site px-6 py-16 sm:py-20 lg:px-8 lg:py-24">
+    <SectionHeading
+      id={titleId}
+      eyebrow={module.eyebrow}
+      heading={module.heading}
+      intro={module.intro}
+    />
+    <div class="mt-12 grid gap-16 sm:mt-14 lg:gap-20">
+      {module.blocks.map((block) => {
+        switch (block.kind) {
+          case 'paths':
+            return <ModulePaths block={block} />;
+          case 'journey':
+            return <ModuleJourney block={block} />;
+          case 'directory':
+            return <ModuleDirectory block={block} />;
+          case 'comparison':
+            return <ModuleComparison block={block} />;
+          case 'note':
+            return <ModuleNote block={block} />;
+          case 'example':
+            return <ModuleExample block={block} />;
+        }
+      })}
+    </div>
+  </div>
+</section>

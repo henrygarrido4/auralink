@@ -1,0 +1,40 @@
+---
+import type { NoteBlock } from '@/data/detail-pages';
+
+/**
+ * A `note` block of a detail page's module (src/data/detail-pages.ts): a short explanation set
+ * as an editorial split over a hairline rule, the heading in the narrow column and the paragraphs,
+ * with an optional list of points, in the wide one. Below md the heading comes first. Plain HTML.
+ */
+interface Props {
+  block: NoteBlock;
+}
+
+const { block } = Astro.props;
+---
+
+<div class="grid gap-6 border-t border-base-300 pt-8 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-12">
+  <h3 class="text-2xl font-bold tracking-tight text-balance text-base-content">{block.heading}</h3>
+  <div class="min-w-0">
+    {block.paragraphs.map((paragraph, index) => (
+      <p
+        class:list={[
+          'max-w-2xl text-base leading-relaxed text-pretty text-base-content/80',
+          index > 0 && 'mt-4',
+        ]}
+      >
+        {paragraph}
+      </p>
+    ))}
+    {block.points && (
+      <ul role="list" class="mt-5 grid gap-2.5">
+        {block.points.map((point) => (
+          <li class="flex items-start gap-3 text-base leading-snug text-base-content">
+            <span class="mt-2.5 size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+            <span class="min-w-0">{point}</span>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</div>

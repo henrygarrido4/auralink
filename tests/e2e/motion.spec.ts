@@ -46,7 +46,10 @@ test.describe('motion allowed', () => {
     // the home page keep going, both the owner's decisions: the services strip, which pauses under
     // the pointer and has no button (tests/e2e/service-strip.spec.ts), and the light on the hero's
     // benefit ring, which never pauses (tests/e2e/hero.spec.ts). Everything else has to finish.
-    for (const route of builtRoutes()) {
+    const routes = builtRoutes();
+    // One visit per page, so the time grows with the site: 2 seconds per page.
+    test.setTimeout(routes.length * 2_000);
+    for (const route of routes) {
       await page.goto(route);
       const endless = await page.evaluate(() =>
         document

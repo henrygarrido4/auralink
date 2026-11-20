@@ -1,0 +1,59 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import type { Deliverables } from '@/data/detail-pages';
+
+/**
+ * What a service page's client receives: four to six numbered deliverables in one flat panel,
+ * its white cells parted by 1px rules as the home directory's are, three across from lg and two
+ * from sm. Each cell is its number on a primary square, a title, and what the title means in
+ * practice. The note under the panel says what is agreed separately or offered only as it
+ * actually is, so nothing is promised by omission. Plain HTML.
+ */
+interface Props {
+  id: string;
+  deliverables: Deliverables;
+}
+
+const { id, deliverables } = Astro.props;
+const titleId = `${id}-title`;
+const number = (index: number) => String(index + 1).padStart(2, '0');
+---
+
+<section id={id} aria-labelledby={titleId} class="bg-base-300/70">
+  <div class="mx-auto max-w-site px-6 py-16 sm:py-20 lg:px-8 lg:py-24">
+    <SectionHeading
+      id={titleId}
+      eyebrow="What you receive"
+      heading={deliverables.heading}
+      intro={deliverables.intro}
+    />
+
+    {/* role="list": Safari drops the list role from lists styled without markers. */}
+    <ol
+      role="list"
+      class="mt-12 grid gap-px border border-base-300 bg-base-300 sm:mt-14 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {deliverables.items.map((deliverable, index) => (
+        <li class="flex min-w-0 flex-col bg-base-100 p-6 sm:p-8">
+          <span
+            class="grid size-10 place-items-center bg-primary font-(family-name:--font-headers) text-sm font-bold text-primary-content"
+            aria-hidden="true"
+          >
+            {number(index)}
+          </span>
+          <h3 class="mt-5 text-xl font-bold tracking-tight text-balance text-base-content">
+            {deliverable.title}
+          </h3>
+          <p class="mt-3 text-base leading-relaxed text-pretty text-base-content/75">
+            {deliverable.text}
+          </p>
+        </li>
+      ))}
+    </ol>
+
+    <p class="mt-8 max-w-3xl text-base leading-relaxed text-base-content/75">
+      {/* The explicit space keeps the label and the note apart in the paragraph's text. */}
+      <span class="font-bold text-base-content">Scope note.</span> {deliverables.scopeNote}
+    </p>
+  </div>
+</section>

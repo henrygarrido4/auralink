@@ -1,15 +1,20 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { site } from '../../src/data/site';
+import { industryPath, serviceCardById, servicePath } from '../../src/data/detail-pages';
+import { industryPages } from '../../src/data/industry-pages';
+import { servicePages } from '../../src/data/service-pages';
+import { industries, site } from '../../src/data/site';
 import { builtRoutes } from './routes';
 
 /**
  * Inner-page hero (src/components/sections/PageIntro.astro with the `page-hero` utility): the hero
  * of every page except the home page, as the owner asked on 2026-11-19. A dark band in the
- * navbar's `neutral`, first in `main`, straight under the navbar. Its copy is left-aligned: a
- * primary eyebrow, the page's h1 in white with its highlighted words in primary, a primary rule,
- * and the description in the band's light text. The logo's mark (src/assets/aura-hero.svg, the
+ * navbar's `neutral`, first in `main`, straight under the navbar. Its copy is left-aligned: on a
+ * detail page the breadcrumb trail (Home and the hub as links, the page as `aria-current` text,
+ * decorative separators) and the page's icon, then on every page a primary eyebrow that is the
+ * page's name in navigation (the owner's request, 2026-11-20), the page's h1 in white with its
+ * highlighted words in primary, a primary rule, and the description in the band's light text. The logo's mark (src/assets/aura-hero.svg, the
  * owner's file) rests on the band's bottom edge at the right, centred on a glow and three rings
  * which that edge cuts in half, with three pixels on the outer ring. It is beside the copy from
  * lg and under it below lg, never behind text, and all of it is decorative. On load the glow
@@ -17,13 +22,89 @@ import { builtRoutes } from './routes';
  * never moves, and nothing moves under reduced motion. The home page keeps its own hero.
  */
 
-/** Each page's title as written, and the words of it set in the primary yellow. */
-const TITLES: Record<string, { title: string; highlight?: string }> = {
-  '/about/': { title: `About ${site.name}`, highlight: site.name },
-  '/contact/': { title: "Let's talk about your project.", highlight: 'your project.' },
-  '/industries/': { title: 'Industries' },
-  '/services/': { title: 'Services' },
+/** A step of a page's breadcrumb trail; the last has no `href`. */
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
+interface HeroCopy {
+  title: string;
+  highlight?: string;
+  /** The page's name in navigation, which the yellow eyebrow shows. */
+  eyebrow: string;
+  /** The page's icon file in src/assets/icons/, on the detail pages only. */
+  icon?: string;
+  /** Home, the hub, then the page, on the detail pages only. */
+  crumbs?: Crumb[];
+}
+
+const HOME: Crumb = { label: 'Home', href: '/' };
+
+/**
+ * Each page's hero copy: the title as written, the words of it set in the primary yellow, the
+ * eyebrow, and, on the detail pages, the icon and the trail. The hub pages are listed by hand; the
+ * service and industry detail pages take theirs from the data that renders them
+ * (src/data/service-pages/, src/data/industry-pages/), so a page is covered as soon as it is
+ * added there.
+ */
+const TITLES: Record<string, HeroCopy> = {
+  '/about/': { title: `About ${site.name}`, highlight: site.name, eyebrow: 'About' },
+  '/contact/': {
+    title: "Let's talk about your project.",
+    highlight: 'your project.',
+    eyebrow: 'Contact',
+  },
+  '/industries/': {
+    title: 'Digital support for the way your business works.',
+    highlight: 'the way your business works.',
+    eyebrow: 'Industries',
+  },
+  '/services/': {
+    title: 'Websites, email, and search that work together.',
+    highlight: 'work together.',
+    eyebrow: 'Services',
+  },
+  ...Object.fromEntries(
+    servicePages.map((page) => {
+      const card = serviceCardById(page.card);
+      return [
+        servicePath(page.slug),
+        {
+          title: page.title,
+          highlight: page.highlight,
+          eyebrow: card.title,
+          icon: card.icon,
+          crumbs: [HOME, { label: 'Services', href: '/services/' }, { label: card.title }],
+        },
+      ];
+    }),
+  ),
+  ...Object.fromEntries(
+    industryPages.map((page) => {
+      const industry = industries.find((entry) => entry.name === page.name)!;
+      return [
+        industryPath(page.slug),
+        {
+          title: page.title,
+          highlight: page.highlight,
+          eyebrow: page.name,
+          icon: industry.icon,
+          crumbs: [HOME, { label: 'Industries', href: '/industries/' }, { label: page.name }],
+        },
+      ];
+    }),
+  ),
 };
+
+/** The `d` of every path in an icon's file, in order: what the page should draw for it. */
+const pathsOf = (icon: string) =>
+  Array.from(
+    readFileSync(join(process.cwd(), 'src/assets/icons', `${icon}.svg`), 'utf8').matchAll(
+      /\sd="([^"]+)"/g,
+    ),
+    ([, d]) => d,
+  );
 
 const WIDTHS = [320, 360, 390, 768, 1023, 1024, 1440, 1920];
 
@@ -144,6 +225,8 @@ test('every page except the home page opens with the dark hero, straight under t
 }) => {
   const routes = innerRoutes();
   expect(routes, 'every inner page has its title listed here').toEqual(Object.keys(TITLES).sort());
+  // One visit per page, so the time grows with the site: 2 seconds per page.
+  test.setTimeout(routes.length * 2_000);
 
   for (const route of routes) {
     await test.step(route, async () => {
@@ -151,16 +234,23 @@ test('every page except the home page opens with the dark hero, straight under t
       await expect(hero(page)).toHaveCount(1);
       await expect(page.getByRole('heading', { level: 1 })).toHaveAttribute('id', 'page-title');
 
+      const expected = TITLES[route];
       const look = await hero(page).evaluate((section) => {
         const navbar = document.querySelector('header')!;
-        const [eyebrow, title, rule, description] = Array.from(
-          section.querySelector('h1')!.parentElement!.children,
-        );
+        const title = section.querySelector('h1')!;
+        const eyebrow = title.previousElementSibling!;
+        const rule = title.nextElementSibling!;
+        const description = rule.nextElementSibling!;
+        const copy = Array.from(title.parentElement!.children);
+        const trail = section.querySelector('nav');
+        // The copy column's own svg: the art's mark sits in the other column.
+        const icon = title.parentElement!.querySelector(':scope > svg');
         return {
           tag: section.tagName,
           first: section === document.querySelector('main')?.firstElementChild,
           gap: section.getBoundingClientRect().top - navbar.getBoundingClientRect().bottom,
-          parts: [eyebrow, title, rule, description].map((element) => element.tagName),
+          // Everything in the copy column, in order: the trail and the icon only on detail pages.
+          copy: copy.map((element) => element.tagName),
           eyebrow: eyebrow.textContent?.trim(),
           eyebrowCase: getComputedStyle(eyebrow).textTransform,
           described: !!description.textContent?.trim(),
@@ -170,29 +260,92 @@ test('every page except the home page opens with the dark hero, straight under t
             getComputedStyle(eyebrow).color,
             getComputedStyle(title).color,
             getComputedStyle(rule).backgroundColor,
+            icon ? getComputedStyle(icon).color : 'transparent',
           ],
+          trail: trail && {
+            label: trail.getAttribute('aria-label'),
+            steps: Array.from(trail.querySelectorAll('li'), (item) => {
+              const link = item.querySelector('a');
+              const current = item.querySelector('[aria-current="page"]');
+              return {
+                label: (link ?? current)?.textContent?.trim(),
+                href: link?.getAttribute('href') ?? undefined,
+                current: !!current && !link,
+                separator: item.querySelector('[aria-hidden="true"]')?.textContent?.trim(),
+                // A comfortable target: the link's own box, at least 44px tall.
+                tall: !link || link.getBoundingClientRect().height >= 44,
+              };
+            }),
+          },
+          icon: icon && {
+            hidden: icon.getAttribute('aria-hidden'),
+            focusable: icon.getAttribute('focusable'),
+            stroke: icon.getAttribute('stroke-width'),
+            size: [icon.getBoundingClientRect().width, icon.getBoundingClientRect().height],
+            paths: Array.from(icon.querySelectorAll('path'), (path) => path.getAttribute('d')),
+          },
         };
       });
       expect(look.tag, 'a section, named by the h1').toBe('SECTION');
       expect(look.first, 'first in main').toBe(true);
       near(look.gap, 0, 'no gap under the navbar', 0.5);
-      expect(look.parts, 'eyebrow, title, rule, description').toEqual(['P', 'H1', 'DIV', 'P']);
-      expect(look.eyebrow).toBe(site.name);
+      expect(
+        look.copy,
+        'trail and icon where the page has them, then eyebrow, title, rule, description',
+      ).toEqual([
+        ...(expected.crumbs ? ['NAV'] : []),
+        ...(expected.icon ? ['svg'] : []),
+        'P',
+        'H1',
+        'DIV',
+        'P',
+      ]);
+      expect(look.eyebrow, "the page's name as the eyebrow").toBe(expected.eyebrow);
       expect(look.eyebrowCase).toBe('uppercase');
       expect(look.described, 'the description is there').toBe(true);
+
+      if (expected.crumbs) {
+        expect(look.trail?.label, 'a breadcrumb landmark').toBe('Breadcrumb');
+        expect(look.trail?.steps, 'Home, the hub, then the page as plain current text').toEqual(
+          expected.crumbs.map((crumb, index) => ({
+            label: crumb.label,
+            href: crumb.href,
+            current: !crumb.href,
+            separator: index < expected.crumbs!.length - 1 ? '/' : undefined,
+            tall: true,
+          })),
+        );
+        await expect(
+          hero(page).getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link'),
+        ).toHaveCount(expected.crumbs.length - 1);
+      } else {
+        expect(look.trail, 'no trail on a top-level page').toBeNull();
+      }
+      if (expected.icon) {
+        expect(look.icon, `the ${expected.icon} icon, decorative, 40px, stroke 1.5`).toEqual({
+          hidden: 'true',
+          focusable: 'false',
+          stroke: '1.5',
+          size: [40, 40],
+          paths: pathsOf(expected.icon),
+        });
+      } else {
+        expect(look.icon, 'no icon on a top-level page').toBeNull();
+      }
 
       const [dark, white, yellow] = await paint(page, [
         'var(--color-neutral)',
         'var(--color-base-100)',
         'var(--color-primary)',
       ]);
-      const [navbar, band, eyebrow, title, rule] = await paint(page, look.colours);
+      const [navbar, band, eyebrow, title, rule, icon] = await paint(page, look.colours);
       expect(band, 'the band is the near-black').toEqual(dark);
       expect(band, 'one masthead with the navbar').toEqual(navbar);
       expect(eyebrow, 'a yellow eyebrow').toEqual(yellow);
       expect(title, 'a white title').toEqual(white);
       expect(white, 'white is white').toEqual([255, 255, 255, 255]);
       expect(rule, 'a yellow rule').toEqual(yellow);
+      if (expected.icon) expect(icon, 'a yellow icon').toEqual(yellow);
     });
   }
 
@@ -203,6 +356,7 @@ test('every page except the home page opens with the dark hero, straight under t
 });
 
 test('each title keeps its words, with the highlighted ones in yellow', async ({ page }) => {
+  test.setTimeout(Object.keys(TITLES).length * 2_000);
   for (const [route, { title, highlight }] of Object.entries(TITLES)) {
     await test.step(route, async () => {
       await page.goto(route);
@@ -226,8 +380,10 @@ test('the mark is the supplied artwork, whole and decorative, with nothing to fo
 }) => {
   const file = artwork();
   expect(file.paths, 'the file is one path').toBe(1);
+  const routes = innerRoutes();
+  test.setTimeout(routes.length * 2_000);
 
-  for (const route of innerRoutes()) {
+  for (const route of routes) {
     await test.step(route, async () => {
       await page.goto(route);
       await expect(art(page)).toHaveAttribute('aria-hidden', 'true');
@@ -277,6 +433,8 @@ test('the mark rests on the bottom edge at the right, on its rings and clear of 
 }) => {
   // Reduced motion shows the resting places at once. With motion only transforms and fades differ.
   await page.emulateMedia({ reducedMotion: 'reduce' });
+  // Eight widths per page, so the time grows with the site: 6 seconds per page.
+  test.setTimeout(Object.keys(TITLES).length * 6_000);
   for (const route of Object.keys(TITLES)) {
     await page.goto(route);
     // The copy is measured in Catamaran and Mukta, not in the face a browser shows until they load.
@@ -434,7 +592,9 @@ test.describe('reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
 
   test('nothing in the hero animates, and the art is there at once', async ({ page }) => {
-    for (const route of innerRoutes()) {
+    const routes = innerRoutes();
+    test.setTimeout(routes.length * 2_000);
+    for (const route of routes) {
       await page.goto(route);
       expect(
         await hero(page).evaluate((section) => section.getAnimations({ subtree: true }).length),

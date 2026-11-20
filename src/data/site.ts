@@ -66,13 +66,18 @@ export const plannedRoutes = [
   { path: '/', label: 'Home' },
   { path: '/services/', label: 'Services' },
   { path: '/industries/', label: 'Industries' },
+  { path: '/industries/[slug]/', label: 'Industry pages (src/data/industry-pages/)' },
   { path: '/blog/', label: 'Blog' },
   { path: '/services/website-development/', label: 'Website Development' },
-  { path: '/services/static-websites/', label: 'Static Website Development' },
-  { path: '/services/wordpress-development/', label: 'WordPress Development' },
-  { path: '/services/shopify-development/', label: 'Shopify Development' },
-  { path: '/services/email-marketing/', label: 'Email Marketing and Development' },
-  { path: '/services/seo-ai-search/', label: 'SEO and AI Search Visibility' },
+  { path: '/services/static-websites/', label: 'Custom Websites' },
+  { path: '/services/wordpress-development/', label: 'WordPress Websites' },
+  { path: '/services/shopify-development/', label: 'Shopify Stores' },
+  { path: '/services/email-marketing/', label: 'Email & Automation' },
+  { path: '/services/seo/', label: 'SEO' },
+  { path: '/services/aeo-geo/', label: 'AEO & GEO' },
+  { path: '/services/local-seo/', label: 'Local SEO + Google Business Profile' },
+  { path: '/services/meta-google-ads/', label: 'Meta + Google Ads' },
+  { path: '/services/gohighlevel/', label: 'GoHighLevel' },
   { path: '/work/', label: 'Work' },
   { path: '/about/', label: 'About' },
   { path: '/insights/', label: 'Insights' },
@@ -112,19 +117,34 @@ export const aboutCta: NavItem = { label: 'Learn more', href: '/about/' };
  */
 export const servicesCta: NavItem = { label: 'View all services', href: '/services/' };
 
+/**
+ * The six home service cards' ids, which the service pages (src/data/service-pages/) and the
+ * industry pages' related services refer to. The services page's three other cards have their own
+ * ids (`ServicesPageCardId`, below).
+ */
+export type ServiceCardId =
+  | 'custom-websites'
+  | 'wordpress-websites'
+  | 'shopify-stores'
+  | 'email-automation'
+  | 'seo'
+  | 'aeo-geo';
+
 /** A card in the home page's services section (src/components/sections/Services.astro). */
 export interface ServiceCard {
   /** Lowercase and hyphenated, unique among the cards; the card's element ids derive from it. */
-  readonly id: string;
+  readonly id: ServiceCardId;
   readonly title: string;
   readonly description: string;
   readonly icon: IconName;
   /** The catalogue services this card presents. */
   readonly services: readonly ServiceSlug[];
   /**
-   * The card's own service page. Add it when that page ships (planned routes:
-   * docs/content-strategy.md). Until then the card leads to the inquiry page, `primaryCta.href`,
-   * with no action label; with neither, it is not a link (src/lib/service-cards.ts).
+   * The card's own service page (src/pages/services/[slug].astro, one per card since 2026-11-20).
+   * With it the card links there, labelled "Learn more"; without it the card leads to the inquiry
+   * page, `primaryCta.href`, with no action label; with neither, it is not a link
+   * (src/lib/service-cards.ts). The industry pages' recommended services lead to the same
+   * destinations (src/components/sections/DetailRelatedServices.astro).
    */
   readonly href?: string;
 }
@@ -132,7 +152,9 @@ export interface ServiceCard {
 /**
  * The home page's service cards, in display order. Titles and descriptions are the owner's
  * (2026-11-17). Together the cards present every catalogue service above exactly once;
- * tests/e2e/services.spec.ts checks this, so a new service needs a card.
+ * tests/e2e/services.spec.ts checks this, so a new service needs a card. The first four
+ * destinations are the routes planned in docs/content-strategy.md; SEO and AEO & GEO, planned
+ * to share one page, have one each (the owner's brief, 2026-11-20).
  */
 export const serviceCards: readonly ServiceCard[] = [
   {
@@ -141,6 +163,7 @@ export const serviceCards: readonly ServiceCard[] = [
     description: 'Fast, responsive websites shaped around your business and your customers.',
     icon: 'code-xml',
     services: ['static-websites'],
+    href: '/services/static-websites/',
   },
   {
     id: 'wordpress-websites',
@@ -148,6 +171,7 @@ export const serviceCards: readonly ServiceCard[] = [
     description: 'Flexible websites that make managing and growing your content easier.',
     icon: 'file-pen-line',
     services: ['wordpress-development'],
+    href: '/services/wordpress-development/',
   },
   {
     id: 'shopify-stores',
@@ -155,6 +179,7 @@ export const serviceCards: readonly ServiceCard[] = [
     description: 'Thoughtful storefronts that make browsing and buying easier.',
     icon: 'shopping-bag',
     services: ['shopify-development'],
+    href: '/services/shopify-development/',
   },
   {
     id: 'email-automation',
@@ -162,6 +187,7 @@ export const serviceCards: readonly ServiceCard[] = [
     description: 'Branded emails and customer journeys that keep your audience connected.',
     icon: 'mail-clock',
     services: ['email-design-development', 'lifecycle-email-marketing'],
+    href: '/services/email-marketing/',
   },
   {
     id: 'seo',
@@ -170,6 +196,7 @@ export const serviceCards: readonly ServiceCard[] = [
       'Useful content and technical foundations that help search engines understand your website.',
     icon: 'search',
     services: ['seo'],
+    href: '/services/seo/',
   },
   {
     id: 'aeo-geo',
@@ -178,19 +205,25 @@ export const serviceCards: readonly ServiceCard[] = [
       'Clear, structured content that supports discovery in answer engines and AI search.',
     icon: 'sparkles',
     services: ['aeo', 'geo'],
+    href: '/services/aeo-geo/',
   },
 ];
 
+/** The three services-page cards' ids, which their service pages refer to. */
+export type ServicesPageCardId = 'local-seo' | 'meta-google-ads' | 'gohighlevel';
+
 /**
- * Cards for the services page only (owner, 2026-11-19). They are not catalogue services, so they
- * stay off the home page, the services strip, the footer, and the inquiry form. The sentences
- * describe the work and wait for the owner to confirm the wording.
+ * Cards for the services page (owner, 2026-11-19). They are not catalogue services, so they stay
+ * off the home page, the services strip, and the inquiry form. Since 2026-11-20 each has its own
+ * page (src/data/service-pages/, at its `href`, which the card and the footer link to), like the
+ * six home cards. The sentences describe the work and wait for the owner to confirm the wording.
  */
 export interface ServicesPageCard {
-  readonly id: string;
+  readonly id: ServicesPageCardId;
   readonly title: string;
   readonly description: string;
   readonly icon: IconName;
+  /** The card's own service page; see `ServiceCard.href`. */
   readonly href?: string;
 }
 
@@ -201,18 +234,21 @@ export const servicesPageCards: readonly ServicesPageCard[] = [
     description:
       'A Google Business Profile and local pages that describe your business and where you work.',
     icon: 'map-pin',
+    href: '/services/local-seo/',
   },
   {
     id: 'meta-google-ads',
     title: 'Meta + Google Ads',
     description: 'Ads on Google, Facebook, and Instagram for the services you want to promote.',
     icon: 'megaphone',
+    href: '/services/meta-google-ads/',
   },
   {
     id: 'gohighlevel',
     title: 'GoHighLevel',
     description: 'A GoHighLevel setup for enquiries, follow-up, and booking.',
     icon: 'workflow',
+    href: '/services/gohighlevel/',
   },
 ];
 
@@ -430,8 +466,8 @@ export interface Industry {
  * The kinds of business in the home page's "Who we work with" directory
  * (src/components/sections/WhoWeWorkWith.astro), in display order, read left to right across the
  * rows (owner, 2026-11-19), each with its icon. They are businesses Auralink Studio can help, not a
- * client list: no client names, logos, results, or claims of past work belong here. Plain text
- * until a page for one of them exists.
+ * client list: no client names, logos, results, or claims of past work belong here. Each name
+ * links to its industry page (src/data/industry-pages/, matched by name) once that page exists.
  */
 export const industries: readonly Industry[] = [
   { name: 'Construction & Home Services', icon: 'hard-hat' },

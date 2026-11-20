@@ -1,0 +1,62 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import type { FaqSection } from '@/data/detail-pages';
+
+/**
+ * Four questions prospective clients ask about the page's subject, as native disclosures: each
+ * `details` opens from the keyboard (Enter or Space on its summary) and from a tap, with no
+ * script, and nothing animates. The question is an h3 inside the summary, so the page's outline
+ * lists it; a plus sign drawn with two bars turns into a minus when the answer is open. From lg
+ * the heading, a sentence, and the link to the inquiry page sit in the left column with the
+ * questions beside them. Core scope and deliverables stay outside these disclosures, in the
+ * sections above. Plain HTML.
+ */
+interface Props {
+  id: string;
+  faqs: FaqSection;
+}
+
+const { id, faqs } = Astro.props;
+const titleId = `${id}-title`;
+---
+
+<section id={id} aria-labelledby={titleId} class="bg-base-100">
+  <div class="mx-auto max-w-site px-6 py-16 sm:py-20 lg:px-8 lg:py-24">
+    <div class="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 xl:gap-24">
+      <div class="min-w-0">
+        <SectionHeading
+          id={titleId}
+          eyebrow="Questions"
+          heading={faqs.heading}
+          intro={faqs.intro}
+        />
+        <a
+          href="/contact/"
+          class="mt-6 inline-flex min-h-11 items-center gap-2 rounded-sm font-bold text-base-content underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+        >
+          Ask something else
+          <Icon name="arrow-right" class="size-4" />
+        </a>
+      </div>
+
+      <div class="min-w-0 border-t border-base-300">
+        {faqs.items.map((faq) => (
+          <details class="group border-b border-base-300">
+            <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-6 py-5 text-left text-base-content marker:content-none hover:text-base-content/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral [&::-webkit-details-marker]:hidden">
+              <h3 class="text-lg font-bold tracking-tight text-balance">{faq.question}</h3>
+              {/* A plus that becomes a minus: the upright bar hides while the answer is open. */}
+              <span class="relative size-5 shrink-0" aria-hidden="true">
+                <span class="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 bg-current" />
+                <span class="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-current group-open:hidden" />
+              </span>
+            </summary>
+            <p class="max-w-2xl pb-6 text-base leading-relaxed text-pretty text-base-content/80">
+              {faq.answer}
+            </p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

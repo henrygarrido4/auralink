@@ -27,7 +27,10 @@ test('unknown routes return 404', async ({ request }) => {
 
 test('every internal link on every built page resolves', async ({ page, request }) => {
   const checked = new Map<string, number>();
-  for (const route of builtRoutes()) {
+  const routes = builtRoutes();
+  // One visit per page plus its links, so the time grows with the site: 3 seconds per page.
+  test.setTimeout(routes.length * 3_000);
+  for (const route of routes) {
     await page.goto(route);
     const hrefs = await page
       .locator('a[href^="/"]')

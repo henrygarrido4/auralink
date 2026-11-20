@@ -70,12 +70,16 @@ test('closing contact banner is separate from the site footer', async ({ page })
   );
   const footer = page.getByRole('contentinfo');
   await expect(footer.locator('#project-contact')).toHaveCount(0);
+  // The nine cards of the services page (the six home cards and the three that page adds) and
+  // the sixteen industries, each a link because each has a page of its own.
+  expect(footerServices).toHaveLength(9);
+  expect(footerIndustries).toHaveLength(16);
   await expect(
     footer.getByRole('navigation', { name: 'Footer services' }).getByRole('link'),
-  ).toHaveCount(6);
+  ).toHaveCount(footerServices.length);
   await expect(
     footer.getByRole('navigation', { name: 'Footer industries' }).getByRole('link'),
-  ).toHaveCount(16);
+  ).toHaveCount(footerIndustries.length);
   await expect(
     footer
       .getByRole('navigation', { name: 'Footer company' })
@@ -87,28 +91,35 @@ test('closing contact banner is separate from the site footer', async ({ page })
   await footer.screenshot({ path: `reports/screenshots/footer-${test.info().project.name}.png` });
 });
 
-test('every footer service and industry fragment exists on its destination page', async ({
-  page,
-}) => {
-  for (const group of [footerServices, footerIndustries]) {
-    const path = group[0]!.href.split('#')[0]!;
-    const response = await page.goto(path);
-    expect(response?.status()).toBe(200);
-    for (const link of group) {
-      const fragment = link.href.split('#')[1]!;
-      await expect(page.locator(`[id="${fragment}"]`)).toHaveCount(1);
-    }
+test('every footer service and industry link leads to its own detail page', async ({ page }) => {
+  // Each destination is a built page whose hero names it: the eyebrow is the page's name in
+  // navigation, which is the footer label. The Company column keeps the hubs themselves.
+  const links = [...footerServices, ...footerIndustries];
+  test.setTimeout(links.length * 2_000);
+  for (const link of links) {
+    await test.step(link.label, async () => {
+      expect(link.href, `${link.label} has a destination`).toMatch(
+        /^\/(services|industries)\/[a-z0-9-]+\/$/,
+      );
+      const response = await page.goto(link.href!);
+      expect(response?.status()).toBe(200);
+      const hero = page.locator('[aria-labelledby="page-title"]');
+      await expect(hero.locator('h1').locator('xpath=preceding-sibling::p[1]')).toHaveText(
+        link.label,
+      );
+    });
   }
 });
 
-test('an industry footer link lands at the requested industry', async ({ page }) => {
+test('an industry footer link lands on that industry page', async ({ page }) => {
   await page.goto('/');
   await page
     .getByRole('navigation', { name: 'Footer industries' })
     .getByRole('link', { name: 'Dental', exact: true })
     .click();
-  await expect(page).toHaveURL(/\/industries\/#industry-dental$/);
-  await expect(page.locator('#industry-dental')).toBeInViewport();
+  await expect(page).toHaveURL(/\/industries\/dental\/$/);
+  await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Dental');
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
 
 test('nothing in the footer fades in on load, even as the stylesheet arrives', async ({ page }) => {

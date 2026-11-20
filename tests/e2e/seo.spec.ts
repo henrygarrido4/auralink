@@ -10,6 +10,8 @@ const SITE = 'https://auralinkstudio.com';
 test('every built page has valid SEO basics', async ({ page }) => {
   const routes = builtRoutes();
   expect(routes.length, 'the build produced at least one page').toBeGreaterThan(0);
+  // One visit per page, so the time grows with the site: 2 seconds per page.
+  test.setTimeout(routes.length * 2_000);
 
   for (const route of routes) {
     await test.step(route, async () => {

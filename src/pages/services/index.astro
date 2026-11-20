@@ -13,6 +13,11 @@ import { site } from '@/data/site';
   <Fragment slot="head">
     <PageSchema type="CollectionPage" name="Services" />
   </Fragment>
-  <PageIntro title="Services" description={site.summary} />
+  <PageIntro
+    eyebrow="Services"
+    title="Websites, email, and search that work together."
+    highlight="work together."
+    description={site.summary}
+  />
   <Services id="services" variant="page" />
 </BaseLayout>

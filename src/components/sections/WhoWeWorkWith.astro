@@ -4,6 +4,7 @@ import Eyebrow from '@/components/ui/Eyebrow.astro';
 import Icon from '@/components/ui/Icon.astro';
 import { industries, primaryCta } from '@/data/site';
 import { industryAnchor } from '@/data/footer';
+import { industryHref } from '@/data/industry-pages';
 
 /**
  * Home page "Who we work with", after Why Auralink Studio and before the process, in the place of the selected
@@ -20,11 +21,13 @@ import { industryAnchor } from '@/data/footer';
  *
  * Under a fine hovering pointer a cell fills with the secondary near-black and its name and icon
  * turn white, the name underlined in white, all over 240ms, with nothing moving (`directory-cell`
- * in src/styles/global.css). A coarse pointer never sees that hover. No page exists for any of
- * these businesses yet, so the names are not links: the hover is decoration, no cell is a tab stop,
- * and the cursor stays as it is. "Let's talk" is the flat charcoal button,
- * following the navbar's call to action (`primaryCta`): a link to the inquiry page once that ships,
- * a placeholder until then. There is no client-side JavaScript.
+ * in src/styles/global.css). A coarse pointer never sees that hover. Each name is a link to its
+ * industry page (src/data/industry-pages/, since 2026-11-20) that stretches over the whole cell,
+ * so the cell is the target and its padding, icon, and name keep their places; keyboard focus
+ * draws the near-black ring on the cell. A name whose page does not exist stays plain text.
+ * "Let's talk" is the flat charcoal button, following the navbar's call to action (`primaryCta`):
+ * a link to the inquiry page once that ships, a placeholder until then. There is no client-side
+ * JavaScript.
  */
 interface Props {
   /** Anchor for in-page links. */
@@ -53,21 +56,34 @@ const titleId = `${id}-title`;
       role="list"
       class="mt-10 grid auto-rows-fr gap-px bg-base-300 text-base-content sm:mt-12 sm:grid-cols-2 lg:grid-cols-4"
     >
-      {industries.map((industry) => (
-        <li
-          id={industryAnchor(industry.name)}
-          class="directory-cell flex min-h-20 items-center gap-4 p-6 lg:min-h-28"
-        >
-          <Icon name={industry.icon} class="size-6 shrink-0" stroke-width="1.75" />
-          {/* 16px from lg to xl, where four columns are narrowest, so no name runs past three lines. */}
-          <span
-            data-directory-name
-            class="min-w-0 text-lg leading-snug font-medium text-balance lg:text-base xl:text-lg"
+      {industries.map((industry) => {
+        const href = industryHref(industry.name);
+        const Name = href ? 'a' : 'span';
+        return (
+          <li
+            id={industryAnchor(industry.name)}
+            class="directory-cell relative flex min-h-20 items-center gap-4 p-6 has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-neutral lg:min-h-28"
           >
-            {industry.name}
-          </span>
-        </li>
-      ))}
+            <Icon name={industry.icon} class="size-6 shrink-0" stroke-width="1.75" />
+            {/*
+             * 16px from lg to xl, where four columns are narrowest, so no name runs past three
+             * lines. The link's ::after covers the cell, so the whole cell is the target; the
+             * cell draws the focus ring in the link's place.
+             */}
+            <Name
+              href={href}
+              data-directory-name
+              class:list={[
+                'min-w-0 text-lg leading-snug font-medium text-balance after:absolute after:inset-0 focus-visible:outline-none lg:text-base xl:text-lg',
+                // Set outright: WebKit shows a pointer on a link but computes `auto`.
+                href && 'cursor-pointer',
+              ]}
+            >
+              {industry.name}
+            </Name>
+          </li>
+        );
+      })}
     </ul>
 
     <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4 text-base-content">

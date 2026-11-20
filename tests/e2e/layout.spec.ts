@@ -30,7 +30,11 @@ test.use({ reducedMotion: 'reduce' });
 
 test('every built page lays out cleanly at representative widths', async ({ page }) => {
   mkdirSync(SCREENSHOT_DIR, { recursive: true });
-  for (const route of builtRoutes()) {
+  const routes = builtRoutes();
+  // One test walks every page at every width and writes a full-page screenshot each time, so its
+  // time grows with the site: 6 seconds per page and width (the home page's longest step takes 3).
+  test.setTimeout(routes.length * VIEWPORTS.length * 6_000);
+  for (const route of routes) {
     for (const viewport of VIEWPORTS) {
       await test.step(`${route} @ ${viewport.width}px`, async () => {
         await page.setViewportSize({ width: viewport.width, height: viewport.height });

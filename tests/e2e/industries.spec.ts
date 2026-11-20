@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { industryHref } from '../../src/data/industry-pages';
 import { industries, primaryCta } from '../../src/data/site';
 
 /**
@@ -15,8 +16,10 @@ import { industries, primaryCta } from '../../src/data/site';
  * action (`primaryCta`). Under a fine hovering pointer the cell beneath it, and only that one,
  * fills `#141817` and turns its name, icon, and underline white over 240ms (at once under reduced
  * motion), moving nothing; a coarse pointer never sees that hover. At rest every cell is white,
- * Automotive included. No industry page exists, so nothing in the list is a link or a tab stop.
- * No client-side JavaScript.
+ * Automotive included. Each name is a link to its industry page (src/data/industry-pages/, since
+ * 2026-11-20) stretched over the whole cell, so the cell is the target, its geometry is unchanged,
+ * and keyboard focus rings the cell. Nothing else in the list is interactive. No client-side
+ * JavaScript.
  *
  * Boxes and styles are read in one `evaluate` on a CSS-located container: Playwright's Firefox
  * crashes on `evaluateAll` inside a region found by its name (testing-playwright.mdc). The layout
@@ -267,16 +270,24 @@ test('introduces the directory, then lists every kind of business in order, each
   );
   for (const [index, { name, icon }] of industries.entries()) {
     expect(entries[index], `${name}: a decorative icon, then the name`).toEqual({
-      parts: ['svg', 'span'],
+      parts: ['svg', 'a'],
       hidden: 'true',
       focusable: 'false',
       stroke: '1.75',
       paths: pathsOf(icon),
     });
   }
-  // Plain text: no industry page exists, so nothing to follow and nothing to tab to.
+  // Each name links to its industry page, and nothing else in the list is interactive.
+  const links = region.getByRole('list').getByRole('link');
+  await expect(links).toHaveCount(industries.length);
+  for (const [index, { name }] of industries.entries()) {
+    const href = industryHref(name);
+    expect(href, `${name} has an industry page`).toBeTruthy();
+    await expect(links.nth(index)).toHaveAccessibleName(name);
+    await expect(links.nth(index)).toHaveAttribute('href', href!);
+  }
   await expect(
-    region.getByRole('list').locator('a, button, input, [tabindex], img, picture'),
+    region.getByRole('list').locator('button, input, [tabindex], img, picture'),
   ).toHaveCount(0);
 
   await expect(region.getByText(QUESTION, { exact: true })).toBeVisible();
@@ -579,6 +590,11 @@ test.describe('the hover', () => {
         decoration: ['underline', '1px', '5px'],
       };
       expect(await chrome(page)).toEqual(NAMES.map(() => still));
+      // The cell keeps the default cursor; the link stretched over it shows the pointer.
+      const cursors = await list(page).evaluate((element) =>
+        Array.from(element.querySelectorAll('a'), (link) => getComputedStyle(link).cursor),
+      );
+      expect(cursors).toEqual(NAMES.map(() => 'pointer'));
       const timing = await cells(page).evaluateAll((items) =>
         items.map((item) => {
           const style = getComputedStyle(item);
@@ -800,11 +816,18 @@ test.describe('the hover', () => {
   });
 });
 
-test('a coarse pointer does not leave a cell dark', async ({ page }) => {
+test('a coarse pointer does not leave a cell dark, and a tap follows the link', async ({
+  page,
+}) => {
   await page.goto('/');
   test.skip(await canHover(page), 'A fine hovering pointer is covered with the other hover tests.');
   const { rest } = await directoryLooks(page);
+  // A tap anywhere in the cell reaches the link stretched over it, so it opens the industry page.
   await cells(page).first().click();
+  await expect(page).toHaveURL(new RegExp(`${industryHref(NAMES[0])}$`));
+  // Back on the home page, no cell is left dark by the tap.
+  await page.goBack();
+  await expect(list(page)).toBeVisible();
   expect((await looks(page)).map(coloursOf)).toEqual(NAMES.map(() => rest));
 });
 

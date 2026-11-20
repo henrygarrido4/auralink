@@ -1,0 +1,61 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageIntro from '@/components/sections/PageIntro.astro';
+import DetailIntro from '@/components/sections/DetailIntro.astro';
+import DetailChallenges from '@/components/sections/DetailChallenges.astro';
+import DetailRelatedServices from '@/components/sections/DetailRelatedServices.astro';
+import DetailModule from '@/components/sections/DetailModule.astro';
+import DetailProcess from '@/components/sections/DetailProcess.astro';
+import DetailFaq from '@/components/sections/DetailFaq.astro';
+import DetailInvitation from '@/components/sections/DetailInvitation.astro';
+import DetailPageSchema from '@/components/seo/DetailPageSchema.astro';
+import { industryPages } from '@/data/industry-pages';
+import { industries } from '@/data/site';
+
+/**
+ * One page per kind of business in `industries` (src/data/industry-pages/, the owner's brief of
+ * 2026-11-20): the shared dark hero with the trail Home / Industries / this industry, the
+ * industry's directory icon, and its name as the eyebrow; who the page is for; three challenges
+ * with the studio's responses; the services that fit and why; the industry's own module (before
+ * the services where the page says so); a brief process where it helps; four questions; the
+ * page's invitation; then the shared contact banner. Industry pages explain the business context;
+ * the service pages explain the work and its scope. Every example describes prospective work and
+ * needs: no client, result, or figure.
+ */
+export function getStaticPaths() {
+  return industryPages.map((page) => ({ params: { slug: page.slug }, props: { page } }));
+}
+
+const { page } = Astro.props;
+const hub = { label: 'Industries', href: '/industries/' };
+/** The directory entry this page belongs to; the index guarantees one exists. */
+const industry = industries.find((entry) => entry.name === page.name)!;
+---
+
+<BaseLayout title={page.metaTitle} description={page.metaDescription}>
+  <Fragment slot="head">
+    <DetailPageSchema
+      kind="industry"
+      name={page.name}
+      description={page.metaDescription}
+      hub={hub}
+      faqs={page.faqs.items}
+    />
+  </Fragment>
+  <PageIntro
+    eyebrow={page.name}
+    icon={industry.icon}
+    breadcrumbs={[{ label: 'Home', href: '/' }, hub, { label: page.name }]}
+    title={page.title}
+    highlight={page.highlight}
+    description={page.description}
+  />
+  <DetailIntro id="who" introduction={page.introduction} />
+  <DetailChallenges id="challenges" challenges={page.challenges} />
+  {page.moduleFirst && <DetailModule id="approach" module={page.module} />}
+  <DetailRelatedServices id="services" services={page.services} />
+  {!page.moduleFirst && <DetailModule id="approach" module={page.module} />}
+  {page.engagement && <DetailProcess id="process" engagement={page.engagement} />}
+  <DetailFaq id="faq" faqs={page.faqs} />
+  <DetailInvitation id="next-step" invitation={page.invitation} />
+</BaseLayout>

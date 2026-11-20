@@ -1,0 +1,37 @@
+---
+import type { ExampleBlock } from '@/data/detail-pages';
+
+/**
+ * An `example` block of a detail page's module (src/data/detail-pages.ts): a sample of content,
+ * such as an answer section, set apart from the page's own copy in a dashed panel with a label
+ * on it, so no reader or engine takes it for a page of the site. Its title is a paragraph, not a
+ * heading, for the same reason. The caption under it says what to notice. Plain HTML.
+ */
+interface Props {
+  block: ExampleBlock;
+}
+
+const { block } = Astro.props;
+---
+
+<div>
+  <h3 class="max-w-3xl text-2xl font-bold tracking-tight text-balance text-base-content">
+    {block.heading}
+  </h3>
+  <figure class="mt-6 max-w-3xl">
+    <div class="rounded-md border-2 border-dashed border-base-content/25 bg-base-200/60 p-6 sm:p-8">
+      <p class="inline-block rounded-full bg-neutral px-3 py-1 text-xs font-bold tracking-[0.12em] text-neutral-content uppercase">
+        {block.label}
+      </p>
+      <p class="mt-5 text-xl font-bold tracking-tight text-balance text-base-content">
+        {block.title}
+      </p>
+      {block.paragraphs.map((paragraph) => (
+        <p class="mt-3 text-base leading-relaxed text-pretty text-base-content/80">{paragraph}</p>
+      ))}
+    </div>
+    <figcaption class="mt-4 text-sm leading-relaxed text-base-content/75">
+      {block.caption}
+    </figcaption>
+  </figure>
+</div>

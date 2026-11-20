@@ -1,0 +1,49 @@
+---
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+
+/**
+ * The header of a detail-page section: the eyebrow, the h2, the short primary rule, and an
+ * optional introduction, left-aligned on the container's edge like the home page's sections.
+ * `tone="dark"` is for a `neutral` band: the eyebrow turns primary and the copy light, as the
+ * "Why Auralink Studio?" section does.
+ */
+interface Props {
+  /** The h2's id, which the section's `aria-labelledby` names. */
+  id: string;
+  eyebrow: string;
+  heading: string;
+  intro?: string;
+  tone?: 'light' | 'dark';
+}
+
+const { id, eyebrow, heading, intro, tone = 'light' } = Astro.props;
+const dark = tone === 'dark';
+---
+
+<div class="max-w-3xl">
+  {dark ? (
+    <p class="text-sm font-bold tracking-[0.16em] text-primary uppercase">{eyebrow}</p>
+  ) : (
+    <Eyebrow>{eyebrow}</Eyebrow>
+  )}
+  <h2
+    id={id}
+    class:list={[
+      'mt-4 text-3xl font-bold tracking-tight text-balance sm:mt-5 sm:text-4xl',
+      dark ? 'text-base-100' : 'text-base-content',
+    ]}
+  >
+    {heading}
+  </h2>
+  <div class="mt-5 h-0.5 w-12 bg-primary" aria-hidden="true"></div>
+  {intro && (
+    <p
+      class:list={[
+        'mt-5 max-w-2xl text-lg leading-relaxed text-pretty',
+        dark ? 'text-neutral-content/80' : 'text-base-content/80',
+      ]}
+    >
+      {intro}
+    </p>
+  )}
+</div>

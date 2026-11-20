@@ -1,0 +1,82 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import type { PathsBlock } from '@/data/detail-pages';
+
+/**
+ * A `paths` block of a detail page's module (src/data/detail-pages.ts): two to five parallel
+ * pathways, audiences, or entry points, each opened by a short primary rule rather than boxed as
+ * a card: a label for who takes the path, its title, what the page does for them, and the one
+ * action it offers. Two or three share a row from md; more fall into two columns from sm and
+ * three or four from lg. Plain HTML.
+ */
+interface Props {
+  block: PathsBlock;
+}
+
+const { block } = Astro.props;
+/** Under a block heading (an h3) the items step down a level. */
+const Title = block.heading ? 'h4' : 'h3';
+const count = block.items.length;
+const columns =
+  count === 2
+    ? 'md:grid-cols-2'
+    : count === 3
+      ? 'md:grid-cols-3'
+      : count === 4
+        ? 'sm:grid-cols-2 lg:grid-cols-4'
+        : 'sm:grid-cols-2 lg:grid-cols-3';
+---
+
+<div>
+  {block.heading && (
+    <div class="max-w-3xl">
+      <h3 class="text-2xl font-bold tracking-tight text-balance text-base-content">
+        {block.heading}
+      </h3>
+      {block.intro && (
+        <p class="mt-3 text-base leading-relaxed text-pretty text-base-content/75">{block.intro}</p>
+      )}
+    </div>
+  )}
+  {!block.heading && block.intro && (
+    <p class="max-w-3xl text-base leading-relaxed text-pretty text-base-content/75">
+      {block.intro}
+    </p>
+  )}
+  {/* role="list": Safari drops the list role from lists styled without markers. */}
+  <ul
+    role="list"
+    class:list={['grid gap-x-8 gap-y-10', columns, (block.heading || block.intro) && 'mt-8']}
+  >
+    {block.items.map((item) => (
+      <li class="flex min-w-0 flex-col border-t-2 border-primary pt-5">
+        {item.icon && <Icon name={item.icon} class="size-6 text-base-content" />}
+        {item.label && (
+          <p
+            class:list={[
+              'text-xs font-bold tracking-[0.16em] text-base-content/70 uppercase',
+              item.icon && 'mt-4',
+            ]}
+          >
+            {item.label}
+          </p>
+        )}
+        <Title
+          class:list={[
+            'text-xl font-bold tracking-tight text-balance text-base-content',
+            (item.label || item.icon) && 'mt-2',
+          ]}
+        >
+          {item.title}
+        </Title>
+        <p class="mt-3 text-base leading-relaxed text-pretty text-base-content/75">{item.text}</p>
+        {item.action && (
+          <p class="mt-4 flex items-start gap-2 text-sm font-bold text-base-content">
+            <Icon name="arrow-right" class="mt-0.5 size-4 shrink-0" />
+            <span>{item.action}</span>
+          </p>
+        )}
+      </li>
+    ))}
+  </ul>
+</div>

@@ -1,0 +1,55 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageIntro from '@/components/sections/PageIntro.astro';
+import DetailIntro from '@/components/sections/DetailIntro.astro';
+import DetailDeliverables from '@/components/sections/DetailDeliverables.astro';
+import DetailModule from '@/components/sections/DetailModule.astro';
+import DetailProcess from '@/components/sections/DetailProcess.astro';
+import DetailFaq from '@/components/sections/DetailFaq.astro';
+import DetailInvitation from '@/components/sections/DetailInvitation.astro';
+import DetailPageSchema from '@/components/seo/DetailPageSchema.astro';
+import { serviceCardById } from '@/data/detail-pages';
+import { servicePages } from '@/data/service-pages';
+
+/**
+ * One page per service card (src/data/service-pages/, the owner's brief of 2026-11-20): the shared
+ * dark hero with the trail Home / Services / this service, the card's icon, and its title as the
+ * eyebrow; who the service helps and when it fits; what the client receives; the service's own
+ * module; the four-step process; four questions; the page's invitation; then the shared contact
+ * banner. Service pages explain the work and its scope; the industry pages explain the business
+ * context.
+ */
+export function getStaticPaths() {
+  return servicePages.map((page) => ({ params: { slug: page.slug }, props: { page } }));
+}
+
+const { page } = Astro.props;
+const card = serviceCardById(page.card);
+const hub = { label: 'Services', href: '/services/' };
+---
+
+<BaseLayout title={page.metaTitle} description={page.metaDescription}>
+  <Fragment slot="head">
+    <DetailPageSchema
+      kind="service"
+      name={card.title}
+      description={page.metaDescription}
+      hub={hub}
+      faqs={page.faqs.items}
+    />
+  </Fragment>
+  <PageIntro
+    eyebrow={card.title}
+    icon={card.icon}
+    breadcrumbs={[{ label: 'Home', href: '/' }, hub, { label: card.title }]}
+    title={page.title}
+    highlight={page.highlight}
+    description={page.description}
+  />
+  <DetailIntro id="fit" introduction={page.introduction} />
+  <DetailDeliverables id="deliverables" deliverables={page.deliverables} />
+  <DetailModule id="approach" module={page.module} />
+  <DetailProcess id="process" engagement={page.engagement} />
+  <DetailFaq id="faq" faqs={page.faqs} />
+  <DetailInvitation id="next-step" invitation={page.invitation} />
+</BaseLayout>

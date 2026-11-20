@@ -22,7 +22,7 @@ Astro 7 (static output), TypeScript (strict), Tailwind CSS 4 via `@tailwindcss/v
 
 ## Repository layout
 
-`src/pages` routes, `src/layouts/BaseLayout.astro` (head, metadata, skip link, main landmark), `src/components/{ui,sections,seo,islands,inspira}`, `src/content` collections with `src/content.config.ts` schemas, `src/data/site.ts` verified facts, `src/styles/global.css` single stylesheet, `src/assets` optimised images (third-party ones credited in `src/assets/CREDITS.md`), `public` static files, `tests/e2e` Playwright suites, `scripts` executable checks, `design` editable source artwork for generated images (`design/hero-mockup` renders the home hero's device image, `design/process-lines` draws the lines behind the home steps), `docs` references, `.cursor` rules, agents, and skills, `reports` generated screenshots and Lighthouse output (gitignored).
+`src/pages` routes, `src/layouts/BaseLayout.astro` (head, metadata, skip link, main landmark), `src/components/{ui,sections,seo,islands,inspira}`, `src/content` collections with `src/content.config.ts` schemas, `src/data/site.ts` verified facts, `src/data/service-pages` and `src/data/industry-pages` the typed, proposed copy of the service and industry detail pages, `src/styles/global.css` single stylesheet, `src/assets` optimised images (third-party ones credited in `src/assets/CREDITS.md`), `public` static files, `tests/e2e` Playwright suites, `scripts` executable checks, `design` editable source artwork for generated images (`design/hero-mockup` renders the home hero's device image, `design/process-lines` draws the lines behind the home steps), `docs` references, `.cursor` rules, agents, and skills, `reports` generated screenshots and Lighthouse output (gitignored).
 
 ## Development
 

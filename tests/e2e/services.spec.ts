@@ -36,7 +36,9 @@ import { serviceCardLink } from '../../src/lib/service-cards';
  *
  * The services page keeps the same heading and drops the sentence and the button. It shows the
  * six home cards plus `servicesPageCards`, nine in all: one column on phones, two from 640px,
- * and three from 1024px, three rows of three. Those three extra cards are absent from the home page.
+ * and three from 1024px, three rows of three. Those three extra cards are absent from the home
+ * page. Every card on that page links to its own service page, labelled "Learn more" (the three
+ * extra cards since 2026-11-20).
  */
 const HEADING = 'Start with one service. Connect the rest.';
 const ACTION_LABEL = /^(Learn more|Discuss this service)$/;
@@ -521,6 +523,21 @@ test('the services page keeps the heading and lays nine cards in three rows of t
       await page.evaluate(() => document.documentElement.scrollWidth - innerWidth),
       `${width}px: no sideways scroll`,
     ).toBeLessThanOrEqual(0);
+  }
+});
+
+test('every card on the services page links to its own page, labelled "Learn more"', async ({
+  page,
+}) => {
+  await page.goto('/services/');
+  await expect(items(page)).toHaveCount(hubCards.length);
+  for (const [index, card] of hubCards.entries()) {
+    const link = serviceCardLink(card);
+    expect(link?.label, `${card.title}: its own page`).toBe('Learn more');
+    const anchor = items(page).nth(index).getByRole('link');
+    await expect(anchor, `${card.title}: one link`).toHaveCount(1);
+    await expect(anchor).toHaveAttribute('href', link!.href);
+    await expect(anchor.getByText(link!.label!, { exact: true })).toBeVisible();
   }
 });
 

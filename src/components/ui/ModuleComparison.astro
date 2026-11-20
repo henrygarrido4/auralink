@@ -1,0 +1,62 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import type { ComparisonBlock } from '@/data/detail-pages';
+
+/**
+ * A `comparison` block of a detail page's module (src/data/detail-pages.ts): two options side by
+ * side as a decision guide, each a bordered panel with its title, a sentence, and the signs that
+ * point to it, marked with a check. Neither side is coloured as the recommended one; the note
+ * under them says how to choose. Plain HTML.
+ */
+interface Props {
+  block: ComparisonBlock;
+}
+
+const { block } = Astro.props;
+---
+
+<div>
+  <div class="max-w-3xl">
+    <h3 class="text-2xl font-bold tracking-tight text-balance text-base-content">
+      {block.heading}
+    </h3>
+    {block.intro && (
+      <p class="mt-3 text-base leading-relaxed text-pretty text-base-content/75">{block.intro}</p>
+    )}
+  </div>
+
+  <div class="mt-8 grid gap-6 md:grid-cols-2">
+    {block.columns.map((column) => (
+      <div class="min-w-0 rounded-md border border-base-300 bg-base-100 p-6 sm:p-8">
+        <h4 class="text-xl font-bold tracking-tight text-balance text-base-content">
+          {column.title}
+        </h4>
+        {column.intro && (
+          <p class="mt-2 text-base leading-relaxed text-pretty text-base-content/75">
+            {column.intro}
+          </p>
+        )}
+        {/* role="list": Safari drops the list role from lists styled without markers. */}
+        <ul role="list" class="mt-5 grid gap-3">
+          {column.items.map((item) => (
+            <li class="flex items-start gap-3">
+              <span
+                class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-neutral text-neutral-content"
+                aria-hidden="true"
+              >
+                <Icon name="check" class="size-3" stroke-width="3" />
+              </span>
+              <span class="min-w-0 text-base leading-snug text-base-content">{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+
+  {block.note && (
+    <p class="mt-6 max-w-3xl text-base leading-relaxed text-pretty text-base-content/75">
+      {block.note}
+    </p>
+  )}
+</div>
