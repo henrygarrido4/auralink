@@ -333,6 +333,7 @@ test('every card ends with the arrow, shown before any hover, on touch screens t
 }) => {
   await page.goto('/');
   const palettes = await arrowPalettes(page);
+  const edgeColours = new Set<string>();
   for (const [index, { card }] of cards.entries()) {
     const tile = surface(items(page).nth(index));
     const arrow = arrowOf(tile);
@@ -351,12 +352,14 @@ test('every card ends with the arrow, shown before any hover, on touch screens t
       return {
         radius: parseFloat(style.borderTopLeftRadius),
         edge: `${style.borderTopWidth} ${style.borderTopStyle}`,
+        edgeColour: style.borderTopColor,
         shadow: style.boxShadow,
         overflow: style.overflowX,
       };
     });
     expect(shape.radius, `${card.title}: 0.25rem corners`).toBe(4);
     expect(shape.edge, `${card.title}: a hairline edge`).toBe('1px solid');
+    edgeColours.add(shape.edgeColour);
     expect(await arrowColours(tile), card.title).toEqual(paletteFor(card.id, palettes).rest);
     if (card.id === LEAD_CARD) {
       expect(shape.shadow, `${card.title}: no shadow on the dark tile`).toBe('none');
@@ -367,6 +370,13 @@ test('every card ends with the arrow, shown before any hover, on touch screens t
     expectAtRest(await arrowPlaces(tile), card.title);
     expect(shape.overflow, `${card.title}: the box hides what is outside it`).toBe('clip');
   }
+  // One edge colour on every box, white or primary: the edge is a line the fill shows through,
+  // never a colour mixed from the fill. Mixed from it, the edge flashed near-black on a card whose
+  // destination had been visited, for the length of every fade (Chrome 157 and 158; the owner's
+  // recording, 2026-11-19; `arrow-box` in src/styles/global.css). No test here can show that
+  // fault itself: computed styles report an unvisited link's colours, and Playwright's Chromium
+  // does not have it.
+  expect([...edgeColours], 'the edge does not take its colour from the fill').toHaveLength(1);
   // Under each card's sentence, and as far above its bottom edge on every card: at its foot.
   const feet = await section(page)
     .getByRole('list')

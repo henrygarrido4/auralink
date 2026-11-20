@@ -246,9 +246,18 @@
  * it from yellow to near-black, which passes through dark olive, so when the pointer left the
  * arrow stayed a dark mark after the frame and the fill had settled: the fault the owner saw. The
  * other swapped yellow for white, the barbershop's own hover, and both of its states were 1.4:1
- * here. With one ink only the fill fades, between two light colours. The edge is the fill's own
- * colour, a shade darker, so it follows the fill with no transition of its own, and it keeps the
- * box's outline in forced colours, which drop the fill and the shadow.
+ * here. With one ink only the fill fades, between two light colours.
+ *
+ * Edge. A 1px line of the near-black at 9%, which the fill shows through: it reads as the fill's
+ * own colour, a shade darker, and follows the fill with no transition of its own. It keeps the
+ * box's outline in forced colours, which drop the fill and the shadow. It must not be mixed from
+ * `--arrow-box-fill`, as it first was. While a registered property is mid-transition, Chrome 157
+ * and 158 paint a border colour that refers to it in the text colour on anything inside a visited
+ * link. So once a card's destination had been visited, the edge flashed near-black for the length
+ * of every fade, in and out: the fault the owner recorded (2026-11-19). It shows in no computed
+ * style and on no card whose link is unvisited, and the fill itself is not affected. `transparent`
+ * leads the mix because the build's fallback for browsers without color-mix() keeps the first
+ * colour, and no edge is the safe fallback.
  *
  * Slide. A track twice as wide as the box holds two arrows, one centred in each half, and hangs
  * from the box's right edge. At rest its right half fills the box and its left half waits
@@ -286,7 +295,7 @@
   --arrow-box-travel: 0;
   position: relative;
   overflow: clip;
-  border: 1px solid color-mix(in oklab, var(--arrow-box-fill), var(--color-neutral) 8%);
+  border: 1px solid color-mix(in oklab, transparent, var(--color-neutral) 9%);
   background-color: var(--arrow-box-fill);
   color: var(--color-primary-content);
   transition-property: --arrow-box-fill, --arrow-box-travel;
