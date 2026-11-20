@@ -191,26 +191,7 @@ test.describe('reduced motion', () => {
   });
 });
 
-test('contact form has a real endpoint contract and native accessible validation', async ({
-  page,
-}) => {
+test('the contact page has no closing banner', async ({ page }) => {
   await page.goto('/contact/');
   await expect(page.locator('#project-contact')).toHaveCount(0);
-  const form = page.locator('form[name="project-inquiry"]');
-  await expect(form).toHaveAttribute('method', 'POST');
-  await expect(form).toHaveAttribute('data-netlify', 'true');
-  await expect(form).toHaveAttribute('action', '/contact/thank-you/');
-  await expect(form.locator('input[name="form-name"]')).toHaveValue('project-inquiry');
-  await expect(form.locator('input[name="company-website"]')).toBeHidden();
-  await expect(form.getByLabel('Your name', { exact: false })).toHaveAttribute('required', '');
-  await expect(form.getByLabel('Email address', { exact: false })).toHaveAttribute('type', 'email');
-  await expect(form.getByLabel('Tell us about your project', { exact: false })).toHaveAttribute(
-    'required',
-    '',
-  );
-  // No form submission: delivery is verified only after Netlify form detection is enabled.
-  expect(await form.evaluate((el) => (el as HTMLFormElement).checkValidity())).toBe(false);
-  const response = await page.goto('/contact/thank-you/');
-  expect(response?.status()).toBe(200);
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
 });

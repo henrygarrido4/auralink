@@ -21,7 +21,6 @@ import { builtRoutes } from './routes';
 const TITLES: Record<string, { title: string; highlight?: string }> = {
   '/about/': { title: `About ${site.name}`, highlight: site.name },
   '/contact/': { title: "Let's talk about your project.", highlight: 'your project.' },
-  '/contact/thank-you/': { title: 'Thanks for getting in touch.', highlight: 'getting in touch.' },
   '/industries/': { title: 'Industries' },
   '/services/': { title: 'Services' },
 };
@@ -360,8 +359,8 @@ test('the mark rests on the bottom edge at the right, on its rings and clear of 
         );
       }
 
-      // What follows keeps its distance: the contact form's heading and the thank-you page's
-      // buttons have no section padding of their own above them.
+      // What follows keeps its distance: the contact page's cards have no section padding of
+      // their own above them.
       expect(measured.after, `${at}: the page goes on`).not.toBeNull();
       expect(
         (measured.after ?? 0) - band.bottom,

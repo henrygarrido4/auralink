@@ -2,7 +2,15 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageIntro from '@/components/sections/PageIntro.astro';
 import ProjectInquiryForm from '@/components/sections/ProjectInquiryForm.astro';
+import ContactAside from '@/components/sections/ContactAside.astro';
 import PageSchema from '@/components/seo/PageSchema.astro';
+
+/*
+ * Laid out after uprig.net/contact, the owner's reference (2026-11-19): the dark hero, then a
+ * light band with the form in a white card and, beside it from lg, the shorter cards that say
+ * what happens next and where to look first. The form confirms a sent message in place, so the
+ * page is the whole inquiry: there is no thank-you page.
+ */
 ---
 
 <BaseLayout
@@ -16,36 +24,13 @@ import PageSchema from '@/components/seo/PageSchema.astro';
   <PageIntro
     title="Let's talk about your project."
     highlight="your project."
-    description="Websites and email marketing, built around your business."
+    description="Tell us a little about your business and what you're looking for. Whether you need a new website, an online store, better email marketing, or more visibility in search, we're here to help."
   />
-  <section
-    aria-labelledby="inquiry-title"
-    class="mx-auto grid max-w-site gap-10 px-6 pt-16 pb-20 lg:grid-cols-3 lg:gap-16 lg:px-8 lg:pt-20"
-  >
-    <div>
-      <h2 id="inquiry-title" class="text-3xl font-bold">
-        Start a conversation
-      </h2>
-      <p class="mt-4 text-lg leading-relaxed text-base-content/80">
-        Tell us what you have in mind and which services you are interested in.
-      </p>
-      <div class="mt-6 flex flex-col items-start gap-3 font-bold">
-        <a
-          href="/services/"
-          class="rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
-        >
-          Explore our services
-        </a>
-        <a
-          href="/industries/"
-          class="rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
-        >
-          Who we work with
-        </a>
-      </div>
-    </div>
-    <div class="bg-base-200 p-6 sm:p-10 lg:col-span-2">
+  <section aria-label="Project inquiry" class="bg-base-200">
+    {/* The form takes the room the aside's column leaves; the aside keeps a readable width. */}
+    <div class="mx-auto grid max-w-site gap-8 px-6 pt-16 pb-20 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)] lg:items-start lg:gap-10 lg:px-8 lg:pt-20 lg:pb-28 xl:gap-14">
       <ProjectInquiryForm />
+      <ContactAside />
     </div>
   </section>
 </BaseLayout>

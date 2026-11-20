@@ -1,6 +1,6 @@
 ---
-description: Contact and project inquiry forms using Netlify Forms, spam protection, success pages, and privacy
-globs: src/**/*Form*.astro,src/**/*Form*.vue,src/**/*form*.astro,src/**/*form*.vue,src/pages/contact/**,netlify.toml
+description: Contact and project inquiry forms using Netlify Forms, spam protection, in-place confirmation, and privacy
+globs: src/**/*Form*.astro,src/**/*Form*.vue,src/**/*form*.astro,src/**/*form*.vue,src/lib/*form*.ts,src/pages/contact/**,netlify.toml
 alwaysApply: false
 ---
 
@@ -10,38 +10,48 @@ Docs: https://docs.netlify.com/manage/forms/setup/ and https://docs.astro.build/
 
 The site is static. Lead capture uses Netlify Forms; there is no backend, database, or serverless function for forms unless a documented requirement appears.
 
-## Static HTML form (preferred)
+## Static HTML form, confirmed in place (the pattern in use)
+
+The project inquiry form (`src/components/sections/ProjectInquiryForm.astro`, on `/contact/`) is an ordinary Netlify form that a small script (`src/lib/inquiry-form.ts`) posts in the background and confirms on the same page. There is no thank-you page: the owner retired it on 2026-11-19.
 
 ```astro
-<form name="project-inquiry" method="POST" action="/contact/thank-you/" data-netlify="true" netlify-honeypot="company-website">
+<form name="project-inquiry" method="POST" data-netlify="true" netlify-honeypot="company-website" data-inquiry-form>
   <input type="hidden" name="form-name" value="project-inquiry" />
-  <p class="hidden"><label>Leave this empty: <input name="company-website" /></label></p>
-  <label for="name">Name</label>
-  <input id="name" name="name" type="text" autocomplete="name" required class="input input-bordered" />
-  <!-- more fields -->
-  <button type="submit" class="btn btn-primary">Send inquiry</button>
+  <p hidden><label>Leave this empty: <input name="company-website" tabindex="-1" autocomplete="off" /></label></p>
+  <label for="inquiry-name">Your name <span aria-hidden="true">*</span></label>
+  <input id="inquiry-name" name="name" autocomplete="name" required data-required-message="Please enter your name." class="input" />
+  <p id="inquiry-name-error" data-inquiry-error="name" hidden><span data-inquiry-error-text></span></p>
+  <!-- more fields; the alert and the submit button -->
 </form>
+<!-- the confirmation (`data-inquiry-success`) and the live region (`data-inquiry-status`), siblings inside `[data-inquiry]` -->
 ```
 
-- `name` is unique per form and matches the `form-name` hidden input.
-- `action` points to a `noindex` thank-you page rendered with `BaseLayout`.
-- Keep the honeypot field hidden from sighted and assistive users (`hidden` class plus visually irrelevant label).
-- Form detection must be enabled in the Netlify UI (Forms > Form detection); note this in the deployment checklist in `docs/architecture.md`.
+- `name` is unique per form and matches the `form-name` hidden input. Netlify reads the form from the built HTML, so keep `name`, `method`, `data-netlify`, the honeypot, the hidden input, and the field names; they label each submission in Netlify's dashboard and notifications.
+- No `action`. Without JavaScript the browser validates (`required`, `type`, `minlength`) and posts to the page itself, and Netlify answers with its own success page. That is the fallback, not the experience: the script runs on every real visit.
+- Keep the honeypot hidden from sighted and assistive users (`hidden` on its paragraph, `tabindex="-1"`).
+- Form detection must be enabled in the Netlify UI (Forms > Form detection); the deployment checklist in `docs/architecture.md` says so, and until it is on, a post from the live site is not stored.
+
+### What the script does
+
+`enhanceInquiryForm()` runs from the component's `<script>` and takes over `form[data-inquiry-form]`: sets `novalidate`, validates with the constraint API on submit, shows the field's own words (`data-required-message`, `data-invalid-message`, else the browser's) in its `[data-inquiry-error]` element, linked by `aria-describedby`, marks the field `aria-invalid`, focuses the first invalid field, and clears a message as the field is edited. A valid form is posted to `/` as `application/x-www-form-urlencoded` (Netlify's AJAX contract), the button shows its `data-inquiry-when="sending"` label meanwhile, and repeated submits are ignored. On success the form is reset and hidden and `[data-inquiry-success]` is shown and focused, with the visitor's first name and address filled in; its `[data-inquiry-reset]` button brings an empty form back. On failure (network error or a non-2xx answer) `[data-inquiry-alert]` (`role="alert"`) is shown and focused and nothing typed is lost. `[data-inquiry-status]` (`aria-live="polite"`) announces each step. Nothing is logged.
+
+Why a script and not a Vue island: Netlify rewrites the built form (it injects its own hidden input), which a hydrating component would see as a mismatch; a plain script enhances whatever HTML is there, costs no runtime, and leaves one form, the detected one, in the page. Use the same approach for another form: copy the markup contract above and call `enhanceInquiryForm()`.
 
 ## Vue island forms
 
-When a form needs client-side steps or validation:
+Only when a form needs real client-side state the script pattern cannot give (multi-step, dependent fields):
 
 1. Keep a hidden static copy of the form in the Astro page so Netlify's build detects the fields (`<form name="project-inquiry" data-netlify="true" hidden>` with the same input names).
 2. Include `<input type="hidden" name="form-name" value="project-inquiry" />` in the Vue template.
-3. Submit with `fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(formData).toString() })`, then show an inline success state or navigate to the thank-you page.
+3. Submit with `fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(formData).toString() })`, then show an inline success state.
 4. Handle failure visibly with a retry message; never lose what the visitor typed.
 
 ## Fields and validation
 
-- Ask only for what qualifying an inquiry needs: name, email, company or website, service interest, message, optional budget range and timeline. No required phone number.
+- Ask only for what qualifying an inquiry needs: name, email, company, optional phone, kind of business, service interest (several boxes, since the studio offers email and search work alongside websites), current website, message. Only name, email, and message are required; never a required phone number.
 - Use native validation attributes first (`required`, `type="email"`, `minlength`), then enhance. Error text sits next to the field and is referenced by `aria-describedby`.
 - `autocomplete` attributes on identity fields; labels always visible.
+- Direct contact details (an email address, a phone number) come from `contactDetails` in `src/data/site.ts` and render only once set there; none is verified yet (`docs/content-strategy.md`). Never type an address into a template.
 
 ## Privacy and spam
 
@@ -51,8 +61,8 @@ When a form needs client-side steps or validation:
 
 ## If hosting changes
 
-If the site moves off Netlify, forms need a replacement endpoint. Record the decision and the migration in `docs/architecture.md` before changing form markup.
+If the site moves off Netlify, forms need a replacement endpoint (`ENDPOINT` in `src/lib/inquiry-form.ts` and the form's attributes). Record the decision and the migration in `docs/architecture.md` before changing form markup.
 
 ## Checks for this area
 
-A Playwright spec asserting the form renders with labels, the hidden `form-name` input, and the honeypot; `npm run test:e2e` for accessibility of the form page.
+`tests/e2e/contact.spec.ts` covers the contract (name, method, `data-netlify`, the `form-name` input, the honeypot, no `action`, no thank-you route), validation, the sent, failed, and sending states with the request answered by the test (Netlify is never posted to), the pills from the keyboard, the side cards, reduced motion, and the form without JavaScript. Run it with `npx playwright test tests/e2e/contact.spec.ts`; `npm run test:e2e` for accessibility of the form page across engines.

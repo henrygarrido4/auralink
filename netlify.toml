@@ -6,3 +6,10 @@
 
 [build.environment]
   NODE_VERSION = "24"
+
+# The form's thank-you page was retired on 2026-11-19 (the form confirms in place). Anything that
+# still points there, such as a cached copy of the old form, lands on the contact page instead.
+[[redirects]]
+  from = "/contact/thank-you/"
+  to = "/contact/"
+  status = 301

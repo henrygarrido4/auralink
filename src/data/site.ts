@@ -21,6 +21,15 @@ export const site = {
   language: 'en',
 } as const;
 
+/**
+ * Ways to reach the studio directly. Each stays unset until the owner confirms it:
+ * docs/content-strategy.md lists the email address and phone number as not yet verified. The
+ * contact page shows its "Direct contact" card, and the inquiry form's failure message offers the
+ * address, only once `email` is set (src/components/sections/ContactAside.astro,
+ * src/components/sections/ProjectInquiryForm.astro).
+ */
+export const contactDetails: { readonly email?: string } = {};
+
 /** Service catalogue. Slugs match the `serviceSlug` enum in src/content.config.ts. */
 export const services = [
   { slug: 'static-websites', name: 'Custom static websites', group: 'website-development' },

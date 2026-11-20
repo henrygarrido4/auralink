@@ -6,6 +6,7 @@ import CalendarCheck from '../assets/icons/calendar-check.svg';
 import Car from '../assets/icons/car.svg';
 import Check from '../assets/icons/check.svg';
 import ChartColumn from '../assets/icons/chart-column.svg';
+import CircleAlert from '../assets/icons/circle-alert.svg';
 import ClipboardList from '../assets/icons/clipboard-list.svg';
 import Clock from '../assets/icons/clock.svg';
 import Code from '../assets/icons/code.svg';
@@ -22,6 +23,7 @@ import LayoutGrid from '../assets/icons/layout-grid.svg';
 import Leaf from '../assets/icons/leaf.svg';
 import ListFilter from '../assets/icons/list-filter.svg';
 import Lock from '../assets/icons/lock.svg';
+import Mail from '../assets/icons/mail.svg';
 import MailClock from '../assets/icons/mail-clock.svg';
 import MessageCircle from '../assets/icons/message-circle.svg';
 import MessagesSquare from '../assets/icons/messages-square.svg';
@@ -61,6 +63,7 @@ export const icons = {
   car: Car,
   check: Check,
   'chart-column': ChartColumn,
+  'circle-alert': CircleAlert,
   'clipboard-list': ClipboardList,
   clock: Clock,
   code: Code,
@@ -77,6 +80,7 @@ export const icons = {
   leaf: Leaf,
   'list-filter': ListFilter,
   lock: Lock,
+  mail: Mail,
   'mail-clock': MailClock,
   'message-circle': MessageCircle,
   'messages-square': MessagesSquare,

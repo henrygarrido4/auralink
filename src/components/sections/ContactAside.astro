@@ -1,0 +1,112 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import { contactDetails } from '@/data/site';
+
+/**
+ * The column beside the contact page's inquiry form, after uprig.net/contact, the owner's
+ * reference (2026-11-19): what happens once a message is sent, where to look while still
+ * deciding, and, once the owner confirms an address, how to write to the studio directly. White
+ * cards like the form's, under the form below `lg` and beside it from there. Plain HTML.
+ *
+ * The steps say how the studio works, from facts already approved: the message reaches the person
+ * who would plan, design, and build the project (the "Personal partnership" pillar), the call is
+ * the free one the site's button offers, and the third step is the owner's own sentence for the
+ * process's "A clear plan" (docs/content-strategy.md), under the process section's titles, Free
+ * estimate and A simple roadmap. None promises a response time, a price, or a result. The owner
+ * approved the steps as written on 2026-11-19.
+ */
+
+/** In the order they happen. */
+const steps = [
+  {
+    title: 'We read your message',
+    text: "It's read by the person who would plan, design, and build your project.",
+  },
+  {
+    title: 'We reply with questions or a time to talk',
+    text: 'If anything is unclear, we ask first. Then we set up a free call to talk through your goals.',
+  },
+  {
+    title: 'You get a free estimate and a simple roadmap',
+    text: "What we'd do first, what it costs, and what to expect. Nothing starts until you say yes.",
+  },
+];
+
+/** Where to look before writing: the hub pages the contact page already pointed to. */
+const explore = [
+  { label: 'Explore our services', href: '/services/' },
+  { label: 'See who we work with', href: '/industries/' },
+];
+
+const card = 'rounded-md border border-base-300 bg-base-100 p-6 text-base-content shadow-sm sm:p-8';
+const heading = 'text-xl font-bold tracking-tight';
+const focusRing =
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary';
+---
+
+<aside aria-label="Before you send" class="grid content-start gap-6">
+  <div class={card}>
+    <h2 class={heading}>What happens next</h2>
+    {/* role="list": Safari drops the list role from lists styled without markers. */}
+    <ol role="list" class="mt-6 grid gap-6">
+      {steps.map((step, index) => (
+        <li class="flex gap-4">
+          <span class="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-primary-content">
+            {index + 1}
+          </span>
+          <div class="min-w-0">
+            <h3 class="text-base leading-snug font-bold">{step.title}</h3>
+            <p class="mt-1 text-sm leading-relaxed text-base-content/75">{step.text}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+
+  {contactDetails.email && (
+    <div class={card}>
+      <h2 class={heading}>Direct contact</h2>
+      <a
+        href={`mailto:${contactDetails.email}`}
+        class:list={[
+          'mt-4 inline-flex max-w-full items-center gap-3 rounded-md text-lg font-bold underline-offset-4 hover:underline',
+          focusRing,
+        ]}
+      >
+        <span
+          class="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-content"
+          aria-hidden="true"
+        >
+          <Icon name="mail" class="size-5" />
+        </span>
+        <span class="min-w-0 break-all">{contactDetails.email}</span>
+      </a>
+      <p class="mt-3 text-sm leading-relaxed text-base-content/75">
+        Prefer email? Write to us and we'll pick it up from there.
+      </p>
+    </div>
+  )}
+
+  <div class={card}>
+    <h2 class={heading}>Still exploring?</h2>
+    <p class="mt-2 text-sm leading-relaxed text-base-content/75">
+      See what we do and who we work with, then come back whenever you're ready.
+    </p>
+    <ul role="list" class="mt-5 grid gap-3">
+      {explore.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            class:list={[
+              'flex items-center justify-between gap-4 rounded-md border border-base-300 px-4 py-3 font-bold hover:border-base-content/40 hover:bg-base-200',
+              focusRing,
+            ]}
+          >
+            {link.label}
+            <Icon name="arrow-right" class="size-5 shrink-0" />
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</aside>
