@@ -1,0 +1,142 @@
+---
+import DetailSection from '@/components/sections/DetailSection.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import type { IconName } from '@/lib/icons';
+import { serviceCards, services, servicesCta, type ServiceSlug } from '@/data/site';
+
+/**
+ * What the studio does, on the About page: the verified service catalogue (`services` in
+ * src/data/site.ts) in its three groups, one white card each on the grey band, after the "How we
+ * work" cards of uprig.net/about, the owner's reference for this page (2026-11-20). Each card
+ * has the group's icon on a near-black tile (the pathway cards of the detail pages), its name, a
+ * sentence, and the group's services as links to the pages that present them: the home service
+ * card that lists each service, which the industry pages' recommendations lead to as well. A
+ * service whose card has no page yet is plain text, never an empty link. The secondary button
+ * after the cards is the services hub's own call (`servicesCta`), where the three services that
+ * stay off the home page are listed too.
+ *
+ * The group names and sentences are proposals composed from the owner's service-card sentences,
+ * and the heading and introduction paraphrase the home services heading ("Start with one service.
+ * Connect the rest."). The service names are the catalogue's, as written. Nothing here states a
+ * client, price, statistic, or result. Nothing moves, and no colour fades. No JavaScript.
+ */
+interface Props {
+  /** Anchor for in-page links and the h2's id. */
+  id: string;
+  /** The edge of this band the shared logo mark is centred on, if it carries one. */
+  mark?: 'top' | 'bottom';
+}
+
+const { id, mark } = Astro.props;
+const titleId = `${id}-title`;
+
+type ServiceGroup = (typeof services)[number]['group'];
+
+interface Group {
+  readonly id: ServiceGroup;
+  readonly title: string;
+  readonly text: string;
+  /** Decorative; the title carries the meaning. */
+  readonly icon: IconName;
+}
+
+/** The catalogue's three groups, in the catalogue's order. */
+const groups: readonly Group[] = [
+  {
+    id: 'website-development',
+    title: 'Website development',
+    text: 'Fast, responsive websites shaped around your business and your customers, whether that is a custom build, a WordPress site, or a Shopify store.',
+    icon: 'code-xml',
+  },
+  {
+    id: 'email',
+    title: 'Email marketing',
+    text: 'Branded emails and automated customer journeys that keep your audience connected after the first visit.',
+    icon: 'mail-clock',
+  },
+  {
+    id: 'search-visibility',
+    title: 'Search visibility',
+    text: 'Useful content and technical foundations that help search engines and AI answer engines understand your website and what you offer.',
+    icon: 'search',
+  },
+];
+
+/* A catalogue service outside these groups would be left out of the page: fail the build instead. */
+for (const service of services) {
+  if (!groups.some((group) => group.id === service.group)) {
+    throw new Error(`AboutServices: the service "${service.slug}" belongs to no group shown here.`);
+  }
+}
+
+/** The page that presents a catalogue service: the home card that lists it, once that card has one. */
+const destination = (slug: ServiceSlug) =>
+  serviceCards.find((card) => card.services.includes(slug))?.href;
+---
+
+<DetailSection id={id} labelledBy={titleId} tone="muted" mark={mark}>
+  <SectionHeading
+    id={titleId}
+    eyebrow="What we do"
+    heading="Three areas of work, one connected plan."
+    intro="Start with the piece you need most. Each one is built so the others can connect to it later."
+  />
+
+  {/* role="list": Safari drops the list role from lists styled without markers. */}
+  <ul role="list" class="mt-12 grid gap-5 sm:mt-14 lg:grid-cols-3 lg:gap-6">
+    {groups.map((group) => (
+      <li class="detail-card flex min-w-0 flex-col p-6 sm:p-7">
+        <span
+          class="grid size-12 place-items-center rounded-md bg-neutral text-neutral-content"
+          aria-hidden="true"
+        >
+          <Icon name={group.icon} class="size-6" stroke-width="1.75" />
+        </span>
+        <h3 class="mt-5 text-xl leading-snug font-bold tracking-tight text-balance text-base-content">
+          {group.title}
+        </h3>
+        <p class="mt-3 text-base leading-relaxed text-pretty text-base-content/75">{group.text}</p>
+        {/* The group's services, each opened by a small primary pixel like the logo's. */}
+        <ul role="list" class="mt-6 grid gap-3 border-t border-base-300 pt-5">
+          {services
+            .filter((service) => service.group === group.id)
+            .map((service) => {
+              const href = destination(service.slug);
+              return (
+                <li class="flex items-start gap-3 text-base leading-snug font-medium text-base-content">
+                  <span
+                    class="mt-2 size-1.5 shrink-0 rotate-45 bg-primary"
+                    aria-hidden="true"
+                  ></span>
+                  {href ? (
+                    <a
+                      href={href}
+                      class="min-w-0 rounded-sm underline decoration-base-content/30 decoration-1 underline-offset-4 hover:decoration-primary hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+                    >
+                      {service.name}
+                    </a>
+                  ) : (
+                    <span class="min-w-0">{service.name}</span>
+                  )}
+                </li>
+              );
+            })}
+        </ul>
+      </li>
+    ))}
+  </ul>
+
+  {/* The next-best action on the page: the contact banner below holds the primary one. */}
+  <div class="mt-10 sm:mt-12">
+    <Button
+      href={servicesCta.href}
+      variant="secondary"
+      size="lg"
+      class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+    >
+      {servicesCta.label}
+    </Button>
+  </div>
+</DetailSection>

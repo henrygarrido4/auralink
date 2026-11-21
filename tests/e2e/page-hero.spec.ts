@@ -3,8 +3,9 @@ import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { industryPath, serviceCardById, servicePath } from '../../src/data/detail-pages';
 import { industryPages } from '../../src/data/industry-pages';
+import { pricingHead, pricingHero } from '../../src/data/pricing';
 import { servicePages } from '../../src/data/service-pages';
-import { industries, site } from '../../src/data/site';
+import { industries } from '../../src/data/site';
 import { builtRoutes } from './routes';
 
 /**
@@ -13,8 +14,10 @@ import { builtRoutes } from './routes';
  * navbar's `neutral`, first in `main`, straight under the navbar. Its copy is left-aligned: on a
  * detail page the breadcrumb trail (Home and the hub as links, the page as `aria-current` text,
  * decorative separators) and the page's icon, then on every page a primary eyebrow that is the
- * page's name in navigation (the owner's request, 2026-11-20), the page's h1 in white with its
- * highlighted words in primary, a primary rule, and the description in the band's light text. The logo's mark (src/assets/aura-hero.svg, the
+ * page's name in navigation (the owner's request, 2026-11-20; the pricing page's is the brief's
+ * own words), the page's h1 in white with its
+ * highlighted words in primary, a primary rule, the description in the band's light text, and,
+ * on the pricing page, a short note under it. The logo's mark (src/assets/aura-hero.svg, the
  * owner's file) rests on the band's bottom edge at the right, centred on a glow and three rings
  * which that edge cuts in half, with three pixels on the outer ring. It is beside the copy from
  * lg and under it below lg, never behind text, and all of it is decorative. On load the glow
@@ -31,8 +34,10 @@ interface Crumb {
 interface HeroCopy {
   title: string;
   highlight?: string;
-  /** The page's name in navigation, which the yellow eyebrow shows. */
+  /** The page's name in navigation, which the yellow eyebrow shows (the pricing page: the brief's). */
   eyebrow: string;
+  /** A short note under the description, on the pricing page only. */
+  note?: string;
   /** The page's icon file in src/assets/icons/, on the detail pages only. */
   icon?: string;
   /** Home, the hub, then the page, on the detail pages only. */
@@ -49,7 +54,11 @@ const HOME: Crumb = { label: 'Home', href: '/' };
  * added there.
  */
 const TITLES: Record<string, HeroCopy> = {
-  '/about/': { title: `About ${site.name}`, highlight: site.name, eyebrow: 'About' },
+  '/about/': {
+    title: 'A digital presence built around your goals.',
+    highlight: 'your goals.',
+    eyebrow: 'About',
+  },
   '/contact/': {
     title: "Let's talk about your project.",
     highlight: 'your project.',
@@ -59,6 +68,12 @@ const TITLES: Record<string, HeroCopy> = {
     title: 'Digital support for the way your business works.',
     highlight: 'the way your business works.',
     eyebrow: 'Industries',
+  },
+  '/pricing/': {
+    title: pricingHead.title,
+    highlight: pricingHead.highlight,
+    eyebrow: pricingHero.eyebrow,
+    note: pricingHero.note,
   },
   '/services/': {
     title: 'Websites, email, and search that work together.',
@@ -254,6 +269,7 @@ test('every page except the home page opens with the dark hero, straight under t
           eyebrow: eyebrow.textContent?.trim(),
           eyebrowCase: getComputedStyle(eyebrow).textTransform,
           described: !!description.textContent?.trim(),
+          note: description.nextElementSibling?.textContent?.trim(),
           colours: [
             getComputedStyle(navbar).backgroundColor,
             getComputedStyle(section).backgroundColor,
@@ -291,7 +307,7 @@ test('every page except the home page opens with the dark hero, straight under t
       near(look.gap, 0, 'no gap under the navbar', 0.5);
       expect(
         look.copy,
-        'trail and icon where the page has them, then eyebrow, title, rule, description',
+        'trail and icon where the page has them, then eyebrow, title, rule, description, and the note where the page has one',
       ).toEqual([
         ...(expected.crumbs ? ['NAV'] : []),
         ...(expected.icon ? ['svg'] : []),
@@ -299,10 +315,14 @@ test('every page except the home page opens with the dark hero, straight under t
         'H1',
         'DIV',
         'P',
+        ...(expected.note ? ['P'] : []),
       ]);
       expect(look.eyebrow, "the page's name as the eyebrow").toBe(expected.eyebrow);
       expect(look.eyebrowCase).toBe('uppercase');
       expect(look.described, 'the description is there').toBe(true);
+      expect(look.note, 'the note under the description, only where the page has one').toBe(
+        expected.note,
+      );
 
       if (expected.crumbs) {
         expect(look.trail?.label, 'a breadcrumb landmark').toBe('Breadcrumb');

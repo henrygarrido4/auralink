@@ -16,8 +16,10 @@ import type { IconName } from '@/lib/icons';
  * the page's small outline icon from the site's set, when it has one, in the primary yellow; the
  * yellow eyebrow, which is the page's name as it appears in navigation (the owner's request of
  * 2026-11-20, replacing the fixed site name); the page's one `h1` in white with `highlight` in the
- * primary yellow; the short primary rule; and the description in the band's light text. A title
- * with no `highlight` is all white.
+ * primary yellow; the short primary rule; the description in the band's light text; and, when a
+ * page passes one, a short `note` under the description with a small primary icon (the pricing
+ * page's two-week design preview, 2026-11-20, whose eyebrow is also the brief's own words rather
+ * than the page's name). A title with no `highlight` is all white.
  *
  * The art is the mark the owner supplied (src/assets/aura-hero.svg), inlined at build time, so it
  * costs no request. It rests on the band's bottom edge at the right: beside the copy from lg, and
@@ -44,13 +46,15 @@ interface Props {
   /** The words of `title` to set in the primary yellow. They must occur in `title` as written. */
   highlight?: string;
   description: string;
+  /** A short condition or caveat under the description, such as a delivery milestone. */
+  note?: string;
   /** The page's own icon from the site's set, drawn small above the eyebrow. */
   icon?: IconName;
   /** The trail from the home page to this page, for pages with a parent hub. */
   breadcrumbs?: readonly Crumb[];
 }
 
-const { eyebrow, title, highlight, description, icon, breadcrumbs } = Astro.props;
+const { eyebrow, title, highlight, description, note, icon, breadcrumbs } = Astro.props;
 
 const start = highlight ? title.indexOf(highlight) : -1;
 if (highlight && start < 0) {
@@ -149,6 +153,12 @@ const pixels = [
       <p class="mt-6 max-w-3xl text-xl leading-relaxed text-pretty text-neutral-content/80">
         {description}
       </p>
+      {note && (
+        <p class="mt-5 flex max-w-3xl items-start gap-3 text-base leading-relaxed text-pretty text-neutral-content/75">
+          <Icon name="circle-alert" class="mt-1 size-4 shrink-0 text-primary" />
+          <span>{note}</span>
+        </p>
+      )}
     </div>
 
     <div data-page-hero-art aria-hidden="true">

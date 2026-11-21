@@ -1,10 +1,20 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageIntro from '@/components/sections/PageIntro.astro';
-import AboutIntro from '@/components/sections/AboutIntro.astro';
-import WhyAuralink from '@/components/sections/WhyAuralink.astro';
+import AboutStory from '@/components/sections/AboutStory.astro';
+import AboutPrinciples from '@/components/sections/AboutPrinciples.astro';
+import AboutServices from '@/components/sections/AboutServices.astro';
 import PageSchema from '@/components/seo/PageSchema.astro';
 import { site } from '@/data/site';
+
+/*
+ * Laid out after https://uprig.net/about, the owner's reference (2026-11-20), in this site's own
+ * system: the dark hero; who the studio is, beside the owner's portrait; how it works, as the
+ * three pillars on the dark band; what it does, as the service catalogue's three groups on the
+ * grey band; then the shared contact banner. The logo's mark lies across the edge between the
+ * dark band and the grey one, as on the detail pages. The hero's headline is the owner's heading
+ * from the home page introduction, where "Learn more" leads here; its yellow words are a proposal.
+ */
 ---
 
 <BaseLayout
@@ -16,10 +26,11 @@ import { site } from '@/data/site';
   </Fragment>
   <PageIntro
     eyebrow="About"
-    title={`About ${site.name}`}
-    highlight={site.name}
+    title="A digital presence built around your goals."
+    highlight="your goals."
     description={site.summary}
   />
-  <AboutIntro id="about" showCta={false} />
-  <WhyAuralink id="why-auralink" />
+  <AboutStory id="story" />
+  <AboutPrinciples id="how-we-work" mark="bottom" />
+  <AboutServices id="what-we-do" mark="top" />
 </BaseLayout>

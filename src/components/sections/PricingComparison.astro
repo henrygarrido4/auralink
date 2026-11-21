@@ -1,0 +1,115 @@
+---
+import DetailSection from '@/components/sections/DetailSection.astro';
+import Icon from '@/components/ui/Icon.astro';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { comparisonRows, comparisonSection, pricingPackages } from '@/data/pricing';
+
+/**
+ * The pricing page's comparison table (src/data/pricing.ts): the three packages side by side,
+ * one row per feature. An included feature is a check on a primary disc with the hidden words
+ * "Included"; one that is not is a dash with "Not included"; the rest are short values. The
+ * Business column, the highlighted package, is tinted.
+ *
+ * Below md the rows re-flow so the table stays readable on a phone without a sideways scroll:
+ * each row is a three-column grid whose header spans the width, with the three values under it,
+ * and the three package names stay stuck under the navbar while the rows scroll past. The
+ * elements keep their table semantics through explicit roles, since a browser drops them from a
+ * cell that is no longer displayed as one; from md the same elements lay out as an ordinary
+ * table. Nothing moves, and there is no script.
+ */
+interface Props {
+  id: string;
+}
+
+const { id } = Astro.props;
+const titleId = `${id}-title`;
+
+/** The highlighted package's column. */
+const tint = (index: number) => (pricingPackages[index].featured ? 'bg-primary/10' : undefined);
+---
+
+<DetailSection id={id} labelledBy={titleId}>
+  <SectionHeading
+    id={titleId}
+    eyebrow={comparisonSection.eyebrow}
+    heading={comparisonSection.heading}
+    intro={comparisonSection.intro}
+  />
+
+  <table
+    role="table"
+    class="mt-10 block w-full border-collapse text-left sm:mt-12 md:table md:table-fixed"
+  >
+    <caption class="sr-only">{comparisonSection.caption}</caption>
+    {/* Stuck 80px down, under the sticky navbar (h-20), while the rows re-flow below md. */}
+    <thead
+      role="rowgroup"
+      class="sticky top-20 z-10 block bg-base-100 md:static md:table-header-group"
+    >
+      <tr role="row" class="grid grid-cols-3 border-b-2 border-base-300 md:table-row">
+        <th
+          role="columnheader"
+          scope="col"
+          class="sr-only md:not-sr-only md:w-[34%] md:table-cell md:px-4 md:py-4 md:text-base md:font-bold md:text-base-content"
+        >
+          {comparisonSection.featureHeading}
+        </th>
+        {pricingPackages.map((pkg, index) => (
+          <th
+            role="columnheader"
+            scope="col"
+            class:list={[
+              'px-2 py-3 text-sm font-bold text-base-content md:table-cell md:px-4 md:py-4 md:text-base',
+              tint(index),
+            ]}
+          >
+            {pkg.name}
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody role="rowgroup" class="block md:table-row-group">
+      {comparisonRows.map((row) => (
+        <tr role="row" class="grid grid-cols-3 border-b border-base-300 md:table-row">
+          <th
+            role="rowheader"
+            scope="row"
+            class="col-span-3 px-2 pt-4 pb-1.5 text-sm font-bold text-base-content md:table-cell md:px-4 md:py-4 md:text-base md:align-top"
+          >
+            {row.feature}
+          </th>
+          {row.values.map((value, index) => (
+            <td
+              role="cell"
+              class:list={[
+                'px-2 pt-1 pb-4 text-sm leading-snug text-base-content md:table-cell md:px-4 md:py-4 md:text-base md:align-top',
+                tint(index),
+              ]}
+            >
+              {value === true ? (
+                <>
+                  <span
+                    class="inline-grid size-6 place-items-center rounded-full bg-primary text-primary-content"
+                    aria-hidden="true"
+                  >
+                    <Icon name="check" class="size-3.5" stroke-width="3" />
+                  </span>
+                  <span class="sr-only">Included</span>
+                </>
+              ) : value === false ? (
+                <>
+                  <span class="text-base-content/40" aria-hidden="true">
+                    —
+                  </span>
+                  <span class="sr-only">Not included</span>
+                </>
+              ) : (
+                value
+              )}
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</DetailSection>

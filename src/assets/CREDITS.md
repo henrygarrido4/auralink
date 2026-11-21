@@ -28,6 +28,13 @@ Not files in this folder. Astro's font support downloads them at build time and 
 - The laptop shows Apple's logo. The photo does not say that Apple endorses Auralink Studio.
 - Original: 1086×1448 PNG. Changes: 280px cropped from the top, the empty wall above the plant and his head, leaving 1086×1168; saved as WebP at quality 92 without metadata. The build serves AVIF and WebP at quality 80, at 1086px and three smaller widths, so nothing is enlarged.
 
+## `about/portrait-arms-crossed.webp`
+
+- Used in: the About page, `src/components/sections/AboutStory.astro`.
+- Supplied by the owner on 2026-11-20 for the About page, from the owner's Photos library (`IMG_3429.png`, exported unmodified). A JPEG of the same picture at 768×1024, the library's preview, was attached in chat; the owner asked for the full-resolution original, so the export is what is used. No photographer, stock page, or licence document came with the file.
+- It shows the same man as the picture above, standing with his arms crossed in a black T-shirt, with the lit lamp on a shelf at the left and the plant at the right. The page does not name him or give him a role: team members and roles are not yet verified (`docs/content-strategy.md`). The photo is not a client or a testimonial.
+- Original: 1086×1448 PNG. Changes: none to the picture; saved as WebP at quality 92 without metadata. The build serves AVIF and WebP at quality 80, at 1086px and three smaller widths, so nothing is enlarged.
+
 ## `why/desk.webp`
 
 - Used in: the home page "Why Auralink Studio?" section, `src/components/sections/WhyAuralink.astro`, as a decorative background (`alt=""`).

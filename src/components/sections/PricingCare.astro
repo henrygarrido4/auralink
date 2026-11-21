@@ -1,0 +1,108 @@
+---
+import DetailSection from '@/components/sections/DetailSection.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { pricingInquiry, websiteCare } from '@/data/pricing';
+
+/**
+ * Hosting and Website Care on the pricing page (src/data/pricing.ts, the owner's brief of
+ * 2026-11-20): one plan as one card. Its head, on the near-black, carries the plan's name, the
+ * monthly price, and the included first 30 days as a primary badge; its white body lists what the
+ * plan includes as checks, what to know about its limits with the logo's pixel as the bullet, and
+ * ends with the outline button to the inquiry page. Beside the card from lg, three short terms
+ * say that the website is a separate one-time purchase, that the plan starts only when accepted
+ * explicitly, and that the website can be hosted elsewhere. No subscription is sold or started on
+ * this page. Plain HTML.
+ */
+interface Props {
+  id: string;
+}
+
+const { id } = Astro.props;
+const titleId = `${id}-title`;
+const { plan, terms } = websiteCare;
+---
+
+<DetailSection id={id} labelledBy={titleId} tone="muted">
+  <SectionHeading
+    id={titleId}
+    eyebrow={websiteCare.eyebrow}
+    heading={websiteCare.heading}
+    intro={websiteCare.intro}
+  />
+
+  <div class="mt-12 grid gap-6 sm:mt-14 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-8">
+    <div data-care-plan class="detail-card flex min-w-0 flex-col overflow-clip">
+      <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 bg-neutral px-6 py-7 text-neutral-content sm:px-8">
+        <div class="min-w-0">
+          <h3 class="text-sm font-bold tracking-[0.16em] text-primary uppercase">{plan.name}</h3>
+          <p class="mt-3 flex items-baseline gap-1.5">
+            <span class="font-(family-name:--font-headers) text-5xl leading-none font-bold tracking-tight text-base-100">
+              ${plan.price}
+            </span>
+            <span class="text-base text-neutral-content/80">/month</span>
+          </p>
+        </div>
+        <p class="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-content">
+          {plan.trial}
+        </p>
+      </div>
+
+      <div class="flex grow flex-col p-6 sm:p-8">
+        <p class="text-xs font-bold tracking-[0.16em] text-base-content/70 uppercase">
+          What's included
+        </p>
+        {/* role="list": Safari drops the list role from lists styled without markers. */}
+        <ul role="list" class="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-x-6">
+          {plan.includes.map((item) => (
+            <li class="flex items-start gap-3 text-base leading-snug text-base-content">
+              <span
+                class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-primary text-primary-content"
+                aria-hidden="true"
+              >
+                <Icon name="check" class="size-3" stroke-width="3" />
+              </span>
+              <span class="min-w-0">{item}</span>
+            </li>
+          ))}
+        </ul>
+
+        <p class="mt-8 text-xs font-bold tracking-[0.16em] text-base-content/70 uppercase">
+          Good to know
+        </p>
+        <ul role="list" class="mt-4 grid gap-2.5">
+          {plan.limits.map((item) => (
+            <li class="flex items-start gap-3 text-base leading-snug text-base-content/80">
+              {/* A square stood on its corner, like the pixels of the logo's mark. */}
+              <span class="mt-2 size-1.5 shrink-0 rotate-45 bg-primary" aria-hidden="true"></span>
+              <span class="min-w-0">{item}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div class="mt-auto pt-8">
+          <Button href={pricingInquiry.href} variant="secondary">
+            {plan.cta}
+          </Button>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-card min-w-0 p-6 sm:p-8">
+      <h3 class="text-xl font-bold tracking-tight text-balance text-base-content">
+        {terms.heading}
+      </h3>
+      <ul role="list" class="mt-2 divide-y divide-base-300">
+        {terms.items.map((term) => (
+          <li class="py-5 last:pb-0">
+            <h4 class="text-base leading-snug font-bold text-base-content">{term.title}</h4>
+            <p class="mt-1.5 text-base leading-relaxed text-pretty text-base-content/75">
+              {term.text}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</DetailSection>

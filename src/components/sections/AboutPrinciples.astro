@@ -1,0 +1,84 @@
+---
+import DetailSection from '@/components/sections/DetailSection.astro';
+import Icon from '@/components/ui/Icon.astro';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { whyPillars } from '@/data/site';
+
+/**
+ * How the studio works, on the About page: the three pillars of the home page's "Why Auralink
+ * Studio?" (`whyPillars` in src/data/site.ts, the owner's copy from the approved mockup of
+ * 2026-11-19) as numbered cards on the dark band of the detail pages, after the "What makes us
+ * different" section of uprig.net/about, the owner's reference for this page (2026-11-20). The
+ * heading opens on the left and the lead copy answers it on the right from lg, as the reference
+ * does; below lg they stack. The lead sentence is the owner's, from that home section. The
+ * sentence after it is a proposal that only introduces the three cards.
+ *
+ * Each card is the band's card (DetailProcess.astro) with a primary bar along its top edge, as
+ * the reference's cards have: the number, large, in primary, then the category, the two-line
+ * title, the description, and the checklist, whose marks are decorative. The cards share one row
+ * from lg and stack below. Nothing moves, and no colour fades. No JavaScript.
+ */
+interface Props {
+  /** Anchor for in-page links and the h2's id. */
+  id: string;
+  /** The edge of this band the shared logo mark is centred on, if it carries one. */
+  mark?: 'top' | 'bottom';
+}
+
+const { id, mark } = Astro.props;
+const titleId = `${id}-title`;
+const number = (index: number) => String(index + 1).padStart(2, '0');
+---
+
+<DetailSection id={id} labelledBy={titleId} tone="dark" mark={mark}>
+  <div class="grid gap-8 lg:grid-cols-2 lg:gap-16 xl:gap-24">
+    <SectionHeading id={titleId} eyebrow="How we work" heading="Why Auralink Studio?" tone="dark" />
+    {/* From lg the lead starts level with the eyebrow's first line. */}
+    <div class="min-w-0 lg:pt-1">
+      <p class="text-xl leading-relaxed text-pretty text-base-100">
+        Thoughtful websites. Connected email journeys. A partner invested in your business.
+      </p>
+      <p class="mt-5 text-lg leading-relaxed text-pretty text-neutral-content/80">
+        Three commitments shape every project: who you work with, how the pieces connect, and how
+        progress is measured.
+      </p>
+    </div>
+  </div>
+
+  {/* role="list": Safari drops the list role from lists styled without markers. */}
+  <ol role="list" class="mt-12 grid gap-5 sm:mt-14 lg:grid-cols-3 lg:gap-6">
+    {whyPillars.map((pillar, index) => (
+      <li class="flex min-w-0 flex-col rounded-md border border-neutral-content/15 border-t-4 border-t-primary bg-neutral-content/5 p-6 sm:p-7">
+        <p
+          class="font-(family-name:--font-headers) text-4xl leading-none font-bold tracking-tight text-primary"
+          aria-hidden="true"
+        >
+          {number(index)}.
+        </p>
+        <p class="mt-6 text-xs font-bold tracking-[0.16em] text-neutral-content/70 uppercase sm:text-sm">
+          {pillar.category}
+        </p>
+        <h3 class="mt-2 text-2xl leading-tight font-bold tracking-tight text-base-100">
+          {/* The explicit space keeps the two lines apart in the heading's text. */}
+          <span class="block">{pillar.title[0]}</span> <span class="block">{pillar.title[1]}</span>
+        </h3>
+        <p class="mt-3 text-base leading-relaxed text-pretty text-neutral-content/80">
+          {pillar.description}
+        </p>
+        <ul role="list" class="mt-6 grid gap-3 border-t border-neutral-content/15 pt-6">
+          {pillar.points.map((point) => (
+            <li class="flex items-start gap-3 text-base leading-snug text-base-100">
+              <span
+                class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-primary text-primary-content"
+                aria-hidden="true"
+              >
+                <Icon name="check" class="size-3" stroke-width="3" />
+              </span>
+              <span class="min-w-0">{point}</span>
+            </li>
+          ))}
+        </ul>
+      </li>
+    ))}
+  </ol>
+</DetailSection>

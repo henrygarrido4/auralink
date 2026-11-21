@@ -86,10 +86,15 @@ export interface Challenges {
   readonly items: readonly [Challenge, Challenge, Challenge];
 }
 
-/** A page's four questions. */
-export interface FaqSection {
+/** A heading, an introduction, and any number of questions: what DetailFaq.astro renders. */
+export interface FaqList {
   readonly heading: string;
   readonly intro: string;
+  readonly items: readonly Faq[];
+}
+
+/** A detail page's four questions. */
+export interface FaqSection extends FaqList {
   readonly items: readonly [Faq, Faq, Faq, Faq];
 }
 

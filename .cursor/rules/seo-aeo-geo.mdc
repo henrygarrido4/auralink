@@ -30,6 +30,7 @@ Render JSON-LD through components in `src/components/seo/` with typed props, inj
 | Insights articles | `Article` (headline, datePublished, dateModified, author as Organization or Person) |
 | About | `AboutPage` with the Organization |
 | Contact | `ContactPage` |
+| Pricing | `WebPage`, `BreadcrumbList`, `FAQPage`, and `Service` nodes whose `Offer`s repeat the visible prices (`src/components/seo/PricingPageSchema.astro`, from `src/data/pricing.ts`) |
 
 - `FAQPage` markup is allowed only where each question and answer is visible on the page. Google stopped showing FAQ rich results in May 2026, so do not expect a search appearance from it; keep it when the content is genuinely a FAQ because other engines and assistants may read it.
 - Do not add `AggregateRating`, `Review`, or award markup without real, verifiable data.

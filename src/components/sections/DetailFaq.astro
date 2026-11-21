@@ -2,12 +2,13 @@
 import DetailSection from '@/components/sections/DetailSection.astro';
 import Icon from '@/components/ui/Icon.astro';
 import SectionHeading from '@/components/ui/SectionHeading.astro';
-import type { FaqSection } from '@/data/detail-pages';
+import type { FaqList } from '@/data/detail-pages';
 
 /**
- * Four questions prospective clients ask about the page's subject, as native disclosures, each a
- * card: a `details` opens from the keyboard (Enter or Space on its summary) and from a tap, with
- * no script, and nothing animates. The question is an h3 inside the summary, so the page's
+ * The questions prospective clients ask about the page's subject (four on a detail page, eleven
+ * on the pricing page), as native disclosures, each a card: a `details` opens from the keyboard
+ * (Enter or Space on its summary) and from a tap, with no script, and nothing animates. The
+ * question is an h3 inside the summary, so the page's
  * outline lists it; at its right a plus sign drawn with two bars on a bordered disc turns into a
  * minus on a primary disc when the answer is open. From lg the heading, a sentence, and the link
  * to the inquiry page sit in the left column with the questions beside them, starting level with
@@ -16,7 +17,7 @@ import type { FaqSection } from '@/data/detail-pages';
  */
 interface Props {
   id: string;
-  faqs: FaqSection;
+  faqs: FaqList;
   /** The edge of this band the shared logo mark is centred on, if it carries one. */
   mark?: 'top' | 'bottom';
 }

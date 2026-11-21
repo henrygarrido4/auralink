@@ -1,0 +1,93 @@
+---
+import { Picture } from 'astro:assets';
+import portrait from '@/assets/about/portrait-arms-crossed.webp';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+
+/**
+ * The first section of the About page, straight under the dark hero: who the studio is, beside
+ * the portrait the owner supplied. Laid out after the "Why we exist" section of uprig.net/about,
+ * the owner's reference for this page (2026-11-20), in this site's own system: the copy takes the
+ * wider column, as the detail pages' introductions do (DetailIntro.astro), with the dash eyebrow,
+ * the h2, the lead paragraph marked with a primary bar, and two short paragraphs at a readable
+ * measure. The portrait takes the other column from lg and follows the copy below it.
+ *
+ * The lead paragraph is the owner's, from the home page introduction (AboutIntro.astro). The
+ * heading and the two paragraphs after the lead are proposals: they describe how the studio
+ * works, from the approved pillars (`whyPillars` in src/data/site.ts), and name no client,
+ * result, price, team size, founding date, or location. The photo is the portrait the owner
+ * supplied on 2026-11-20 (src/assets/CREDITS.md). The page does not name him or give him a role,
+ * since team members and roles are not yet verified (docs/content-strategy.md), and the alt text
+ * describes the picture.
+ *
+ * The picture's treatment is this page's own, after the reference's photo with its accent bar
+ * underneath: the photo on a near-black panel set 20px down and to the right, so it stands off the
+ * white page, and a short primary bar on the panel's lower lip, at the photo's left. Both are
+ * decorative and stay inside the container's padding at every width, so nothing reaches past the
+ * screen. Nothing moves, on load or under the pointer. No JavaScript.
+ */
+interface Props {
+  /** Anchor for in-page links and the h2's id. */
+  id: string;
+}
+
+const { id } = Astro.props;
+const titleId = `${id}-title`;
+---
+
+<section id={id} aria-labelledby={titleId} class="bg-base-100">
+  <div class="mx-auto max-w-site px-6 pt-16 pb-20 sm:pb-24 lg:px-8 lg:pt-20 lg:pb-28">
+    <div class="grid gap-14 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-center lg:gap-16 xl:gap-24">
+      <div class="min-w-0">
+        <SectionHeading
+          id={titleId}
+          eyebrow="Who we are"
+          heading="One studio for your website, email, and search."
+        />
+        <p class="mt-8 max-w-2xl border-l-4 border-primary pl-6 text-xl leading-relaxed text-pretty text-base-content">
+          We help business owners, ecommerce brands, and marketing teams bring their websites,
+          email, and search strategy together. From getting discovered to keeping customers
+          connected, we build thoughtful digital experiences around your business goals.
+        </p>
+        <p class="mt-5 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
+          A website, email marketing, and search visibility do more when they are planned together:
+          the website explains what you do, email keeps customers in touch, and search brings the
+          right people to both.
+        </p>
+        <p class="mt-5 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
+          That is the work of this studio: planning, designing, and building those pieces so they
+          fit your business and your customers, and staying involved after launch.
+        </p>
+      </div>
+
+      {/*
+       * Centred and no wider than 28rem on phones, 32rem from sm; from lg it fills its column up
+       * to 32rem, held against the container's right edge. The panel behind it is the photo's own
+       * box moved 20px down and right: inside the container's 24px padding (32px from lg), so it
+       * never reaches past the screen. The bar lies on the panel's lower lip, below the photo.
+       */}
+      <div class="relative mx-auto w-full max-w-md min-w-0 sm:max-w-lg lg:mx-0 lg:ml-auto">
+        <div
+          class="absolute inset-0 translate-x-5 translate-y-5 rounded-md bg-neutral"
+          aria-hidden="true"
+        ></div>
+        {/*
+         * `sizes` is the photo's rendered width at each breakpoint, worked out from the container
+         * padding, the column split, the column gap, and the width caps above: change it whenever
+         * they change. Widths stop at the 1086px source, so nothing is enlarged. Quality 80: the
+         * image service's default AVIF quality of 50 softens a face.
+         */}
+        <Picture
+          src={portrait}
+          alt="Man with glasses in a black T-shirt standing with his arms crossed, with a lit lamp on a shelf and a plant behind him"
+          formats={['avif']}
+          fallbackFormat="webp"
+          quality={80}
+          widths={[480, 640, 800, 1086]}
+          sizes="(min-width: 1389px) 512px, (min-width: 1280px) calc((100vw - 160px) * 5 / 12), (min-width: 1024px) calc((100vw - 128px) * 5 / 12), (min-width: 640px) 512px, (min-width: 496px) 448px, calc(100vw - 48px)"
+          class="relative block h-auto w-full rounded-md"
+        />
+        <span class="absolute -bottom-3.5 left-8 h-1.5 w-24 bg-primary" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+</section>

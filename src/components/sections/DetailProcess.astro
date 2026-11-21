@@ -8,16 +8,20 @@ import type { Engagement } from '@/data/detail-pages';
  * lines and all: the baseline is Discovery, Plan, Build, Refine, with the labels adjusted to the
  * service or the industry. Each step is a card on the band, a shade lighter than it, with a large
  * primary Mukta number, then a title and what happens in it. Four share a row from lg and two
- * from md. It describes how a project would run, never work already done for a client. Plain HTML.
+ * from md. It describes how a project would run, never work already done for a client. A page can
+ * add a `note` under the steps, a callout on the band opened by a primary bar (the pricing page's
+ * payment terms, 2026-11-20). Plain HTML.
  */
 interface Props {
   id: string;
   engagement: Engagement;
+  /** A titled note under the steps, such as payment terms. */
+  note?: { readonly title: string; readonly text: string };
   /** The edge of this band the shared logo mark is centred on, if it carries one. */
   mark?: 'top' | 'bottom';
 }
 
-const { id, engagement, mark } = Astro.props;
+const { id, engagement, note, mark } = Astro.props;
 const titleId = `${id}-title`;
 const number = (index: number) => String(index + 1).padStart(2, '0');
 ---
@@ -51,4 +55,13 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
       </li>
     ))}
   </ol>
+
+  {note && (
+    <div class="mt-8 max-w-3xl rounded-md border border-neutral-content/15 border-l-4 border-l-primary bg-neutral-content/5 p-5 sm:px-6">
+      <p class="text-base leading-relaxed text-neutral-content/80">
+        {/* The explicit space keeps the title and the note apart in the paragraph's text. */}
+        <span class="font-bold text-base-100">{note.title}.</span> {note.text}
+      </p>
+    </div>
+  )}
 </DetailSection>

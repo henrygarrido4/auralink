@@ -1,0 +1,87 @@
+---
+import { pricingFaqs, pricingHead, pricingPackages, websiteCare } from '@/data/pricing';
+import { site } from '@/data/site';
+
+/**
+ * JSON-LD for the pricing page, describing only what the page shows: the page itself, the
+ * breadcrumb from the home page, the visible questions and answers as a `FAQPage`, and the prices
+ * as offers. Website design and development is one `Service` with one `Offer` per package, each
+ * at its visible one-time price; Website Care is a second `Service` whose offer is priced per
+ * month. Facts about the studio come from `site`; no rating, review, area served, or result is
+ * stated, and every figure here is taken from the same data the page renders.
+ */
+const url = new URL(Astro.url.pathname, site.url).href;
+const organization = { '@type': 'Organization', name: site.name, url: site.url };
+
+const page = {
+  '@type': 'WebPage',
+  name: pricingHead.metaTitle,
+  description: pricingHead.metaDescription,
+  url,
+  isPartOf: { '@type': 'WebSite', name: site.name, url: site.url },
+  about: organization,
+};
+
+const breadcrumb = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${site.url}/` },
+    { '@type': 'ListItem', position: 2, name: 'Pricing', item: url },
+  ],
+};
+
+const faqPage = {
+  '@type': 'FAQPage',
+  mainEntity: pricingFaqs.items.map((faq) => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+  })),
+};
+
+const websites = {
+  '@type': 'Service',
+  name: 'Website design and development',
+  serviceType: 'Website design and development',
+  provider: organization,
+  url,
+  offers: pricingPackages.map((pkg) => ({
+    '@type': 'Offer',
+    name: `${pkg.name} website package`,
+    description: pkg.audience,
+    price: pkg.price,
+    priceCurrency: 'USD',
+    url: `${url}#packages`,
+    seller: organization,
+  })),
+};
+
+const care = {
+  '@type': 'Service',
+  name: websiteCare.plan.name,
+  serviceType: 'Website hosting and maintenance',
+  provider: organization,
+  url: `${url}#website-care`,
+  offers: {
+    '@type': 'Offer',
+    name: websiteCare.plan.name,
+    price: websiteCare.plan.price,
+    priceCurrency: 'USD',
+    priceSpecification: {
+      '@type': 'UnitPriceSpecification',
+      price: websiteCare.plan.price,
+      priceCurrency: 'USD',
+      unitCode: 'MON',
+    },
+    url: `${url}#website-care`,
+    seller: organization,
+  },
+};
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [page, breadcrumb, faqPage, websites, care],
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(schema)} />

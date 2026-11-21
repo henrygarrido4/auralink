@@ -1,0 +1,83 @@
+---
+import { Picture } from 'astro:assets';
+import workspace from '@/assets/contact/workspace.webp';
+import Button from '@/components/ui/Button.astro';
+import { pricingCta } from '@/data/pricing';
+
+/**
+ * The pricing page's closing call to action (src/data/pricing.ts, the owner's brief of
+ * 2026-11-20), which takes the place of the shared contact banner on this page so the page ends
+ * with one invitation, not two. It keeps the banner's shape, the near-black band under the same
+ * workspace photograph, but its card is white, so both of the site's buttons can sit on it as
+ * designed: the lit primary "Let's get started" and the near-black outline "Have a question?".
+ * Both lead to the inquiry page; there is no checkout, booking, or form here. Plain HTML.
+ */
+interface Props {
+  id: string;
+}
+
+const { id } = Astro.props;
+const titleId = `${id}-title`;
+---
+
+<section
+  id={id}
+  aria-labelledby={titleId}
+  class="relative isolate bg-neutral pt-48 text-neutral-content sm:pt-60 lg:pt-64"
+>
+  <div
+    class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 overflow-hidden sm:h-80 lg:h-88"
+    aria-hidden="true"
+  >
+    <Picture
+      src={workspace}
+      formats={['avif']}
+      fallbackFormat="webp"
+      quality={80}
+      widths={[640, 1280, 1920]}
+      sizes="100vw"
+      alt=""
+      loading="lazy"
+      class="size-full object-cover object-center"
+    />
+    <div class="absolute inset-0 bg-neutral/25"></div>
+  </div>
+  <div class="mx-auto max-w-site px-6 lg:px-8">
+    <div class="grid gap-8 rounded-md bg-base-100 px-7 py-10 text-base-content shadow-lg sm:px-10 sm:py-12 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-12 lg:px-14">
+      {/* `relative` keeps this copy above the primary button's glow. */}
+      <div class="relative min-w-0">
+        <p class="flex items-center gap-3 text-sm font-bold tracking-[0.16em] text-base-content/70 uppercase">
+          <span class="h-0.5 w-6 shrink-0 bg-primary" aria-hidden="true"></span>
+          {pricingCta.eyebrow}
+        </p>
+        <h2
+          id={titleId}
+          class="mt-4 text-3xl leading-tight font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl"
+        >
+          {pricingCta.heading}
+        </h2>
+        <p class="mt-4 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
+          {pricingCta.text}
+        </p>
+      </div>
+      {/*
+       * Stacked on phones, side by side from sm, and stacked again beside the copy from lg. The
+       * primary's light stays off until the pointer or keyboard focus (`aura="hover"`), and its
+       * focus ring is near-black, since its own yellow ring is 1.4:1 on the white card.
+       */}
+      <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap lg:flex-col lg:items-stretch">
+        <Button
+          href={pricingCta.primary.href}
+          size="lg"
+          aura="hover"
+          class="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+        >
+          {pricingCta.primary.label}
+        </Button>
+        <Button href={pricingCta.secondary.href} variant="secondary" size="lg">
+          {pricingCta.secondary.label}
+        </Button>
+      </div>
+    </div>
+  </div>
+</section>

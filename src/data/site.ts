@@ -67,6 +67,7 @@ export const plannedRoutes = [
   { path: '/services/', label: 'Services' },
   { path: '/industries/', label: 'Industries' },
   { path: '/industries/[slug]/', label: 'Industry pages (src/data/industry-pages/)' },
+  { path: '/pricing/', label: 'Pricing' },
   { path: '/blog/', label: 'Blog' },
   { path: '/services/website-development/', label: 'Website Development' },
   { path: '/services/static-websites/', label: 'Custom Websites' },
@@ -92,12 +93,14 @@ export interface NavItem {
 
 /**
  * Navbar links, in display order. Add an entry's `href` when its page ships
- * (planned paths are listed above), so the site never links to a missing page.
+ * (planned paths are listed above), so the site never links to a missing page. Pricing joined
+ * the bar with its page (the owner's brief, 2026-11-20), after the two hubs and before About.
  */
 export const primaryNav: readonly NavItem[] = [
   { label: 'Home', href: '/' },
   { label: 'Services', href: '/services/' },
   { label: 'Industries', href: '/industries/' },
+  { label: 'Pricing', href: '/pricing/' },
   { label: 'About', href: '/about/' },
   { label: 'Blog' },
 ];
