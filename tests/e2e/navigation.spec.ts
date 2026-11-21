@@ -53,7 +53,9 @@ const navbarSizes = (page: Page) =>
 
 const scrollTo = (page: Page, top: number) =>
   page.evaluate(async (y) => {
-    const root = document.scrollingElement ?? document.documentElement;
+    const { scrollingElement } = document;
+    const root =
+      scrollingElement instanceof HTMLElement ? scrollingElement : document.documentElement;
     const previous = root.style.scrollBehavior;
     // The page smooth-scrolls. Hold `auto` across the jump and the frames that follow, or the
     // ease is still running when the bar is measured and the logo is caught mid-shrink.
