@@ -2,7 +2,7 @@
 
 Every file in `src/assets/` that Auralink Studio did not create has an entry here, added in the same change as the file: where it came from, who made it, the licence it is used under, and what was changed. Original work is not listed: the owner's logo files, and the laptop and phone in the hero, which are rendered from `design/hero-mockup/`. The pages on those screens are a fictional heating and cooling homepage drawn for the mockup, credited under the hero entry below. Remove an entry when its file is deleted.
 
-Stock photos only illustrate: the site's audience, or the industry of a featured project. Never caption one as a client, a team member, or a testimonial, never name the people in it, and never present one as a project's own premises, products, or photography.
+Stock photos only illustrate: the site's audience, the industry of a featured project, or a kind of business in the home directory. Never caption one as a client, a team member, or a testimonial, never name the people in it, and never present one as a project's own premises, products, or photography.
 
 ## Web fonts
 
@@ -83,6 +83,19 @@ Changes, common to all: the object was cut out of its background with rembg 2.0.
 | `bottle.webp`    | A matte black water bottle, one0one                   | 38718303, "Minimalist Black Water Bottle on Yellow Background", Valentin Ivantsov (https://www.pexels.com/@valentin-ivantsov-2154772556/) | 4825×3209 | Turned 180° so the cap end drops below the card          |
 
 The photo pages are `https://www.pexels.com/photo/<id>/`. The sneakers' insoles show a size ("39"), not a brand. The props only suggest each industry: never present one as the business's own tools, premises, or products.
+
+## `industries/props/` (who we work with props)
+
+The cut-out objects that pop out from behind the home page's directory of businesses, `src/components/sections/WhoWeWorkWith.astro` (the owner's request, 2026-11-20: the reveal the selected work cards had, with images that suit the directory). A hard hat rises above the panel's top edge and a stethoscope drops below its bottom edge, each suggesting kinds of business in the directory and chosen with no logo, brand name, or person in it. Both are under the Pexels License, https://www.pexels.com/license/ (read 2026-11-20, the terms quoted under `work/` above), and each page labels its photo "Free" (checked 2026-11-20). Each original JPEG was retrieved on 2026-11-20 from `https://images.pexels.com/photos/<id>/pexels-photo-<id>.jpeg`.
+
+Changes, common to both: the object was cut out of its background with rembg 2.0.61 (MIT licence) and its IS-Net general-use model (Apache 2.0), run locally. Parts smaller than 4% of the largest would have been dropped; each cut-out came out as one part. The result was trimmed to the object, turned where noted, scaled so its longer side is 864px, and saved as WebP with transparency (quality 88, alpha 95) without metadata. The build serves AVIF and WebP versions made from these files.
+
+| File               | Object                                                                                                         | Pexels photo, title, and photographer                                                                                   | Original  | Changes beyond the common ones                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------- |
+| `hard-hat.webp`    | A white hard hat from the side, brim down: Construction & Home Services                                        | 8470809, "Gray and Black Laptop on Concrete Ground", Thirdman (https://www.pexels.com/@thirdman/)                       | 6252×4168 | Cropped to the hat; the laptop and the rolled plans left out                                              |
+| `stethoscope.webp` | A black stethoscope with a plain aluminium chestpiece: Healthcare & Medical, Dental, and Veterinary & Pet Care | 14906846, "Close Up Photo of Black Stethoscope", Johnathon Horner (https://www.pexels.com/@johnathon-horner-396768174/) | 8576×5696 | Cropped to the stethoscope; turned 90° anticlockwise so the chestpiece and earpieces hang below the panel |
+
+The photo pages are `https://www.pexels.com/photo/<id>/`. The hard hat's page lists a Canon EOS 5D Mark IV at 24 mm, taken 2021-06-02 and published 2021-06-24, and describes the photo as "A clean workspace with laptop, hard hat, and blueprints for construction planning." The stethoscope's page lists no camera, was published 2022-12-27, and describes it as "A simple and elegant image of a stethoscope on a white background, highlighting medical essentials." Neither object carries a mark: a stethoscope whose chestpiece reads "LITTMANN" (Pexels 7108337) was passed over for that reason. Unlike the work props, which are top-down, the hat is photographed from the side, so its dome is what rises above the panel. The props only suggest kinds of business: never present one as a client's own gear or premises.
 
 ## `icons/` (Lucide icons)
 
