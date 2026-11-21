@@ -61,7 +61,7 @@ tests/e2e/          Playwright suites (smoke, a11y, motion, navigation, hero, se
 scripts/            executable checks (workflow, content, Lighthouse audit)
 docs/               architecture, content strategy, quality checks, SEO/AEO/GEO, performance
 reports/            generated screenshots and Lighthouse reports (gitignored)
-design/             editable source artwork for generated images (hero-mockup, process-lines)
+design/             editable source artwork for generated images (hero-mockup, process-lines, favicon)
 .cursor/            rules, agents, skills (this instruction system)
 ```
 
