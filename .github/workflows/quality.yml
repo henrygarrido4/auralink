@@ -1,6 +1,8 @@
 # Pull-request and main-branch quality gate.
 # Sequence mirrors `npm run quality:full` with a single production build:
 # static checks -> build -> browser matrix against the build -> Lighthouse audit with budgets.
+# The audit covers the sample (`--sample`: every top-level page and the fullest page of each
+# directory of detail pages); `npm run perf:audit` audits every route locally (docs/performance.md).
 # Artifacts (Playwright HTML report, traces, screenshots, Lighthouse reports) are uploaded on every run.
 name: Quality
 
@@ -20,7 +22,9 @@ jobs:
   quality:
     name: Static checks, build, browser matrix, performance budgets
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The run took 15 minutes with five pages and about 25 with thirty (2026-11-20, the browser
+    # matrix visits every page). A cancelled job reports nothing, so leave room above that.
+    timeout-minutes: 45
     env:
       CI: true
     steps:
@@ -51,7 +55,7 @@ jobs:
           PLAYWRIGHT_SKIP_BUILD: '1'
 
       - name: Lighthouse audit with budgets (lab data)
-        run: node scripts/perf-audit.mjs --no-build
+        run: node scripts/perf-audit.mjs --no-build --sample
 
       - name: Upload reports and failure artifacts
         if: always()

@@ -141,7 +141,7 @@ AGENTS.md, CLAUDE.md  shared and Claude-specific instructions
 
 ## Continuous integration
 
-`.github/workflows/quality.yml` runs on pull requests and pushes to `main`: `npm ci`, `npm run quality:static`, `npm run build`, Playwright browser installation, the five-project matrix against the build (`PLAYWRIGHT_SKIP_BUILD=1`), `node scripts/perf-audit.mjs --no-build`, and uploads `playwright-report/`, `test-results/`, and `reports/` as artifacts on every run. Status: the repository is on GitHub (`origin`, `henrygarrido4/auralink`, since 2026-11-17) and the workflow runs there; its run history, and how to reproduce a run in a Linux container, are in `docs/quality-checks.md`. Lighthouse scores on shared runners vary; if the performance budget fails in CI without a code change, compare the uploaded report before adjusting anything.
+`.github/workflows/quality.yml` runs on pull requests and pushes to `main`: `npm ci`, `npm run quality:static`, `npm run build`, Playwright browser installation, the five-project matrix against the build (`PLAYWRIGHT_SKIP_BUILD=1`), `node scripts/perf-audit.mjs --no-build --sample` (every top-level page and the fullest page of each directory of detail pages, `docs/performance.md`), and uploads `playwright-report/`, `test-results/`, and `reports/` as artifacts on every run. Status: the repository is on GitHub (`origin`, `henrygarrido4/auralink`, since 2026-11-17) and the workflow runs there; its run history, and how to reproduce a run in a Linux container, are in `docs/quality-checks.md`. Lighthouse scores on shared runners vary; if the performance budget fails in CI without a code change, compare the uploaded report before adjusting anything.
 
 ## Deployment checklist (Netlify)
 

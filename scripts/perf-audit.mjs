@@ -6,6 +6,9 @@
  *   node scripts/perf-audit.mjs --no-build      audit the existing dist/
  *   node scripts/perf-audit.mjs --runs=1        one run per route and device (default 3, median kept)
  *   node scripts/perf-audit.mjs --routes=/,/about/
+ *   node scripts/perf-audit.mjs --sample        every top-level page, and from each directory of
+ *                                               detail pages only the one with the largest HTML
+ *                                               (what CI and `npm run quality:full` audit)
  *
  * What it does:
  *   1. Serves dist/ with `astro preview --port 4323 --ignore-lock` (never a dev server).
@@ -46,6 +49,7 @@ const PORT = 4323;
 const BASE = `http://localhost:${PORT}`;
 const RUNS = Number(flagValue('runs', 3));
 const BUILD = !flag('no-build');
+const SAMPLE = !!flag('sample');
 const DEVICES = ['mobile', 'desktop'];
 const CATEGORIES = ['performance', 'accessibility', 'best-practices', 'seo'];
 const METRICS = [
@@ -89,6 +93,38 @@ function builtRoutes() {
   };
   visit(dist);
   return routes.sort();
+}
+
+/** The built HTML file of a route, as `builtRoutes()` derived the route from it. */
+function htmlFile(route) {
+  const dist = join(root, 'dist');
+  return route.endsWith('/') ? join(dist, route, 'index.html') : join(dist, `${route}.html`);
+}
+
+/**
+ * The routes CI audits (`--sample`): every top-level page (`/`, `/about/`, `/services/`, ...) and,
+ * from each directory of detail pages built from one template (`/services/<slug>/`,
+ * `/industries/<slug>/`), only the page with the largest HTML file, the fullest instance of its
+ * template. Pages from one template share their stylesheet, fonts, scripts, and layout, so one
+ * audit stands for the rest. Auditing all of them, three runs on two devices each, outgrew the CI
+ * job's time limit once the twenty-five detail pages were added (2026-11-20). A detail page whose
+ * own data adds images or scripts still wants `--routes=<route>` by hand.
+ */
+function sampleRoutes(routes) {
+  const topLevel = [];
+  const largestPerDirectory = new Map();
+  for (const route of routes) {
+    const segments = route.split('/').filter(Boolean);
+    if (segments.length < 2) {
+      topLevel.push(route);
+      continue;
+    }
+    const directory = `/${segments.slice(0, -1).join('/')}/`;
+    const size = statSync(htmlFile(route)).size;
+    const current = largestPerDirectory.get(directory);
+    if (!current || size > current.size) largestPerDirectory.set(directory, { route, size });
+  }
+  return [...topLevel, ...[...largestPerDirectory.values()].map((entry) => entry.route)].sort();
 }
 
 async function waitForServer(url, attempts = 60) {
@@ -196,7 +232,17 @@ async function main() {
   if (BUILD) await run('node_modules/.bin/astro', ['build']);
   if (!existsSync(join(root, 'dist'))) throw new Error('dist/ is missing; run without --no-build');
 
-  const routes = flagValue('routes') ? flagValue('routes').split(',') : builtRoutes();
+  const routes = flagValue('routes')
+    ? flagValue('routes').split(',')
+    : SAMPLE
+      ? sampleRoutes(builtRoutes())
+      : builtRoutes();
+  const coverage = flagValue('routes')
+    ? 'the routes given'
+    : SAMPLE
+      ? 'every top-level page and the largest page of each directory of detail pages'
+      : 'every built route';
+  console.log(`perf-audit: auditing ${routes.length} route(s), ${coverage}: ${routes.join(' ')}`);
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const outDir = join(root, 'reports', 'lighthouse', stamp);
   const latestDir = join(root, 'reports', 'lighthouse', 'latest');
@@ -272,6 +318,7 @@ async function main() {
   const summary = {
     generatedAt: new Date().toISOString(),
     runsPerConfig: RUNS,
+    coverage,
     environment,
     budgets,
     results,
@@ -281,7 +328,7 @@ async function main() {
   const lines = [
     `# Lighthouse baseline (${summary.generatedAt})`,
     '',
-    `Lighthouse ${environment.lighthouse}, ${environment.chrome}, Node ${environment.node}, ${environment.os}. Throttling: ${environment.throttlingMethod}. ${RUNS} run(s) per route and device; the median run by performance score is reported. Lab data only.`,
+    `Lighthouse ${environment.lighthouse}, ${environment.chrome}, Node ${environment.node}, ${environment.os}. Throttling: ${environment.throttlingMethod}. ${RUNS} run(s) per route and device; the median run by performance score is reported. Routes: ${coverage} (${routes.length}). Lab data only.`,
     '',
     '| Route | Device | Perf | A11y | BP | SEO | FCP | LCP | SI | TBT | CLS | TTI | Transfer | Requests | Budget |',
     '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
