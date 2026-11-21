@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures';
 import { serviceCards, services, servicesCta, whyPillars } from '../../src/data/site';
 
 /**

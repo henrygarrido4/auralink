@@ -11,20 +11,22 @@ import { whyPillars } from '@/data/site';
  * 2026-11-19. No button, link, price, or badge, and nothing is clickable.
  *
  * The cards follow the "Why choose us" cards of the Troma demo (demo.casethemes.net/troma), the
- * owner's reference (2026-11-20), in this site's colours: three alike, white, with soft corners,
- * no border or shadow, generous padding, and an icon at the top. The yellow centre card of the
+ * owner's reference (2026-11-20), in this site's colours, and since 2026-11-21 they are a dark
+ * tone: three alike, `card-shine` (src/styles/global.css), a dark mix of `neutral` with white, soft
+ * corners, no border or shadow, generous padding, and light text. The yellow centre card of the
  * mockup went with the Troma cards, since one card standing yellow at rest would read as hovered.
- * The icon tile and the check discs are near-black with yellow glyphs, the pairing of the lead
- * service card. The icons and marks are decorative.
+ * The icon tile and the check discs stay near-black with yellow glyphs, the pairing of the lead
+ * service card, which still reads on the lighter dark of the card. The icons and marks are
+ * decorative.
  *
- * Hover (the owner's choice, 2026-11-20, over the yellow fill the cards had before): the border
- * light of the site's primary buttons. Each card sits in daisyUI's `aura` under the `aura-hover`
- * policy (src/styles/global.css), so it is unlit at rest and under a pointer that can hover the
- * light fades in and circles the card's edge, and when the pointer leaves it fades out and keeps
- * its place, as the buttons' does. The wrapper is the card's list item, in `primary`, so the light
- * is the brand yellow on the dark band (the buttons take their surroundings' text colour; the card
- * sets its own). The wrapper takes no room, so the cards keep the grid's exact geometry, and
- * nothing moves or changes colour on the card itself. Under reduced motion the light stays off.
+ * Hover (the owner's choice, 2026-11-21, the premium card shine,
+ * https://www.youtube.com/shorts/RojcPDSd63k, in place of the border light the cards had before):
+ * a streak of light sweeps across the card. `card-shine` parks that band off the card's left edge;
+ * under a fine pointer that can hover it crosses the card, and when the pointer leaves it fades
+ * out where it is and returns to its parking place unseen, so a pointer passing through never
+ * sees it vanish. The band moves on the compositor (`translate` and `opacity`), so the sweep
+ * costs the page nothing per frame. Nothing on the card moves or changes colour. Under reduced
+ * motion, and on a coarse pointer, the band stays parked.
  *
  * The band is flat `neutral` (the owner asked for a cleaner background than the desk photograph
  * that was here, 2026-11-20, so the photograph was removed from the repository with its credit),
@@ -111,23 +113,18 @@ const titleId = `${id}-title`;
     {/*
      * role="list": Safari drops the list role from lists styled without markers.
      * Three columns from lg. The row gap is the space between a card's icon, category, heading,
-     * description, and checklist, shared through the subgrid, which runs through the aura
-     * wrapper into the card. The wrapper's negative margin cancels the light's padding, so the
-     * card fills its grid area exactly; `isolate` keeps the glow and the card in the wrapper's
-     * own stacking context. In forced colours the fill is dropped, so the card keeps an edge.
+     * description, and checklist, shared through the subgrid, which runs through the list item
+     * into the card. In forced colours the fill is dropped, so the card keeps an edge.
      */}
     <ul
       role="list"
       class="mt-12 grid gap-6 sm:mt-14 lg:mt-16 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-5 xl:mt-20 xl:gap-x-7"
     >
       {whyPillars.map((pillar) => (
-        <li
-          data-why-aura
-          class="aura aura-hover isolate -m-(--aura-padding) grid text-primary lg:row-span-5 lg:grid-rows-subgrid"
-        >
+        <li class="grid lg:row-span-5 lg:grid-rows-subgrid">
           <div
             data-why-card
-            class="grid min-w-0 grid-rows-[auto_auto_auto_auto_auto] gap-5 rounded-lg bg-base-100 p-8 text-left text-base-content forced-colors:border sm:p-10 lg:row-span-5 lg:grid-rows-subgrid lg:gap-y-5 lg:p-8 xl:p-12"
+            class="card-shine grid min-w-0 grid-rows-[auto_auto_auto_auto_auto] gap-5 rounded-lg p-8 text-left text-base-100 forced-colors:border sm:p-10 lg:row-span-5 lg:grid-rows-subgrid lg:gap-y-5 lg:p-8 xl:p-12"
           >
             {/* A little more room under the tile than between the lines of copy. */}
             <span
@@ -137,18 +134,18 @@ const titleId = `${id}-title`;
             >
               <Icon name={pillar.icon} class="size-7" stroke-width="1.75" />
             </span>
-            <p class="text-xs font-bold tracking-[0.14em] text-base-content/70 uppercase sm:text-sm">
+            <p class="text-xs font-bold tracking-[0.14em] text-neutral-content uppercase sm:text-sm">
               {pillar.category}
             </p>
             <h3 class="text-2xl leading-tight font-bold tracking-tight sm:text-3xl lg:text-2xl xl:text-[2rem] xl:leading-tight">
               <span class="block">{pillar.title[0]}</span>{' '}
               <span class="block">{pillar.title[1]}</span>
             </h3>
-            <p class="text-base leading-relaxed text-pretty text-base-content/80">
+            <p class="text-base leading-relaxed text-pretty text-neutral-content/90">
               {pillar.description}
             </p>
-            {/* The hairline is the near-black at 10%. */}
-            <ul role="list" data-why-points class="grid gap-3 border-t border-neutral/10 pt-5">
+            {/* The hairline is white at 15%, which shows on the dark card. */}
+            <ul role="list" data-why-points class="grid gap-3 border-t border-base-100/15 pt-5">
               {pillar.points.map((point) => (
                 <li class="flex items-start gap-3">
                   <span

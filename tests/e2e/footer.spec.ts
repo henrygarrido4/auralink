@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from './fixtures';
 import { footerIndustries, footerServices } from '../../src/data/footer';
 
 /** The first link of the footer's lists, which all share one style (`footer-link`). */

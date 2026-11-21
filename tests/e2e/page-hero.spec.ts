@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures';
 import { industryPath, serviceCardById, servicePath } from '../../src/data/detail-pages';
 import { industryPages } from '../../src/data/industry-pages';
 import { pricingHead, pricingHero } from '../../src/data/pricing';

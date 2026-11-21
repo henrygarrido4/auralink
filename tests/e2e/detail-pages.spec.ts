@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures';
 import { industryPath, serviceCardById, servicePath } from '../../src/data/detail-pages';
 import { industryPages } from '../../src/data/industry-pages';
 import { servicePages } from '../../src/data/service-pages';

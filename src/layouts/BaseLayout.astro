@@ -43,6 +43,21 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : und
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="only light" />
+    {/*
+      Google Tag Manager, container GTM-PVBR2FJZ (the owner's decision, 2026-11-21): Google's
+      current install snippet as given, `is:inline` so Astro leaves both tags as they are, and
+      `arguments` kept as written, since gtag.js tells its commands from other dataLayer pushes by
+      that object (eslint.config.js lifts prefer-rest-params for this file's scripts). Tags are
+      configured in the container, not here (docs/architecture.md, "Analytics").
+    */}
+    <script is:inline async src="https://www.googletagmanager.com/gtm.js?id=GTM-PVBR2FJZ"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+    </script>
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />

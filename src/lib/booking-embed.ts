@@ -1,8 +1,9 @@
 /**
  * The Calendly scheduler on the contact page (src/components/sections/BookingCalendar.astro): the
  * owner's discovery-call event, embedded inline with Calendly's own script, which stays in charge
- * of availability, time zones, and the booking itself. The only third-party script on the site;
- * the decision is recorded in docs/architecture.md.
+ * of availability, time zones, and the booking itself. With Google Tag Manager's container script
+ * (src/layouts/BaseLayout.astro), one of the site's two third-party scripts; the decision is
+ * recorded in docs/architecture.md.
  *
  * When. Calendly's script (`widget.js`) is fetched only once the page has loaded and the browser
  * is idle, so nothing of the page waits for it, and the widget is created only while the booking

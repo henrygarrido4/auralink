@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { watchConsole } from './console';
 
 /** WebKit mirrors Safari: plain Tab skips links; Option+Tab (Alt+Tab) reaches them. */

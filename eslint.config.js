@@ -58,6 +58,13 @@ export default defineConfig([
     files: ['scripts/**/*.mjs'],
     rules: { 'no-console': 'off' },
   },
+  {
+    // The layout's head carries Google Tag Manager's install snippet as Google gives it, whose
+    // `gtag()` pushes the `arguments` object itself: gtag.js tells its commands from other
+    // dataLayer pushes by that object, so rest parameters (an array) cannot stand in for it.
+    files: ['src/layouts/BaseLayout.astro/*.ts'],
+    rules: { 'prefer-rest-params': 'off' },
+  },
   // Must be last: turns off formatting rules that Prettier owns.
   prettier,
 ]);

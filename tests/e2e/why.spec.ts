@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from './fixtures';
 import { whyPillars } from '../../src/data/site';
 
 /**
@@ -8,17 +8,20 @@ import { whyPillars } from '../../src/data/site';
  * sections; the sentence keeps a readable measure and is not centred. The three `whyPillars`
  * follow, in order, as cards after the "Why choose us" cards of the Troma demo, the owner's
  * reference (2026-11-20), in this site's colours, on a flat `neutral` band with no image: all
- * three white, with 8px corners, no shadow, and dark text, each opening with a decorative icon on
- * a near-black tile, then the category, heading, description, and checklist, left-aligned with
- * the same padding. The checklist marks are near-black discs with a yellow check, decorative.
- * From lg the cards share one row and the checklist of each starts on the same line; below that
- * they stack. Each card sits in the buttons' aura (`aura-hover`), in `primary`: unlit at rest, and
- * under a pointer that can hover the light fades in and circles that card alone, with nothing on
- * any card moving or changing colour, then fades out when the pointer leaves and continues from
- * where it stopped; nothing runs on load, and under reduced motion the light stays off. The
- * owner's mark lies faint in the band's top right corner from lg, behind the copy and the cards
- * and inside the screen, and is not drawn below lg. No link, button, or image. No client-side
- * JavaScript.
+ * three a dark tone of `neutral` (80% mixed with white), with 8px corners, no shadow, and light
+ * text, each opening with a decorative icon on a near-black tile, then the category, heading,
+ * description, and checklist, left-aligned with the same padding. The checklist marks are
+ * near-black discs with a yellow check, decorative. From lg the cards share one row and the
+ * checklist of each starts on the same line; below that they stack. Hover is the premium card
+ * shine (https://www.youtube.com/shorts/RojcPDSd63k): the band is parked off the card at rest, and
+ * under a pointer that can hover it sweeps across that card alone over 0.8s, with nothing on any
+ * card moving or changing colour; when the pointer leaves, the band fades out over 0.15s where it
+ * is, then returns to its parking place in one jump, never sweeping back, and a pointer that
+ * returns during the fade carries the sweep on from where it was; it moves and fades through
+ * `translate` and `opacity` themselves (the compositor's properties), the cards transition
+ * nothing, nothing runs on load, and under reduced motion the band stays parked. The owner's mark
+ * lies faint in the band's top right corner from lg, behind the copy and the cards and inside the
+ * screen, and is not drawn below lg. No link, button, or image. No client-side JavaScript.
  */
 const EYEBROW = "How we're different";
 const HEADING = 'Why Auralink Studio?';
@@ -26,31 +29,71 @@ const SENTENCE = 'Thoughtful websites. Built for performance. A partner invested
 
 const section = (page: Page) => page.locator('#why-auralink');
 const cards = (page: Page) => section(page).locator('[data-why-card]');
-const auras = (page: Page) => section(page).locator('[data-why-aura]');
 const marks = (page: Page) => section(page).locator('[data-why-mark]');
 const mark = (page: Page, corner: 'top' | 'bottom') =>
   section(page).locator(`[data-why-mark="${corner}"]`);
 const canHover = (page: Page) =>
   page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
 
-/** The aura's own spin, not the glow copies, and how strongly the light shines. */
-const auraSpin = (aura: Locator) =>
-  aura.evaluate((el) => {
-    const spin = el.getAnimations().find((animation) => {
-      const effect = animation.effect as KeyframeEffect | null;
-      return (animation as CSSAnimation).animationName === 'aura' && !effect?.pseudoElement;
-    });
+/** A card's band: parked off the left edge at -100, off the right edge at 100. */
+const PARKED = -100;
+const CROSSED = 100;
+
+/**
+ * A card's band: how far it has travelled (`translate`, as a percentage of the card's width),
+ * how much of it shows, and what it is transitioning.
+ */
+const shineOf = (card: Locator) =>
+  card.evaluate((el) => {
+    const band = getComputedStyle(el, '::after');
     return {
-      playing: spin?.playState === 'running',
-      time: spin ? Number(spin.currentTime) : null,
-      strength: getComputedStyle(el).getPropertyValue('--aura-light').trim(),
+      travel: parseFloat(band.translate),
+      opacity: parseFloat(band.opacity),
+      property: band.transitionProperty,
+      duration: band.transitionDuration,
+      delay: band.transitionDelay,
+      timing: band.transitionTimingFunction,
+      image: band.backgroundImage,
     };
   });
 
-/** Whether each card's light is on and spinning. */
-const lit = async (page: Page) => {
-  const states = await Promise.all((await auras(page).all()).map((aura) => auraSpin(aura)));
-  return states.map((state) => state.playing && state.strength === '100%');
+interface Sample {
+  /** Milliseconds since sampling began. */
+  t: number;
+  travel: number;
+  opacity: number;
+}
+
+/** The band's travel and opacity at every animation frame for `ms` milliseconds. */
+const sampleShine = (card: Locator, ms: number) =>
+  card.evaluate(
+    (el, ms) =>
+      new Promise<Sample[]>((done) => {
+        const samples: Sample[] = [];
+        const start = performance.now();
+        const tick = () => {
+          const band = getComputedStyle(el, '::after');
+          samples.push({
+            t: Math.round(performance.now() - start),
+            travel: parseFloat(band.translate),
+            opacity: parseFloat(band.opacity),
+          });
+          if (performance.now() - start < ms) requestAnimationFrame(tick);
+          else done(samples);
+        };
+        requestAnimationFrame(tick);
+      }),
+    ms,
+  );
+
+/** The samples in one line, for a failure message. */
+const trace = (samples: Sample[]) =>
+  samples.map((s) => `${s.t}ms ${s.travel.toFixed(1)}@${s.opacity.toFixed(2)}`).join(' | ');
+
+/** The centre of a card, for pointer moves that take one round trip. */
+const centre = async (card: Locator) => {
+  const box = (await card.boundingBox())!;
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 };
 
 const colour = (page: Page, value: string) =>
@@ -65,12 +108,13 @@ const colour = (page: Page, value: string) =>
 
 /** The theme colours the cards use, as the browser serialises them. */
 const palette = async (page: Page) => {
-  const [white, yellow, nearBlack] = await Promise.all([
+  const [white, yellow, nearBlack, card] = await Promise.all([
     colour(page, 'var(--color-base-100)'),
     colour(page, 'var(--color-primary)'),
     colour(page, 'var(--color-neutral)'),
+    colour(page, 'color-mix(in oklab, var(--color-neutral) 80%, white)'),
   ]);
-  return { white, yellow, nearBlack };
+  return { white, yellow, nearBlack, card };
 };
 
 /**
@@ -164,32 +208,28 @@ test('follows the services and introduces the three pillars', async ({ page }) =
   }
 });
 
-test('every card is white, soft-cornered, and flat, with near-black tiles and marks, in an unlit aura', async ({
+test('every card is a dark tone, soft-cornered, and flat, with near-black tiles and marks, and the shine parked', async ({
   page,
 }) => {
   await page.goto('/');
   await page.mouse.move(0, 0);
-  const { white, yellow, nearBlack } = await palette(page);
+  const { white, yellow, nearBlack, card: tone } = await palette(page);
   const seen = await looks(page);
   expect(seen).toHaveLength(whyPillars.length);
   for (const [index, card] of seen.entries()) {
     const name = whyPillars[index].category;
-    expect(card.fill, `${name}: white at rest`).toBe(white);
+    expect(card.fill, `${name}: a dark tone at rest`).toBe(tone);
+    expect(card.text, `${name}: light text`).toBe(white);
     expect(card.tile, `${name}: a near-black tile`).toBe(nearBlack);
     expect(card.icon, `${name}: a yellow icon`).toBe(yellow);
     expect(card.mark, `${name}: near-black marks`).toBe(nearBlack);
     expect(card.check, `${name}: yellow checks`).toBe(yellow);
   }
-  // One aura around each card, the buttons' hover policy, whose light is the primary yellow.
-  await expect(auras(page)).toHaveCount(whyPillars.length);
-  for (const aura of await auras(page).all()) {
-    await expect(aura).toHaveClass(/\baura\b/);
-    await expect(aura).toHaveClass(/\baura-hover\b/);
-    await expect(aura).toHaveCSS('color', yellow);
-    await expect(aura.locator('> [data-why-card]'), 'wrapping the card alone').toHaveCount(1);
-    const { playing, strength } = await auraSpin(aura);
-    expect(playing, 'nothing runs at rest').toBe(false);
-    expect(strength, 'unlit at rest').toBe('0%');
+  for (const card of await cards(page).all()) {
+    const shine = await shineOf(card);
+    expect(shine.travel, 'the band is parked off the card').toBe(PARKED);
+    expect(shine.opacity, 'and unlit').toBe(0);
+    expect(shine.image, 'the short\u2019s tilted band').toContain('115deg');
   }
   for (const card of await cards(page).all()) {
     await expect(card).toHaveCSS('border-radius', '8px');
@@ -460,32 +500,35 @@ test("the owner's mark lies faint in the band's top right corner and rises from 
   }
 });
 
-test.describe('the aura', () => {
+test.describe('the shine', () => {
   test.describe('motion allowed', () => {
     test.use({ reducedMotion: 'no-preference' });
 
-    test('under the pointer the light fades in and circles a card, and only that one, with nothing on any card moving or changing colour; it fades out when the pointer leaves and continues from where it stopped', async ({
+    test('under the pointer the band sweeps one card, and only that one, with nothing on any card moving or changing colour; when the pointer leaves it goes dark and returns to its parking place', async ({
       page,
     }) => {
       await page.goto('/');
-      test.skip(!(await canHover(page)), 'Touch screens have no hover; every light stays off.');
+      test.skip(!(await canHover(page)), 'Touch screens have no hover; every band stays parked.');
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.evaluate(() => document.fonts.ready);
       await page.mouse.move(0, 0);
       const rest = await looks(page);
       const before = await boxes(page);
-      expect(await lit(page), 'all unlit at rest').toEqual(whyPillars.map(() => false));
 
       for (const [index, pillar] of whyPillars.entries()) {
-        await auras(page).nth(index).hover();
+        await cards(page).nth(index).hover();
         await expect
-          .poll(() => lit(page), { message: `${pillar.category} lit, every other card unlit` })
-          .toEqual(whyPillars.map((_, i) => i === index));
-        await expect
-          .poll(async () => (await auraSpin(auras(page).nth(index))).time ?? 0, {
-            message: `${pillar.category}: the light circles`,
+          .poll(async () => (await shineOf(cards(page).nth(index))).travel, {
+            message: `${pillar.category}: the band crosses the card`,
           })
-          .toBeGreaterThan(200);
+          .toBe(CROSSED);
+        expect((await shineOf(cards(page).nth(index))).opacity, 'lit while it crosses').toBe(1);
+        for (const [other, name] of whyPillars.entries()) {
+          if (other === index) continue;
+          const shine = await shineOf(cards(page).nth(other));
+          expect(shine.travel, `${name} stays parked`).toBe(PARKED);
+          expect(shine.opacity, `${name} stays unlit`).toBe(0);
+        }
         expect(await looks(page), `${pillar.category}: no colour on any card changes`).toEqual(
           rest,
         );
@@ -493,54 +536,122 @@ test.describe('the aura', () => {
         await expect(cards(page).nth(index)).toHaveCSS('cursor', 'auto');
       }
 
-      // Leaving: the spin pauses where it is and the light fades out; the next visit resumes.
-      const last = auras(page).last();
-      const carried = (await auraSpin(last)).time ?? 0;
+      // Leaving: the band goes dark and is parked again, ready for the next visit.
+      const last = cards(page).last();
       await page.mouse.move(0, 0);
       await expect
-        .poll(async () => (await auraSpin(last)).playing, {
-          message: 'paused once the pointer leaves',
-        })
-        .toBe(false);
-      expect((await auraSpin(last)).time ?? 0, 'the spin holds its place').toBeGreaterThanOrEqual(
-        carried - 50,
-      );
-      await expect.poll(async () => (await auraSpin(last)).strength, 'fades out').toBe('0%');
-      await last.evaluate((el) => {
-        for (const animation of el.getAnimations()) {
-          if ((animation as CSSAnimation).animationName === 'aura') animation.currentTime = 2500;
-        }
-      });
-      await last.hover();
-      const resumed = (await auraSpin(last)).time ?? 0;
-      expect(resumed, 'continues from where it stopped').toBeGreaterThanOrEqual(2400);
-      expect(resumed, 'did not start over').toBeLessThan(3500);
+        .poll(async () => await shineOf(last), { message: 'parked and unlit again' })
+        .toMatchObject({ travel: PARKED, opacity: 0 });
     });
 
-    test('the light fades through its strength over 0.4s, and nothing on the cards transitions', async ({
+    test('a pointer that leaves mid-sweep sees the band fade where it is, never sweep back; one that returns during the fade carries the sweep on', async ({
       page,
     }) => {
       await page.goto('/');
-      for (const aura of await auras(page).all()) {
-        await expect(aura).toHaveCSS('transition-property', '--aura-light');
-        await expect(aura).toHaveCSS('transition-duration', '0.4s');
+      test.skip(!(await canHover(page)), 'Touch screens have no hover; the band never travels.');
+      await page.setViewportSize({ width: 1280, height: 900 });
+      const card = cards(page).first();
+      await card.scrollIntoViewIfNeeded();
+      const over = await centre(card);
+      const midSweep = () =>
+        expect
+          .poll(async () => (await shineOf(card)).travel, {
+            message: 'the band is part way across',
+            intervals: [40, 40, 40, 40, 40, 40, 40, 40, 40, 40],
+          })
+          .toBeGreaterThan(-60);
+
+      // Leave while the band is crossing. Sample every frame as it goes.
+      await page.mouse.move(over.x, over.y);
+      await midSweep();
+      const leaving = sampleShine(card, 500);
+      await page.mouse.move(0, 0);
+      const samples = await leaving;
+
+      const seen = trace(samples);
+      const onCard = (s: Sample) => s.travel > PARKED + 0.5;
+      // The frames after the pointer left and before the band jumped back.
+      const fading = samples.filter((s) => s.opacity < 1 && onCard(s));
+      expect(fading.length, `the light fades over more than one frame: ${seen}`).toBeGreaterThan(1);
+      const held = fading[0].travel;
+      expect(held, `it fades part way across, where it was: ${seen}`).toBeLessThan(CROSSED);
+      for (const [i, s] of fading.entries()) {
+        expect(
+          Math.abs(s.travel - held),
+          `held in place while it fades (${s.travel} at ${s.t}ms): ${seen}`,
+        ).toBeLessThanOrEqual(1);
+        if (i > 0) {
+          expect(s.opacity, `dimming (${s.opacity} at ${s.t}ms): ${seen}`).toBeLessThanOrEqual(
+            fading[i - 1].opacity,
+          );
+        }
       }
+      for (const s of samples) {
+        // Every frame shows the band either where it was or parked: nothing in between.
+        const between = onCard(s) && s.travel < held - 1;
+        expect(between, `no sweep back (${s.travel} at ${s.t}ms): ${seen}`).toBe(false);
+      }
+      // The jump back happens once the light is out, or as near as a frame can tell.
+      const parked = samples.find((s) => s.opacity < 1 && !onCard(s));
+      expect(parked?.opacity, `off the card only once unlit: ${seen}`).toBeLessThanOrEqual(0.05);
+      expect(samples.at(-1), `parked and unlit at the end: ${seen}`).toMatchObject({
+        travel: PARKED,
+        opacity: 0,
+      });
+
+      // Return during the fade: the sweep goes on from where it was, and does not start over.
+      // WebKit holds the band a few percent short of the last value read, so allow that.
+      await page.mouse.move(over.x, over.y);
+      await midSweep();
+      const since = (await shineOf(card)).travel;
+      await page.mouse.move(0, 0);
+      await page.mouse.move(over.x, over.y);
+      const resumed = await sampleShine(card, 1000);
+      const again = trace(resumed);
+      expect(resumed[0].opacity, `lit again at once: ${again}`).toBe(1);
+      for (const s of resumed) {
+        expect(s.travel, `never back to the start (since ${since}): ${again}`).toBeGreaterThan(
+          since - 10,
+        );
+      }
+      expect(resumed.at(-1)?.travel, `and across: ${again}`).toBe(CROSSED);
+    });
+
+    test('the band moves and fades through the compositor\u2019s properties alone, and the cards transition nothing', async ({
+      page,
+    }) => {
+      await page.goto('/');
+      test.skip(!(await canHover(page)), 'Touch screens have no hover; the band never travels.');
+      await page.mouse.move(0, 0);
+      const rest = await shineOf(cards(page).first());
+      expect(rest.property, 'leaving: the light fades, then the band jumps back').toBe(
+        'opacity, translate',
+      );
+      expect(rest.duration).toBe('0.15s, 0s');
+      expect(rest.delay, 'the jump waits for the fade').toBe('0s, 0.15s');
+
+      await cards(page).first().hover();
+      const hovered = await shineOf(cards(page).first());
+      expect(hovered.property, 'hovering: only the travel eases').toBe('translate');
+      expect(hovered.duration).toBe('0.8s');
+      expect(hovered.timing).toBe('ease');
       for (const card of await cards(page).all()) {
         await expect(card).toHaveCSS('transition-duration', '0s');
       }
     });
 
-    test('nothing runs or fades in on load, even as the stylesheet arrives', async ({ page }) => {
-      // WebKit can style the page before the stylesheet applies; a plain transition would then
-      // fade the lights in from the browser's defaults (`aura-hover` in global.css).
+    test('nothing runs or slides in on load, even as the stylesheet arrives', async ({ page }) => {
+      // WebKit can style the page before the stylesheet applies. The band transitions `translate`
+      // and `opacity` themselves, which is safe only because the stylesheet creates the band, so
+      // there is no earlier style to transition from (`card-shine` in global.css).
       await page.addInitScript(() => {
         const runs: string[] = [];
         Object.assign(window, { whyRuns: runs });
         document.addEventListener(
           'transitionrun',
           (event) => {
-            if ((event.target as Element).closest('[data-why-aura]')) {
-              runs.push(event.propertyName);
+            if ((event.target as Element).closest('#why-auralink')) {
+              runs.push(`${event.propertyName}${event.pseudoElement ?? ''}`);
             }
           },
           true,
@@ -552,28 +663,31 @@ test.describe('the aura', () => {
       );
       const runs = await page.evaluate(() => (window as unknown as { whyRuns: string[] }).whyRuns);
       expect(runs, 'no transition on load').toEqual([]);
-      expect(await lit(page), 'no light on load').toEqual(whyPillars.map(() => false));
+      for (const card of await cards(page).all()) {
+        expect(await shineOf(card), 'parked and unlit on load').toMatchObject({
+          travel: PARKED,
+          opacity: 0,
+        });
+      }
     });
   });
 
   test.describe('reduced motion', () => {
     test.use({ reducedMotion: 'reduce' });
 
-    test('the light stays off, and nothing moves', async ({ page }) => {
+    test('the band stays parked, and nothing moves', async ({ page }) => {
       await page.goto('/');
-      for (const aura of await auras(page).all()) {
-        await expect(aura).toHaveCSS('animation-name', 'none');
-      }
       if (await canHover(page)) {
         await page.mouse.move(0, 0);
         const before = await boxes(page);
-        await auras(page).first().hover();
+        await cards(page).first().hover();
         await page.evaluate(
           () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
         );
-        expect((await auraSpin(auras(page).first())).strength, 'unlit under the pointer').toBe(
-          '0%',
-        );
+        expect(await shineOf(cards(page).first()), 'parked under the pointer').toMatchObject({
+          travel: PARKED,
+          opacity: 0,
+        });
         expect(await boxes(page), 'no card moves').toEqual(before);
       }
     });

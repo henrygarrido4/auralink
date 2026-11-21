@@ -23,6 +23,7 @@
     }
   },
   "resources": {
+    "$comment": "Third-party requests: every page loads Google Tag Manager's container script from Google (the owner's decision, 2026-11-21; docs/architecture.md, 'Analytics'), one request, and the budget leaves room for a Google Analytics tag and its beacons once the container has one. Anything beyond that in the container is a new decision.",
     "transferKB": {
       "total": 500,
       "document": 40,
@@ -31,11 +32,11 @@
       "image": 250,
       "font": 100
     },
-    "requests": { "total": 30, "third-party": 0 }
+    "requests": { "total": 30, "third-party": 6 }
   },
   "routes": {
     "/contact/": {
-      "$comment": "The contact page embeds Calendly's scheduler (the owner's decision, 2026-11-20; docs/architecture.md), an iframe that fetches Calendly's own scripts and styles and Stripe's, and whose cookies fail Lighthouse's third-party-cookies audit (best practices 0.77 measured). The allowances are for that embed alone: the page's own resources keep the budgets above.",
+      "$comment": "The contact page embeds Calendly's scheduler (the owner's decision, 2026-11-20; docs/architecture.md), an iframe that fetches Calendly's own scripts and styles and Stripe's, and whose cookies fail Lighthouse's third-party-cookies audit (best practices 0.77 measured). The allowances are for that embed and the Tag Manager script every page loads (17 third-party requests measured, 2026-11-21): the page's own resources keep the budgets above.",
       "scores": {
         "mobile": { "best-practices": 0.75 },
         "desktop": { "best-practices": 0.75 }

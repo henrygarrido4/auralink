@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from './fixtures';
 import { serviceCards } from '../../src/data/site';
 import { SERVICE_STRIP_SPEED_PX_PER_SECOND } from '../../src/lib/service-strip';
 
@@ -274,9 +274,14 @@ test.describe('services strip', () => {
     // The tilted band shows as a wedge as deep as the section's padding at each edge of the
     // screen: half the width times tan(2.2deg). The section's top continues the hero's
     // background and its bottom the services band, so no seam shows beside the wedges.
-    await band.evaluate((element) =>
-      element.scrollIntoView({ block: 'center', behavior: 'instant' }),
-    );
+    await band.evaluate(async (element) => {
+      element.scrollIntoView({ block: 'center', behavior: 'instant' });
+      // The navbar shrinks as the page scrolls (`navbar-collapse`), and everything below it moves
+      // up with it; that scroll-driven animation applies over the next frames, so the strip's box
+      // is taken only once they have run, or the clip sits a few pixels off and a sample meant for
+      // the wedge lands on the yellow.
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    });
     const box = await band.boundingBox();
     expect(box, 'the strip has a box').not.toBeNull();
     if (!box) return;

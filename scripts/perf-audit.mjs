@@ -21,8 +21,9 @@
  *   4. Compares the median run against lighthouse.budgets.json and exits 1 on any overage.
  *
  * Transfer budgets cover the site's own resources, those served from the page's origin; what a
- * third party sends (the contact page's Calendly scheduler, an iframe with its own scripts and
- * styles) counts toward the third-party request budget alone and is reported beside the total.
+ * third party sends (Google Tag Manager's container script on every page; the contact page's
+ * Calendly scheduler, an iframe with its own scripts and styles) counts toward the third-party
+ * request budget alone and is reported beside the total.
  * A route listed under `routes` in lighthouse.budgets.json takes its own values for the keys it
  * names, over the defaults (docs/performance.md, "Budgets").
  *

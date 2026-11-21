@@ -233,6 +233,68 @@
 }
 
 /*
+ * The streak on the home "Why Auralink Studio?" cards (WhyAuralink.astro). The owner asked for the
+ * premium card shine (2026-11-21, https://www.youtube.com/shorts/RojcPDSd63k) as the hover, on a
+ * dark card: the short's own band, white at a quarter between two clear stops, tilted 115 degrees.
+ *
+ * The band is one layer the size of the card, parked off its left edge (`translate: -100%`) and
+ * clipped by the card, so at rest none of it shows. Under a fine pointer that can hover it travels
+ * to the right edge (`100%`) over 0.8s with `ease`, and the bright stop crosses the card. When the
+ * pointer leaves, the band fades out over 0.15s where it is, and only then returns to its parking
+ * place, in one jump (a travel of no length, delayed by the fade's length). So a pointer that
+ * passes through mid-sweep sees the light fade rather than vanish, the band never sweeps back
+ * across the copy, and a pointer that returns during the fade carries the sweep on from where it
+ * was. A coarse pointer never starts it, and neither does reduced motion.
+ *
+ * It moves and fades through `translate` and `opacity` themselves, the two properties the
+ * compositor animates without the main thread, so a sweep is painted once and then only moved. The
+ * first version ran the travel through a registered property that `translate` read, which Chrome
+ * cannot composite: in one second of hover it painted the band 94 times and rastered it 186 times,
+ * against 2 paints and 1 raster now (Chrome trace, 2026-11-21). That is the one exception to
+ * transitioning through registered properties (see `arrow-box`): the band is a pseudo-element
+ * this stylesheet creates, so WebKit, which styles the page before the stylesheet arrives, has no
+ * earlier style to transition it from on load; `tests/e2e/why.spec.ts` checks that nothing runs on
+ * load. Forced colours drop the band. The card's fill is a dark tone of `neutral`, 80% of it mixed
+ * with white, light enough to sit on the band as its own surface; the copy is set in the markup.
+ */
+@utility card-shine {
+  position: relative;
+  overflow: clip;
+  background-color: color-mix(in oklab, var(--color-neutral) 80%, white);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(115deg, #0000 40%, #ffffff40 50%, #0000 60%);
+    translate: -100% 0;
+    opacity: 0;
+    /* Leaving: fade out in place, then jump back to the parking place unseen. */
+    transition:
+      opacity 0.15s ease,
+      translate 0s 0.15s;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @media (hover: hover) and (pointer: fine) {
+      &:hover::after {
+        translate: 100% 0;
+        opacity: 1;
+        /* The light shows at once; only the travel eases. */
+        transition: translate 0.8s ease;
+      }
+    }
+  }
+
+  @media (forced-colors: active) {
+    &::after {
+      content: none;
+    }
+  }
+}
+
+/*
  * The arrow box at the foot of each home service card (src/components/ui/ServiceCard.astro). It
  * began as the `.card_btn` of the service cards on Johnny's Exclusive Barbershop's website, the
  * arrow the owner asked for (2026-11-18), and it keeps that box's place and shape: 50px, with

@@ -18,7 +18,7 @@ Astro 7 (static output), TypeScript (strict), Tailwind CSS 4 via `@tailwindcss/v
 - Do not add React, Next.js, Nuxt, another CSS framework, a database, authentication, or an application backend. Explain the requirement instead.
 - npm only; `package-lock.json` is the single lockfile. No major-version upgrades inside feature work; propose them separately. No prerelease packages.
 - Build-time packages go in `dependencies`, tooling in `devDependencies`.
-- Brand colours beyond the decided primary and secondary, the icon family, analytics, final imagery, and page layouts are open design decisions; do not pick them while doing setup or maintenance work. Web fonts are decided: Catamaran for text and Mukta for headings (`docs/architecture.md`).
+- Brand colours beyond the decided primary and secondary, the icon family, final imagery, and page layouts are open design decisions; do not pick them while doing setup or maintenance work. Web fonts are decided: Catamaran for text and Mukta for headings (`docs/architecture.md`). Analytics is decided: Google Tag Manager's snippet in `BaseLayout`'s head, with tags configured in the container, not in code (`docs/architecture.md`, "Analytics").
 
 ## Repository layout
 
