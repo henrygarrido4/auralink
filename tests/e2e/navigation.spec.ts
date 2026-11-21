@@ -37,6 +37,33 @@ const playingUntil = (element: Locator) =>
       .map((animation) => Number(animation.effect?.getComputedTiming().endTime)),
   );
 
+/** Bar and logo heights in CSS pixels. The dialog's logo is outside `header`, so it is not included. */
+const navbarSizes = (page: Page) =>
+  page.evaluate(() => {
+    const bar = document.querySelector('header .navbar');
+    const logo = document.querySelector('header .navbar svg');
+    const link = document.querySelector('header nav a');
+    return {
+      bar: bar?.getBoundingClientRect().height ?? 0,
+      logo: logo?.getBoundingClientRect().height ?? 0,
+      link: link ? Number.parseFloat(getComputedStyle(link).fontSize) : 0,
+      pad: Number.parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop),
+    };
+  });
+
+const scrollTo = (page: Page, top: number) =>
+  page.evaluate(async (y) => {
+    const root = document.scrollingElement ?? document.documentElement;
+    const previous = root.style.scrollBehavior;
+    // The page smooth-scrolls. Hold `auto` across the jump and the frames that follow, or the
+    // ease is still running when the bar is measured and the logo is caught mid-shrink.
+    root.style.scrollBehavior = 'auto';
+    root.scrollTop = y;
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    root.style.scrollBehavior = previous;
+    return window.scrollY;
+  }, top);
+
 test.describe('navbar at desktop width', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
@@ -56,6 +83,51 @@ test.describe('navbar at desktop width', () => {
       contactRoutes.page,
     );
     await expect(menuButton(page)).toBeHidden();
+  });
+
+  test('the logo and the bar shrink from their designed size over the first 100px of scroll, then grow back', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const supported = await page.evaluate(() =>
+      CSS.supports('(animation-timeline: scroll()) and (animation-range: 0% 100%)'),
+    );
+    test.skip(!supported, 'this engine has no scroll-driven animations');
+
+    const resting = await navbarSizes(page);
+    expect(resting.bar, 'bar starts at its designed 5rem').toBeGreaterThan(78);
+    expect(resting.bar).toBeLessThan(82);
+    expect(resting.logo, 'logo starts at its designed 3rem, no larger').toBeGreaterThan(46);
+    expect(resting.logo).toBeLessThan(50);
+    expect(resting.pad, 'focused content clears the bar').toBeGreaterThan(78);
+
+    const linkSize = resting.link;
+    const midY = await scrollTo(page, 50);
+    const mid = await navbarSizes(page);
+    expect(midY, 'partway down the range').toBeGreaterThan(20);
+    expect(midY).toBeLessThan(80);
+    expect(mid.logo, 'the logo is between its two sizes').toBeGreaterThan(40);
+    expect(mid.logo).toBeLessThan(resting.logo);
+    expect(mid.bar).toBeGreaterThan(64);
+    expect(mid.bar).toBeLessThan(resting.bar);
+    expect(mid.link, 'the links do not shrink').toBe(linkSize);
+
+    // Shrinking the bar gives a little of the scroll back, so the jump overshoots 100px.
+    expect(await scrollTo(page, 160), 'past the end of the range').toBeGreaterThanOrEqual(100);
+    const shut = await navbarSizes(page);
+    expect(shut.bar, 'scrolled bar is 4rem').toBeGreaterThan(62);
+    expect(shut.bar).toBeLessThan(66);
+    expect(shut.logo, 'scrolled logo is 2.5rem').toBeGreaterThan(38);
+    expect(shut.logo).toBeLessThan(42);
+    expect(shut.pad, 'focus clearance stays at the taller bar').toBeGreaterThan(78);
+    expect(shut.pad).toBeLessThan(82);
+
+    expect(await scrollTo(page, 0), 'scrolled back to the top').toBe(0);
+    const again = await navbarSizes(page);
+    expect(again.logo, 'scrolling back restores the logo').toBeGreaterThan(46);
+    expect(again.logo).toBeLessThan(50);
+    expect(again.bar).toBeGreaterThan(78);
+    expect(again.bar).toBeLessThan(82);
   });
 
   test('links only the entries whose pages exist', async ({ page }) => {
@@ -177,6 +249,21 @@ test.describe('navbar below the desktop breakpoint', () => {
         `${v.id} (${v.impact}): ${v.help} -> ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`,
     );
     expect(summary, 'menu dialog accessibility violations').toEqual([]);
+  });
+});
+
+test.describe('navbar with reduced motion', () => {
+  test.use({ reducedMotion: 'reduce', viewport: { width: 1280, height: 720 } });
+
+  test('keeps the compact logo and bar at the top of the page', async ({ page }) => {
+    await page.goto('/');
+    const size = await navbarSizes(page);
+    expect(size.bar, 'stays at the designed size when motion is reduced').toBeGreaterThan(78);
+    expect(size.bar).toBeLessThan(82);
+    expect(size.logo).toBeGreaterThan(46);
+    expect(size.logo).toBeLessThan(50);
+    expect(size.pad).toBeGreaterThan(78);
+    expect(size.pad).toBeLessThan(82);
   });
 });
 

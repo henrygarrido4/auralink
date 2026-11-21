@@ -30,10 +30,15 @@ const linkUnderline =
 ---
 
 <header class="sticky top-0 z-40 bg-neutral text-neutral-content">
-  <div class="navbar mx-auto h-20 max-w-site gap-8 px-6 py-0 lg:px-8">
+  {/*
+   * Starts at the designed size, 5rem with a 3rem logo, then both shrink over the first 100px of
+   * scroll (`navbar-collapse` and `navbar-logo` in global.css). The menu's own bar below keeps
+   * this starting size: it does not scroll.
+   */}
+  <div class="navbar navbar-collapse mx-auto max-w-site gap-8 px-6 py-0 lg:px-8">
     <a href="/" aria-label={`${site.name} home`} class:list={['mr-auto rounded-sm', focusRing]}>
-      {/* 48px: any smaller and the "Studio" line under the wordmark stops being readable. */}
-      <Logo class="h-12 w-auto" aria-hidden="true" />
+      {/* 3rem at the top of the page, 2.5rem once the page has scrolled. */}
+      <Logo class="navbar-logo" aria-hidden="true" />
     </a>
 
     <nav aria-label="Primary" class="hidden lg:block">
@@ -93,6 +98,7 @@ const linkUnderline =
 >
   <div class="ml-auto flex h-full w-full translate-x-full flex-col overflow-y-auto overscroll-contain bg-neutral text-neutral-content transition-transform duration-300 group-open:translate-x-0 sm:max-w-md animate-in slide-in-from-right">
     <div class="flex h-20 shrink-0 items-center justify-between px-6">
+      {/* The size at the top of the page. This copy does not shrink. */}
       <Logo class="h-12 w-auto" aria-hidden="true" />
       <form method="dialog" class="-mr-2.5">
         <button aria-label="Close menu" class:list={iconButton}>

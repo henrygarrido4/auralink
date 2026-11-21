@@ -1059,6 +1059,69 @@
   }
 }
 
+/*
+ * Collapsing navbar (owner, 2026-11-21), the scroll-driven header from "New Collapsing Header?":
+ * the bar and the logo start at the size the bar was designed at and shrink across the first 100px
+ * of scrolling, then grow back on the way up. They never start larger than that. Nothing listens
+ * for scroll. Links and the call to action keep their size.
+ *
+ * `--navbar-bar` is the height at the top of the page, and `scroll-padding-top` stays there: it is
+ * the taller of the two, so focused content stays clear after the bar shrinks as well. The pricing
+ * comparison sticks at `top-20`, this same 5rem. Change the three together. The animation runs
+ * only where scroll timelines exist and motion is allowed. Reduced motion and every other browser
+ * keep the 5rem bar and the 3rem logo.
+ */
+:root {
+  --navbar-bar: 5rem;
+  --navbar-bar-shut: 4rem;
+  --navbar-logo: 3rem;
+  --navbar-logo-shut: 2.5rem;
+  --navbar-collapse-end: 100px;
+}
+
+@utility navbar-collapse {
+  height: var(--navbar-bar);
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports ((animation-timeline: scroll()) and (animation-range: 0% 100%)) {
+      animation-name: navbar-collapse;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root block);
+      animation-range: 0px var(--navbar-collapse-end);
+    }
+  }
+}
+
+@utility navbar-logo {
+  width: auto;
+  height: var(--navbar-logo);
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports ((animation-timeline: scroll()) and (animation-range: 0% 100%)) {
+      animation-name: navbar-logo;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root block);
+      animation-range: 0px var(--navbar-collapse-end);
+    }
+  }
+}
+
+@keyframes navbar-collapse {
+  to {
+    height: var(--navbar-bar-shut);
+  }
+}
+
+@keyframes navbar-logo {
+  to {
+    height: var(--navbar-logo-shut);
+  }
+}
+
 /* The mark comes up from behind the band's bottom edge, which clips it, and fades in on the way. */
 @keyframes page-hero-rise {
   from {
@@ -1071,8 +1134,11 @@
   html {
     font-family: var(--font-main);
     scroll-behavior: smooth;
-    /* Height of the sticky navbar (h-20), so anchored and focused content is never hidden under it. */
-    scroll-padding-top: calc(var(--spacing) * 20);
+    /*
+     * Taller height of the sticky navbar (`--navbar-bar`), so anchored and focused content is never
+     * hidden under it, including once the bar has shrunk.
+     */
+    scroll-padding-top: var(--navbar-bar);
   }
 
   /* Section titles are Mukta. Smaller headings share it through --font-subheaders. */
