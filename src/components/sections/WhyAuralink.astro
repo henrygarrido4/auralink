@@ -1,32 +1,48 @@
 ---
-import { Picture } from 'astro:assets';
-import desk from '@/assets/why/desk.webp';
+import Mark from '@/assets/aura-hero.svg';
 import Icon from '@/components/ui/Icon.astro';
 import { whyPillars } from '@/data/site';
 
 /**
  * Home page "Why Auralink Studio?", directly under the services and before who we work with.
- * The owner's approved mockup (2026-11-19) sets the look, with Hub2B's "Coworking Subscriptions"
- * as the earlier reference for a dark band and three flat cards, the centre one in the brand
- * yellow. The copy is `whyPillars` (src/data/site.ts): an eyebrow, one heading, one sentence, and
- * exactly three cards. No button, link, price, or badge, and nothing is clickable.
+ * The copy is the owner's, from the approved mockup of 2026-11-19: an eyebrow, one heading, one
+ * sentence, and exactly three cards (`whyPillars`, src/data/site.ts). No button, link, price, or
+ * badge, and nothing is clickable.
  *
- * Behind the copy is the desk photograph the owner supplied (src/assets/why/desk.webp). It is
- * decorative. A `neutral` wash over it keeps the heading readable; `neutral` itself shows until
- * the photo has loaded. The file is 1024px wide, so wider screens scale it rather than a larger
- * source.
- * The introduction sits on the container's left edge, like the other sections: the eyebrow,
- * the heading, a short primary rule, and the sentence. The sentence keeps a readable measure
- * (`max-w-2xl`, the same as the other supporting sentences) and is not centred. From lg the
- * cards share one row and a subgrid, so the category, the two-line heading, the description,
- * and the checklist each line up across the three cards however the description wraps. Those
- * four are left-aligned, and every card uses the same padding: 32px from lg, so "Measurable
- * progress." stays on one line, and 48px from xl, where the cards are wider. Below lg they
- * stack in the same order, only as tall as their own text. Corners stay square and nothing
- * casts a shadow.
- * The checklist marks
- * are decorative: a green circle in the mockup's green, around Lucide's check in white.
- * daisyUI's `success` is too light for a white check. No client-side JavaScript.
+ * The cards follow the "Why choose us" cards of the Troma demo (demo.casethemes.net/troma), the
+ * owner's reference (2026-11-20), in this site's colours: three alike, white, with soft corners,
+ * no border or shadow, generous padding, and an icon at the top. The yellow centre card of the
+ * mockup went with the Troma cards, since one card standing yellow at rest would read as hovered.
+ * The icon tile and the check discs are near-black with yellow glyphs, the pairing of the lead
+ * service card. The icons and marks are decorative.
+ *
+ * Hover (the owner's choice, 2026-11-20, over the yellow fill the cards had before): the border
+ * light of the site's primary buttons. Each card sits in daisyUI's `aura` under the `aura-hover`
+ * policy (src/styles/global.css), so it is unlit at rest and under a pointer that can hover the
+ * light fades in and circles the card's edge, and when the pointer leaves it fades out and keeps
+ * its place, as the buttons' does. The wrapper is the card's list item, in `primary`, so the light
+ * is the brand yellow on the dark band (the buttons take their surroundings' text colour; the card
+ * sets its own). The wrapper takes no room, so the cards keep the grid's exact geometry, and
+ * nothing moves or changes colour on the card itself. Under reduced motion the light stays off.
+ *
+ * The band is flat `neutral` (the owner asked for a cleaner background than the desk photograph
+ * that was here, 2026-11-20, so the photograph was removed from the repository with its credit),
+ * with the owner's mark (src/assets/aura-hero.svg, in the viewBox that ends at the artwork, as
+ * the inner-page hero draws it) laid faint in the band's top right corner from lg, in `primary`
+ * at a tenth: the owner's request for the logo somewhere about the section (2026-11-20). It is
+ * decorative, behind the copy and the cards, inside the screen (the layout suite fails any box
+ * past the viewport), and sized so it stays right of the sentence's measure and above the cards
+ * at every width from lg; below lg the copy could run under it, so it is not drawn there.
+ *
+ * The introduction sits on the container's left edge, like the other sections (the owner asked
+ * for the header left-aligned where the reference centres it): the eyebrow, the heading, a short
+ * primary rule, and the sentence at a readable measure (`max-w-2xl`). Inside the cards the copy
+ * is left-aligned too, which keeps the checklists readable. From lg the cards share one row and
+ * a subgrid, so the icon, the category, the two-line heading, the description, and the checklist
+ * each line up across the three cards however the description wraps, and every card uses the
+ * same padding: 32px from lg, so "Measurable progress." stays on one line, and 48px from xl,
+ * where the cards are wider. Below lg they stack in the same order, only as tall as their own
+ * text. No client-side JavaScript.
  */
 interface Props {
   /** Anchor for in-page links. */
@@ -37,29 +53,27 @@ const { id } = Astro.props;
 const titleId = `${id}-title`;
 ---
 
-<section id={id} aria-labelledby={titleId} class="relative isolate bg-neutral text-neutral-content">
+<section
+  id={id}
+  aria-labelledby={titleId}
+  class="relative isolate overflow-clip bg-neutral text-neutral-content"
+>
   {/*
-   * Decorative. object-top keeps the laptop and notebook, which sit along the top of the frame;
-   * a tall phone crops the sides and shows the dark desktop. Widths stop at the 1024px source.
-   * The wash is half `neutral`: the photograph is already near-black, and a heavier wash hid it.
+   * 24% of the viewport wide between 14rem and 26rem (the section mark's measure), held in the
+   * corner: at 1024px that is 246px, inside the 288px between the sentence's measure and the
+   * screen's edge, and 172px tall, well above the cards. Its paths take the tint set here.
    */}
-  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
-    <Picture
-      src={desk}
-      alt=""
-      formats={['avif']}
-      fallbackFormat="webp"
-      quality={80}
-      widths={[480, 768, 1024]}
-      sizes="100vw"
-      loading="lazy"
-      pictureAttributes={{ class: 'absolute inset-0 block size-full' }}
-      class="size-full object-cover object-top"
-    />
-    <div class="absolute inset-0 bg-neutral/50"></div>
-  </div>
+  <Mark
+    data-why-mark
+    class="pointer-events-none absolute top-0 right-0 -z-10 hidden h-auto w-[clamp(14rem,24vw,26rem)] text-primary/10 **:fill-current lg:block"
+    viewBox="0 225 1500 1050"
+    width="1500"
+    height="1050"
+    aria-hidden="true"
+    focusable="false"
+  />
 
-  <div class="relative mx-auto max-w-site px-6 py-16 sm:py-20 lg:px-8 lg:py-24 xl:py-28">
+  <div class="mx-auto max-w-site px-6 py-16 sm:py-20 lg:px-8 lg:py-24 xl:py-28">
     {/*
      * The shared eyebrow locks a dark colour for the light sections. Here the label is the
      * primary yellow, so it is set directly, with the same size and tracking. It, the heading,
@@ -79,8 +93,11 @@ const titleId = `${id}-title`;
 
     {/*
      * role="list": Safari drops the list role from lists styled without markers.
-     * Three columns from lg. The row gap is the space between a card's category, heading,
-     * description, and checklist, shared through the subgrid.
+     * Three columns from lg. The row gap is the space between a card's icon, category, heading,
+     * description, and checklist, shared through the subgrid, which runs through the aura
+     * wrapper into the card. The wrapper's negative margin cancels the light's padding, so the
+     * card fills its grid area exactly; `isolate` keeps the glow and the card in the wrapper's
+     * own stacking context. In forced colours the fill is dropped, so the card keeps an edge.
      */}
     <ul
       role="list"
@@ -88,40 +105,48 @@ const titleId = `${id}-title`;
     >
       {whyPillars.map((pillar) => (
         <li
-          data-why-card
-          data-accent={pillar.accent || undefined}
-          class:list={[
-            'grid min-w-0 grid-rows-[auto_auto_auto_auto] gap-5 rounded-none p-8 text-left text-base-content shadow-none sm:p-10 lg:row-span-4 lg:grid-rows-subgrid lg:gap-y-5 lg:p-8 xl:p-12',
-            pillar.accent ? 'bg-primary' : 'bg-base-100',
-          ]}
+          data-why-aura
+          class="aura aura-hover isolate -m-(--aura-padding) grid text-primary lg:row-span-5 lg:grid-rows-subgrid"
         >
-          <p class="text-xs font-bold tracking-[0.14em] uppercase sm:text-sm">{pillar.category}</p>
-          <h3 class="text-2xl leading-tight font-bold tracking-tight sm:text-3xl lg:text-2xl xl:text-[2rem] xl:leading-tight">
-            <span class="block">{pillar.title[0]}</span>{' '}
-            <span class="block">{pillar.title[1]}</span>
-          </h3>
-          <p class="text-base leading-relaxed text-pretty text-base-content/80">
-            {pillar.description}
-          </p>
-          <ul role="list" data-why-points class="grid gap-3">
-            {pillar.points.map((point) => (
-              <li class="flex items-start gap-3">
-                {/*
-                 * #32a464 is the green of the checks in the approved mockup. Not a brand
-                 * colour: daisyUI's success is too light for a white check.
-                 */}
-                <span
-                  class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[#32a464] text-base-100"
-                  aria-hidden="true"
-                >
-                  <Icon name="check" class="size-3.5" stroke-width="3" />
-                </span>
-                <span class="min-w-0 text-base leading-snug font-medium lg:text-sm xl:text-base">
-                  {point}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div
+            data-why-card
+            class="grid min-w-0 grid-rows-[auto_auto_auto_auto_auto] gap-5 rounded-lg bg-base-100 p-8 text-left text-base-content forced-colors:border sm:p-10 lg:row-span-5 lg:grid-rows-subgrid lg:gap-y-5 lg:p-8 xl:p-12"
+          >
+            {/* A little more room under the tile than between the lines of copy. */}
+            <span
+              data-why-icon
+              class="mb-1 grid size-14 place-items-center rounded-md bg-neutral text-primary"
+              aria-hidden="true"
+            >
+              <Icon name={pillar.icon} class="size-7" stroke-width="1.75" />
+            </span>
+            <p class="text-xs font-bold tracking-[0.14em] text-base-content/70 uppercase sm:text-sm">
+              {pillar.category}
+            </p>
+            <h3 class="text-2xl leading-tight font-bold tracking-tight sm:text-3xl lg:text-2xl xl:text-[2rem] xl:leading-tight">
+              <span class="block">{pillar.title[0]}</span>{' '}
+              <span class="block">{pillar.title[1]}</span>
+            </h3>
+            <p class="text-base leading-relaxed text-pretty text-base-content/80">
+              {pillar.description}
+            </p>
+            {/* The hairline is the near-black at 10%. */}
+            <ul role="list" data-why-points class="grid gap-3 border-t border-neutral/10 pt-5">
+              {pillar.points.map((point) => (
+                <li class="flex items-start gap-3">
+                  <span
+                    class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-neutral text-primary"
+                    aria-hidden="true"
+                  >
+                    <Icon name="check" class="size-3" stroke-width="3" />
+                  </span>
+                  <span class="min-w-0 text-base leading-snug font-medium lg:text-sm xl:text-base">
+                    {point}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </li>
       ))}
     </ul>

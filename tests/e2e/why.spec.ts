@@ -1,26 +1,56 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { whyPillars } from '../../src/data/site';
 
 /**
  * Home page "Why Auralink Studio?" (src/components/sections/WhyAuralink.astro), directly under the
- * services and before who we work with, after the owner's approved mockup (2026-11-19). The
- * eyebrow, one h2 with a light "Why", a short primary rule, and one sentence are left-aligned on
- * the same edge as the three cards, like the other sections; the sentence keeps a readable
- * measure and is not centred. The three `whyPillars` follow, in order. Inside each card the
- * category, heading, description, and checklist are left-aligned, with the same padding. Side
- * cards are white, the centre card is primary, all square and flat, with dark text. From lg they
- * share one row and the checklist of each starts on the same line; below that they stack.
- * Checklist marks are decorative. The desk photograph is decorative (empty alt, lazy). No link
- * or button. No client-side JavaScript.
+ * services and before who we work with. The eyebrow, one h2 with a light "Why", a short primary
+ * rule, and one sentence are left-aligned on the same edge as the three cards, like the other
+ * sections; the sentence keeps a readable measure and is not centred. The three `whyPillars`
+ * follow, in order, as cards after the "Why choose us" cards of the Troma demo, the owner's
+ * reference (2026-11-20), in this site's colours, on a flat `neutral` band with no image: all
+ * three white, with 8px corners, no shadow, and dark text, each opening with a decorative icon on
+ * a near-black tile, then the category, heading, description, and checklist, left-aligned with
+ * the same padding. The checklist marks are near-black discs with a yellow check, decorative.
+ * From lg the cards share one row and the checklist of each starts on the same line; below that
+ * they stack. Each card sits in the buttons' aura (`aura-hover`), in `primary`: unlit at rest, and
+ * under a pointer that can hover the light fades in and circles that card alone, with nothing on
+ * any card moving or changing colour, then fades out when the pointer leaves and continues from
+ * where it stopped; nothing runs on load, and under reduced motion the light stays off. The
+ * owner's mark lies faint in the band's top right corner from lg, behind the copy and the cards
+ * and inside the screen, and is not drawn below lg. No link, button, or image. No client-side
+ * JavaScript.
  */
 const EYEBROW = "How we're different";
 const HEADING = 'Why Auralink Studio?';
 const SENTENCE =
   'Thoughtful websites. Connected email journeys. A partner invested in your business.';
-/** The check green from the approved mockup, #32a464. */
-const CHECK = 'rgb(50, 164, 100)';
 
 const section = (page: Page) => page.locator('#why-auralink');
+const cards = (page: Page) => section(page).locator('[data-why-card]');
+const auras = (page: Page) => section(page).locator('[data-why-aura]');
+const mark = (page: Page) => section(page).locator('[data-why-mark]');
+const canHover = (page: Page) =>
+  page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
+
+/** The aura's own spin, not the glow copies, and how strongly the light shines. */
+const auraSpin = (aura: Locator) =>
+  aura.evaluate((el) => {
+    const spin = el.getAnimations().find((animation) => {
+      const effect = animation.effect as KeyframeEffect | null;
+      return (animation as CSSAnimation).animationName === 'aura' && !effect?.pseudoElement;
+    });
+    return {
+      playing: spin?.playState === 'running',
+      time: spin ? Number(spin.currentTime) : null,
+      strength: getComputedStyle(el).getPropertyValue('--aura-light').trim(),
+    };
+  });
+
+/** Whether each card's light is on and spinning. */
+const lit = async (page: Page) => {
+  const states = await Promise.all((await auras(page).all()).map((aura) => auraSpin(aura)));
+  return states.map((state) => state.playing && state.strength === '100%');
+};
 
 const colour = (page: Page, value: string) =>
   page.evaluate((css) => {
@@ -31,6 +61,46 @@ const colour = (page: Page, value: string) =>
     probe.remove();
     return computed;
   }, value);
+
+/** The theme colours the cards use, as the browser serialises them. */
+const palette = async (page: Page) => {
+  const [white, yellow, nearBlack] = await Promise.all([
+    colour(page, 'var(--color-base-100)'),
+    colour(page, 'var(--color-primary)'),
+    colour(page, 'var(--color-neutral)'),
+  ]);
+  return { white, yellow, nearBlack };
+};
+
+/**
+ * Each card's fill, its tile's fill and icon colour, its first mark's fill and check colour, and
+ * its text: none of which the hover changes.
+ */
+const looks = (page: Page) =>
+  cards(page).evaluateAll((items) =>
+    items.map((card) => {
+      const tile = card.querySelector<HTMLElement>('[data-why-icon]')!;
+      const mark = card.querySelector<HTMLElement>('[data-why-points] span[aria-hidden="true"]')!;
+      return {
+        fill: getComputedStyle(card).backgroundColor,
+        tile: getComputedStyle(tile).backgroundColor,
+        icon: getComputedStyle(tile.querySelector('svg')!).color,
+        mark: getComputedStyle(mark).backgroundColor,
+        check: getComputedStyle(mark.querySelector('svg')!).color,
+        text: getComputedStyle(card.querySelector('h3')!).color,
+      };
+    }),
+  );
+
+/** Each card's box, relative to the section, so scrolling a card into view changes nothing. */
+const boxes = (page: Page) =>
+  cards(page).evaluateAll((items) =>
+    items.map((card) => {
+      const origin = card.closest('section')!.getBoundingClientRect();
+      const { x, y, width, height } = card.getBoundingClientRect();
+      return [x - origin.x, y - origin.y, width, height];
+    }),
+  );
 
 test('follows the services and introduces the three pillars', async ({ page }) => {
   await page.goto('/');
@@ -55,10 +125,15 @@ test('follows the services and introduces the three pillars', async ({ page }) =
   await expect(eyebrow).toHaveCSS('text-transform', 'uppercase');
   await expect(region.getByText(SENTENCE, { exact: true })).toBeVisible();
 
-  const cards = region.locator('[data-why-card]');
-  await expect(cards).toHaveCount(whyPillars.length);
+  const items = region.locator('[data-why-card]');
+  await expect(items).toHaveCount(whyPillars.length);
   for (const [index, pillar] of whyPillars.entries()) {
-    const card = cards.nth(index);
+    const card = items.nth(index);
+    const tile = card.locator('[data-why-icon]');
+    await expect(tile, 'one decorative icon tile').toHaveAttribute('aria-hidden', 'true');
+    await expect(tile.locator('svg')).toHaveCount(1);
+    await expect(tile.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+    await expect(card.getByText(pillar.category, { exact: true })).toBeVisible();
     await expect(card.getByRole('heading', { level: 3 })).toHaveText(pillar.title.join(' '));
     await expect(card.getByText(pillar.description, { exact: true })).toBeVisible();
     await expect(card.locator('[data-why-points]').getByRole('listitem')).toHaveText([
@@ -73,26 +148,50 @@ test('follows the services and introduces the three pillars', async ({ page }) =
 
   await expect(region.getByRole('link')).toHaveCount(0);
   await expect(region.getByRole('button')).toHaveCount(0);
-  const photo = region.locator('img');
-  await expect(photo).toHaveCount(1);
-  await expect(photo).toHaveAttribute('alt', '');
-  await expect(photo).toHaveAttribute('loading', 'lazy');
+  await expect(region.locator('img, picture, video, canvas'), 'a flat band, no image').toHaveCount(
+    0,
+  );
+  const [band, nearBlack] = await Promise.all([
+    region.evaluate((el) => getComputedStyle(el).backgroundColor),
+    colour(page, 'var(--color-neutral)'),
+  ]);
+  expect(band, 'the band is the flat neutral').toBe(nearBlack);
+  await expect(mark(page), 'one decorative mark').toHaveCount(1);
+  await expect(mark(page)).toHaveAttribute('aria-hidden', 'true');
+  await expect(mark(page)).toHaveAttribute('focusable', 'false');
 });
 
-test('the centre card is yellow, the others white, and every card is flat', async ({ page }) => {
+test('every card is white, soft-cornered, and flat, with near-black tiles and marks, in an unlit aura', async ({
+  page,
+}) => {
   await page.goto('/');
-  const [white, yellow] = await Promise.all([
-    colour(page, 'var(--color-base-100)'),
-    colour(page, 'var(--color-primary)'),
-  ]);
-  const cards = section(page).locator('[data-why-card]');
-  await expect(cards.nth(0)).toHaveCSS('background-color', white);
-  await expect(cards.nth(1)).toHaveCSS('background-color', yellow);
-  await expect(cards.nth(1)).toHaveAttribute('data-accent', 'true');
-  await expect(cards.nth(2)).toHaveCSS('background-color', white);
-  for (const card of await cards.all()) {
-    await expect(card).toHaveCSS('border-radius', '0px');
+  await page.mouse.move(0, 0);
+  const { white, yellow, nearBlack } = await palette(page);
+  const seen = await looks(page);
+  expect(seen).toHaveLength(whyPillars.length);
+  for (const [index, card] of seen.entries()) {
+    const name = whyPillars[index].category;
+    expect(card.fill, `${name}: white at rest`).toBe(white);
+    expect(card.tile, `${name}: a near-black tile`).toBe(nearBlack);
+    expect(card.icon, `${name}: a yellow icon`).toBe(yellow);
+    expect(card.mark, `${name}: near-black marks`).toBe(nearBlack);
+    expect(card.check, `${name}: yellow checks`).toBe(yellow);
+  }
+  // One aura around each card, the buttons' hover policy, whose light is the primary yellow.
+  await expect(auras(page)).toHaveCount(whyPillars.length);
+  for (const aura of await auras(page).all()) {
+    await expect(aura).toHaveClass(/\baura\b/);
+    await expect(aura).toHaveClass(/\baura-hover\b/);
+    await expect(aura).toHaveCSS('color', yellow);
+    await expect(aura.locator('> [data-why-card]'), 'wrapping the card alone').toHaveCount(1);
+    const { playing, strength } = await auraSpin(aura);
+    expect(playing, 'nothing runs at rest').toBe(false);
+    expect(strength, 'unlit at rest').toBe('0%');
+  }
+  for (const card of await cards(page).all()) {
+    await expect(card).toHaveCSS('border-radius', '8px');
     await expect(card).toHaveCSS('cursor', 'auto');
+    await expect(card).toHaveCSS('border-top-width', '0px');
     const shadows = await card.evaluate((el) => {
       const value = getComputedStyle(el).boxShadow;
       return value === 'none' ? [] : value.split(/,(?![^(]*\))/);
@@ -101,8 +200,6 @@ test('the centre card is yellow, the others white, and every card is flat', asyn
       expect(shadow, 'no visible shadow').toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
     }
   }
-  const mark = section(page).locator('[data-why-points] span[aria-hidden="true"]').first();
-  await expect(mark).toHaveCSS('background-color', CHECK);
 });
 
 test('the introduction and the cards are left-aligned, on one edge', async ({ page }) => {
@@ -134,6 +231,7 @@ test('the introduction and the cards are left-aligned, on one edge', async ({ pa
       const cards = [...root.querySelectorAll<HTMLElement>('[data-why-card]')].map((card) => {
         const cardStyle = getComputedStyle(card);
         const cardEdge = card.getBoundingClientRect().left + parseFloat(cardStyle.paddingLeft);
+        const tile = card.querySelector('[data-why-icon]')!;
         const category = card.querySelector(':scope > p')!;
         const title = card.querySelector('h3')!;
         const description = card.querySelectorAll(':scope > p')[1]!;
@@ -147,6 +245,7 @@ test('the introduction and the cards are left-aligned, on one edge', async ({ pa
           ],
           align: [category, title, description, points].map((el) => getComputedStyle(el).textAlign),
           starts: [
+            tile.getBoundingClientRect().left,
             start(category),
             ...[...title.querySelectorAll('span')].map((line) => start(line)),
             start(description),
@@ -202,6 +301,7 @@ test('the introduction and the cards are left-aligned, on one edge', async ({ pa
         expect(['left', 'start'], `${width}px: card copy is left-aligned`).toContain(align);
       }
       for (const [index, part] of [
+        'icon tile',
         'category',
         'heading line',
         'heading line',
@@ -276,4 +376,178 @@ test('three equal columns from lg, stacked below, with the checklists aligned', 
   for (const card of phone.cards) {
     expect(card.lines, 'each heading line fits on a phone').toEqual([1, 1]);
   }
+});
+
+test("the owner's mark lies faint in the band's top right corner from lg, behind the copy and the cards, and inside the screen", async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.evaluate(() => document.fonts.ready);
+  const art = mark(page);
+  await expect(art).toHaveCSS('z-index', '-10');
+  await expect(art).toHaveCSS('pointer-events', 'none');
+  // The tint is the primary at a tenth, and the file's own yellow fill gives way to it.
+  await expect(art).toHaveCSS(
+    'color',
+    await colour(page, 'color-mix(in oklab, var(--color-primary) 10%, transparent)'),
+  );
+  const fills = await art
+    .locator('path')
+    .evaluateAll((paths) => paths.map((path) => getComputedStyle(path).fill));
+  expect(fills.length).toBeGreaterThan(0);
+  for (const fill of fills)
+    expect(fill, 'not the file\u2019s own yellow').not.toBe('rgb(247, 219, 21)');
+
+  for (const width of [1024, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(art, `${width}px: drawn`).toBeVisible();
+    const placed = await section(page).evaluate((root) => {
+      const art = root.querySelector('[data-why-mark]')!.getBoundingClientRect();
+      const band = root.getBoundingClientRect();
+      const sentence = root.querySelector('h2 + div + p')!.getBoundingClientRect();
+      const cards = [...root.querySelectorAll('[data-why-card]')].map((card) =>
+        card.getBoundingClientRect(),
+      );
+      return {
+        art: { left: art.left, right: art.right, top: art.top, bottom: art.bottom },
+        band: { top: band.top, right: band.right },
+        sentenceRight: sentence.right,
+        cardsTop: Math.min(...cards.map((card) => card.top)),
+        vw: document.documentElement.clientWidth,
+      };
+    });
+    expect(placed.art.right, `${width}px: inside the screen`).toBeLessThanOrEqual(placed.vw + 1);
+    expect(placed.art.right, `${width}px: against the band's right edge`).toBeCloseTo(
+      placed.band.right,
+      0,
+    );
+    expect(placed.art.top, `${width}px: at the band's top`).toBeCloseTo(placed.band.top, 0);
+    expect(placed.art.left, `${width}px: right of the sentence`).toBeGreaterThan(
+      placed.sentenceRight,
+    );
+    expect(placed.art.bottom, `${width}px: above the cards`).toBeLessThan(placed.cardsTop);
+  }
+
+  await page.setViewportSize({ width: 768, height: 900 });
+  await expect(art, 'not drawn below lg, where the copy could run under it').toBeHidden();
+});
+
+test.describe('the aura', () => {
+  test.describe('motion allowed', () => {
+    test.use({ reducedMotion: 'no-preference' });
+
+    test('under the pointer the light fades in and circles a card, and only that one, with nothing on any card moving or changing colour; it fades out when the pointer leaves and continues from where it stopped', async ({
+      page,
+    }) => {
+      await page.goto('/');
+      test.skip(!(await canHover(page)), 'Touch screens have no hover; every light stays off.');
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.evaluate(() => document.fonts.ready);
+      await page.mouse.move(0, 0);
+      const rest = await looks(page);
+      const before = await boxes(page);
+      expect(await lit(page), 'all unlit at rest').toEqual(whyPillars.map(() => false));
+
+      for (const [index, pillar] of whyPillars.entries()) {
+        await auras(page).nth(index).hover();
+        await expect
+          .poll(() => lit(page), { message: `${pillar.category} lit, every other card unlit` })
+          .toEqual(whyPillars.map((_, i) => i === index));
+        await expect
+          .poll(async () => (await auraSpin(auras(page).nth(index))).time ?? 0, {
+            message: `${pillar.category}: the light circles`,
+          })
+          .toBeGreaterThan(200);
+        expect(await looks(page), `${pillar.category}: no colour on any card changes`).toEqual(
+          rest,
+        );
+        expect(await boxes(page), `${pillar.category}: no card moves or resizes`).toEqual(before);
+        await expect(cards(page).nth(index)).toHaveCSS('cursor', 'auto');
+      }
+
+      // Leaving: the spin pauses where it is and the light fades out; the next visit resumes.
+      const last = auras(page).last();
+      const carried = (await auraSpin(last)).time ?? 0;
+      await page.mouse.move(0, 0);
+      await expect
+        .poll(async () => (await auraSpin(last)).playing, {
+          message: 'paused once the pointer leaves',
+        })
+        .toBe(false);
+      expect((await auraSpin(last)).time ?? 0, 'the spin holds its place').toBeGreaterThanOrEqual(
+        carried - 50,
+      );
+      await expect.poll(async () => (await auraSpin(last)).strength, 'fades out').toBe('0%');
+      await last.evaluate((el) => {
+        for (const animation of el.getAnimations()) {
+          if ((animation as CSSAnimation).animationName === 'aura') animation.currentTime = 2500;
+        }
+      });
+      await last.hover();
+      const resumed = (await auraSpin(last)).time ?? 0;
+      expect(resumed, 'continues from where it stopped').toBeGreaterThanOrEqual(2400);
+      expect(resumed, 'did not start over').toBeLessThan(3500);
+    });
+
+    test('the light fades through its strength over 0.4s, and nothing on the cards transitions', async ({
+      page,
+    }) => {
+      await page.goto('/');
+      for (const aura of await auras(page).all()) {
+        await expect(aura).toHaveCSS('transition-property', '--aura-light');
+        await expect(aura).toHaveCSS('transition-duration', '0.4s');
+      }
+      for (const card of await cards(page).all()) {
+        await expect(card).toHaveCSS('transition-duration', '0s');
+      }
+    });
+
+    test('nothing runs or fades in on load, even as the stylesheet arrives', async ({ page }) => {
+      // WebKit can style the page before the stylesheet applies; a plain transition would then
+      // fade the lights in from the browser's defaults (`aura-hover` in global.css).
+      await page.addInitScript(() => {
+        const runs: string[] = [];
+        Object.assign(window, { whyRuns: runs });
+        document.addEventListener(
+          'transitionrun',
+          (event) => {
+            if ((event.target as Element).closest('[data-why-aura]')) {
+              runs.push(event.propertyName);
+            }
+          },
+          true,
+        );
+      });
+      await page.goto('/');
+      await page.evaluate(
+        () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+      );
+      const runs = await page.evaluate(() => (window as unknown as { whyRuns: string[] }).whyRuns);
+      expect(runs, 'no transition on load').toEqual([]);
+      expect(await lit(page), 'no light on load').toEqual(whyPillars.map(() => false));
+    });
+  });
+
+  test.describe('reduced motion', () => {
+    test.use({ reducedMotion: 'reduce' });
+
+    test('the light stays off, and nothing moves', async ({ page }) => {
+      await page.goto('/');
+      for (const aura of await auras(page).all()) {
+        await expect(aura).toHaveCSS('animation-name', 'none');
+      }
+      if (await canHover(page)) {
+        await page.mouse.move(0, 0);
+        const before = await boxes(page);
+        await auras(page).first().hover();
+        await page.evaluate(
+          () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+        );
+        expect((await auraSpin(auras(page).first())).strength, 'unlit under the pointer').toBe(
+          '0%',
+        );
+        expect(await boxes(page), 'no card moves').toEqual(before);
+      }
+    });
+  });
 });

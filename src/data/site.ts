@@ -30,6 +30,14 @@ export const site = {
  */
 export const contactDetails: { readonly email?: string } = {};
 
+/**
+ * The person in the home introduction's portrait (src/components/sections/AboutIntro.astro),
+ * named on the card over the photo. Team members and roles are not yet verified
+ * (docs/content-strategy.md), so both stay unset until the owner confirms them, and the card
+ * renders only once `name` is set. `role` is the line under the name ("Owner, developer").
+ */
+export const owner: { readonly name?: string; readonly role?: string } = {};
+
 /** Service catalogue. Slugs match the `serviceSlug` enum in src/content.config.ts. */
 export const services = [
   { slug: 'static-websites', name: 'Custom static websites', group: 'website-development' },
@@ -114,6 +122,49 @@ export const primaryCta: NavItem = { label: 'Book a free call', href: '/contact/
  * The home introduction's call to action, under its text, links to the built About page.
  */
 export const aboutCta: NavItem = { label: 'Learn more', href: '/about/' };
+
+/** One of the six points under the home introduction's paragraph (AboutIntro.astro). */
+export interface AboutHighlight {
+  /** Short enough for one line beside its mark. */
+  readonly title: string;
+  /** One sentence. */
+  readonly description: string;
+}
+
+/**
+ * The six points the home introduction makes after its paragraph (the owner's request,
+ * 2026-11-20: a section like the reference's "What we offer", with the owner's own facts). Each
+ * restates approved copy in one line: the pillars in `whyPillars` and the service cards'
+ * sentences. The wording is a proposal awaiting the owner's confirmation. None states a price,
+ * a client, a statistic, a result, or a guarantee; prices belong only on the pricing page.
+ */
+export const aboutHighlights: readonly AboutHighlight[] = [
+  {
+    title: 'Direct communication',
+    description: 'Work directly with the person planning, designing, and building your project.',
+  },
+  {
+    title: 'Clear scope and timelines',
+    description: 'You know what is included and when to expect it before the work begins.',
+  },
+  {
+    title: 'Web and email together',
+    description: 'Your website and email marketing planned as one consistent customer journey.',
+  },
+  {
+    title: 'Built for search and AI',
+    description:
+      'Useful content and technical foundations that help search and answer engines understand your website.',
+  },
+  {
+    title: 'Testing and reporting',
+    description: 'Decisions guided by testing and performance tracking, not guesswork.',
+  },
+  {
+    title: 'Support beyond launch',
+    description: 'Practical, ongoing improvements after your website goes live.',
+  },
+];
 
 /**
  * The home services introduction links to the services hub, which reuses the approved catalogue.
@@ -409,8 +460,9 @@ export const featuredProjects: readonly FeaturedProject[] = [
 
 /**
  * One pillar in the home page's "Why Auralink Studio?" section
- * (src/components/sections/WhyAuralink.astro). Copy is the owner's, from the approved mockup of
- * 2026-11-19. It describes how the studio works. It names no client, price, statistic, or result.
+ * (src/components/sections/WhyAuralink.astro) and the About page's "How we work"
+ * (AboutPrinciples.astro). Copy is the owner's, from the approved mockup of 2026-11-19. It
+ * describes how the studio works. It names no client, price, statistic, or result.
  */
 export interface WhyPillar {
   readonly id: string;
@@ -419,11 +471,15 @@ export interface WhyPillar {
   readonly title: readonly [string, string];
   readonly description: string;
   readonly points: readonly string[];
-  /** The centre card, on the primary yellow. The other two stay white. */
-  readonly accent?: boolean;
+  /** Decorative, at the top of the home card; the category and title carry the meaning. */
+  readonly icon: IconName;
 }
 
-/** The three pillars, in display order: white, yellow, white. */
+/**
+ * The three pillars, in display order. The home cards are alike (the owner's request of
+ * 2026-11-20 for cards after the reference's "Why choose us"); the yellow centre card of the
+ * 2026-11-19 mockup went with that change.
+ */
 export const whyPillars: readonly WhyPillar[] = [
   {
     id: 'personal-partnership',
@@ -431,6 +487,7 @@ export const whyPillars: readonly WhyPillar[] = [
     title: ['Direct access.', 'Clear answers.'],
     description: 'Work directly with the person planning, designing, and building your project.',
     points: ['Direct communication', 'Clear scope and timelines', 'Support beyond launch'],
+    icon: 'handshake',
   },
   {
     id: 'connected-expertise',
@@ -442,7 +499,7 @@ export const whyPillars: readonly WhyPillar[] = [
       'Email campaigns and automation',
       'Consistent brand experience',
     ],
-    accent: true,
+    icon: 'link',
   },
   {
     id: 'purposeful-execution',
@@ -455,6 +512,7 @@ export const whyPillars: readonly WhyPillar[] = [
       'Testing and performance tracking',
       'Practical, ongoing improvements',
     ],
+    icon: 'target',
   },
 ];
 

@@ -15,12 +15,14 @@ import Factory from '../assets/icons/factory.svg';
 import FilePenLine from '../assets/icons/file-pen-line.svg';
 import Globe from '../assets/icons/globe.svg';
 import GraduationCap from '../assets/icons/graduation-cap.svg';
+import Handshake from '../assets/icons/handshake.svg';
 import HardHat from '../assets/icons/hard-hat.svg';
 import HeartHandshake from '../assets/icons/heart-handshake.svg';
 import House from '../assets/icons/house.svg';
 import KeyRound from '../assets/icons/key-round.svg';
 import LayoutGrid from '../assets/icons/layout-grid.svg';
 import Leaf from '../assets/icons/leaf.svg';
+import Link from '../assets/icons/link.svg';
 import ListFilter from '../assets/icons/list-filter.svg';
 import Lock from '../assets/icons/lock.svg';
 import Mail from '../assets/icons/mail.svg';
@@ -39,6 +41,7 @@ import Search from '../assets/icons/search.svg';
 import ShoppingBag from '../assets/icons/shopping-bag.svg';
 import SlidersHorizontal from '../assets/icons/sliders-horizontal.svg';
 import Sparkles from '../assets/icons/sparkles.svg';
+import Target from '../assets/icons/target.svg';
 import Tooth from '../assets/icons/tooth.svg';
 import TrendingUp from '../assets/icons/trending-up.svg';
 import UserPlus from '../assets/icons/user-plus.svg';
@@ -75,12 +78,14 @@ export const icons = {
   'file-pen-line': FilePenLine,
   globe: Globe,
   'graduation-cap': GraduationCap,
+  handshake: Handshake,
   'hard-hat': HardHat,
   'heart-handshake': HeartHandshake,
   house: House,
   'key-round': KeyRound,
   'layout-grid': LayoutGrid,
   leaf: Leaf,
+  link: Link,
   'list-filter': ListFilter,
   lock: Lock,
   mail: Mail,
@@ -99,6 +104,7 @@ export const icons = {
   'shopping-bag': ShoppingBag,
   'sliders-horizontal': SlidersHorizontal,
   sparkles: Sparkles,
+  target: Target,
   tooth: Tooth,
   'trending-up': TrendingUp,
   'user-plus': UserPlus,

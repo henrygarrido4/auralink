@@ -1,23 +1,33 @@
 ---
 import { Picture } from 'astro:assets';
 import photo from '@/assets/about/business-owner-laptop.webp';
+import Mark from '@/assets/aura-hero.svg';
 import Button from '@/components/ui/Button.astro';
 import Eyebrow from '@/components/ui/Eyebrow.astro';
-import { aboutCta, site } from '@/data/site';
+import Icon from '@/components/ui/Icon.astro';
+import { aboutCta, aboutHighlights, owner, site } from '@/data/site';
 
 /**
  * Home page introduction, after the process and the target of the hero's "About us" button: who
  * Auralink Studio works with and what it brings together, beside the portrait the owner supplied.
- * Laid out after the "Space for Freelancers and Creative People" section of the Hub2B
- * reference: from lg the photo sits left on a frame in the primary colour, offset down and to the
- * right, with the copy beside it; below lg the copy comes first and the photo follows. Where
- * Hub2B's copy ends with its large "Read more" button, ours ends with the primary call to learn
- * more (`aboutCta`), a placeholder until the About page ships. Nothing moves on its own. That
- * button's aura fades and circles under the pointer or keyboard focus, and resumes where it
- * stopped. There is no client-side JavaScript.
+ * The copy is laid out after the "What we offer" section the owner gave as the reference (a
+ * screenshot, 2026-11-20): from lg it takes the wider column, the eyebrow, the heading, the rule,
+ * the owner's paragraph, six points in two columns (`aboutHighlights`, each a mark, a title, and
+ * one sentence), and the primary call to learn more (`aboutCta`). The photo keeps the treatment
+ * the owner preferred (2026-11-20), after the "Space for Freelancers and Creative People" section
+ * of the Hub2B reference: from lg it sits left on a frame in the primary colour, offset down and
+ * to the right; below lg the copy comes first and the photo follows. The reference's price and
+ * guarantee have no place here: prices belong only on the pricing page, and the points restate
+ * approved copy. Nothing moves on its own. The button's aura fades and circles under the pointer
+ * or keyboard focus, and resumes where it stopped. There is no client-side JavaScript.
+ *
+ * The name card over the photo's lower right corner is the reference's, in this site's colours:
+ * the name and the role on white, a hairline, and the owner's mark on a near-black tile. It
+ * renders only once `owner.name` is set in src/data/site.ts, because team members and roles are
+ * not yet verified (docs/content-strategy.md). Until then the portrait stands alone, as before.
  *
  * The photo is the portrait the owner supplied on 2026-11-19, recorded in src/assets/CREDITS.md.
- * It is not captioned or named, and it is not presented as a client or a testimonial.
+ * It is not captioned beyond that card, and it is not presented as a client or a testimonial.
  */
 interface Props {
   /** Anchor for in-page links, such as the hero's "About us" button. */
@@ -30,8 +40,8 @@ const titleId = `${id}-title`;
 
 <section id={id} aria-labelledby={titleId}>
   <div class="mx-auto max-w-site px-6 pt-16 pb-20 sm:pt-20 sm:pb-24 lg:px-8 lg:pt-24 lg:pb-32">
-    {/* One readable column below lg, aligned with the hero's copy; two equal columns from lg. */}
-    <div class="grid max-w-2xl gap-12 lg:max-w-none lg:grid-cols-2 lg:items-center lg:gap-16 xl:gap-20">
+    {/* One readable column below lg, aligned with the hero's copy; five and seven twelfths from lg. */}
+    <div class="grid max-w-2xl gap-12 lg:max-w-none lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-16 xl:gap-20">
       <div class="min-w-0">
         <Eyebrow>About Auralink Studio</Eyebrow>
         <h2
@@ -48,11 +58,39 @@ const titleId = `${id}-title`;
           email, and search strategy together. From getting discovered to keeping customers
           connected, we build thoughtful digital experiences around your business goals.
         </p>
+
         {/*
-         * Hub2B's spacing and size: 32px under the text on phones and 48px from md, with an 18px
-         * label (lg). The primary's aura shines in this text colour: dark, so it shows on the white
-         * page. The hidden words name the destination for screen readers and search engines, which
-         * "Learn more" alone does not, and the name still starts with the visible label.
+         * The six points, two columns from sm. Each opens with the check disc the "Why Auralink
+         * Studio?" cards use (near-black, a yellow check), which is decorative: the title carries
+         * the meaning. role="list": Safari drops the list role from lists styled without markers.
+         */}
+        <ul role="list" data-about-points class="mt-8 grid gap-x-8 gap-y-6 sm:mt-10 sm:grid-cols-2">
+          {aboutHighlights.map((point) => (
+            <li data-about-point class="flex min-w-0 items-start gap-4">
+              <span
+                class="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-neutral text-primary"
+                aria-hidden="true"
+              >
+                <Icon name="check" class="size-3.5" stroke-width="3" />
+              </span>
+              <div class="min-w-0">
+                <h3 class="text-lg leading-snug font-bold tracking-tight text-base-content">
+                  {point.title}
+                </h3>
+                <p class="mt-1 text-base leading-relaxed text-pretty text-base-content/70">
+                  {point.description}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/*
+         * The reference's spacing and size: 32px under the points on phones and 48px from md, with
+         * an 18px label (lg). The primary's aura shines in this text colour: dark, so it shows on
+         * the white page. The hidden words name the destination for screen readers and search
+         * engines, which "Learn more" alone does not, and the name still starts with the visible
+         * label.
          */}
         <div class="mt-8 text-base-content md:mt-12">
           <Button
@@ -69,21 +107,23 @@ const titleId = `${id}-title`;
 
       {/*
        * The frame is the photo's size, shifted down and right by the padding that makes room for
-       * it, and paints under the photo. The photo has its own positioned box, so a control placed
-       * over it later (the planned video, see docs/architecture.md) lines up with its edges.
+       * it, and paints under the photo. The photo has its own positioned box, so the name card,
+       * and a control placed over it later (the planned video, see docs/architecture.md), line up
+       * with its edges.
        */}
       <div class="relative min-w-0 pr-4 pb-4 sm:pr-6 sm:pb-6 lg:order-first lg:pr-10 lg:pb-10 xl:pr-12 xl:pb-12">
         <div
+          data-photo-frame
           class="absolute top-4 right-0 bottom-0 left-4 border-6 border-primary sm:top-6 sm:left-6 lg:top-10 lg:left-10 lg:border-8 xl:top-12 xl:left-12"
           aria-hidden="true"
         ></div>
         <div class="relative">
           {/*
            * `sizes` is the photo's rendered width at each breakpoint, worked out from the container
-           * padding, column gap, and frame padding above: change it whenever they change. Widths
-           * stop at the 1086px source. The file is 1086×1168: 280px of empty wall is cropped
-           * from the top. Quality 80: the image service's default AVIF quality is 50,
-           * which softened this portrait.
+           * padding, the column split and gap, and the frame padding above: change it whenever they
+           * change. The container is 88rem at most, reached at 1408px. Widths stop at the 1086px
+           * source. The file is 1086×1168: 280px of empty wall is cropped from the top. Quality 80:
+           * the image service's default AVIF quality is 50, which softened this portrait.
            */}
           <Picture
             src={photo}
@@ -92,9 +132,37 @@ const titleId = `${id}-title`;
             fallbackFormat="webp"
             quality={80}
             widths={[480, 640, 800, 1086]}
-            sizes="(min-width: 1408px) 584px, (min-width: 1280px) calc(50vw - 120px), (min-width: 1024px) calc(50vw - 104px), (min-width: 720px) 648px, (min-width: 640px) calc(100vw - 72px), calc(100vw - 64px)"
+            sizes="(min-width: 1408px) 479px, (min-width: 1280px) calc((100vw - 144px) * 5 / 12 - 48px), (min-width: 1024px) calc((100vw - 128px) * 5 / 12 - 40px), (min-width: 720px) 648px, (min-width: 640px) calc(100vw - 72px), calc(100vw - 64px)"
             class="block h-auto w-full"
           />
+          {owner.name && (
+            <div
+              data-owner-card
+              class="absolute right-4 bottom-4 flex max-w-[calc(100%-2rem)] items-center gap-4 rounded-lg bg-base-100 p-4 pr-5 text-base-content shadow-md sm:right-6 sm:bottom-6"
+            >
+              <div class="min-w-0">
+                <p class="font-(family-name:--font-headers) text-lg leading-tight font-bold tracking-tight uppercase">
+                  {owner.name}
+                </p>
+                {owner.role && (
+                  <p class="mt-0.5 text-sm leading-snug text-base-content/70">{owner.role}</p>
+                )}
+              </div>
+              <span class="h-10 w-px shrink-0 bg-base-300" aria-hidden="true"></span>
+              <span
+                class="grid size-11 shrink-0 place-items-center rounded-md bg-neutral"
+                aria-hidden="true"
+              >
+                <Mark
+                  class="h-6 w-auto"
+                  viewBox="0 225 1500 1050"
+                  width="1500"
+                  height="1050"
+                  focusable="false"
+                />
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
