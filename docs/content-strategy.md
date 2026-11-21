@@ -57,9 +57,7 @@ Pages are built when their content is ready and pass the quality checks. Do not 
 
 ## Navigation plan
 
-Primary (the navbar, `src/components/sections/Navbar.astro`): the logo, five links, and a "Book a free call" button, as the owner asked on 2026-11-16. The entries live in `primaryNav` and `primaryCta` in `src/data/site.ts`. An entry becomes a link only when its page exists and its `href` is added there; until then it renders as a label, so the site never links to a missing page.
-
-Below `lg`, where the navbar's button moves into the menu, the same button also stays at the bottom of the screen on every page (`src/components/sections/StickyCta.astro`), as the owner asked on 2026-11-18. It reads `primaryCta` too, so it becomes a link with the others.
+Primary (the navbar, `src/components/sections/Navbar.astro`): the logo, five links, and a "Book a free call" button, as the owner asked on 2026-11-16. The entries live in `primaryNav` and `primaryCta` in `src/data/site.ts`. An entry becomes a link only when its page exists and its `href` is added there; until then it renders as a label, so the site never links to a missing page. Below `lg` that button lives in the menu. The bar that kept a second copy at the bottom of the screen was removed on 2026-11-20.
 
 Proposed, awaiting the owner's confirmation: the five labels (Home, Services, Work, Insights, About) and `/contact/` as the target of the button. Services may become a menu of the nine service pages, which shipped on 2026-11-20; for now it stays one link to the hub, and the navbar marks it as the current section on every service page (and Industries on every industry page).
 

@@ -2,7 +2,6 @@
 import { Font } from 'astro:assets';
 import '../styles/global.css';
 import Navbar from '../components/sections/Navbar.astro';
-import StickyCta from '../components/sections/StickyCta.astro';
 import ContactBanner from '../components/sections/ContactBanner.astro';
 import SiteFooter from '../components/sections/SiteFooter.astro';
 import { site } from '../data/site';
@@ -85,6 +84,5 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : und
     <slot name="footer">
       <SiteFooter />
     </slot>
-    <StickyCta />
   </body>
 </html>

@@ -30,7 +30,6 @@ Reference: `docs/quality-checks.md`
    - `rendering.spec.ts`: a missing asset, a route that should 404, or a broken internal link.
    - `motion.spec.ts`: an animation or smooth scroll ignoring `prefers-reduced-motion`.
    - `navigation.spec.ts`: the navbar no longer matches `primaryNav` or `primaryCta` in `src/data/site.ts`, or the menu dialog below `lg` stopped opening, closing, or returning focus.
-   - `sticky-cta.spec.ts`: below `lg` the call to action bar left the bottom of the screen, covers the end of the page, or hides focused content; its height and `scroll-padding-bottom` in `src/styles/global.css` must match.
    - `perf-audit`: a budget in `lighthouse.budgets.json` exceeded; read `reports/lighthouse/latest/summary.md`.
    - `a11y.spec.ts`: axe violation with rule id and selector; fix the markup.
    - Browser missing: `npx playwright install chromium firefox webkit`.

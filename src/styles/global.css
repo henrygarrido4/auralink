@@ -1020,16 +1020,6 @@
     scroll-padding-top: calc(var(--spacing) * 20);
   }
 
-  /*
-   * Below lg the call to action sticks to the bottom of the screen (StickyCta.astro): 4.5rem, its
-   * large button plus py-3. Focused content scrolls clear of it, as it does of the navbar.
-   */
-  @media (width < 64rem) {
-    html {
-      scroll-padding-bottom: calc(var(--spacing) * 18);
-    }
-  }
-
   /* Section titles are Mukta. Smaller headings share it through --font-subheaders. */
   h1,
   h2 {
