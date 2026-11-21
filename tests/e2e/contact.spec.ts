@@ -18,7 +18,8 @@ import { builtRoutes } from './routes';
  * and they stand in for Calendly: the widget script is answered with a stub that does what the
  * real one does as far as the page can see (an iframe appended to the container, whose height the
  * script then sets from the booking page), or refused, and the booking page with a blank
- * document. No appointment and no inquiry is ever made.
+ * document. No appointment and no inquiry is ever made; a booking's confirmation, the message
+ * Calendly's page posts to the window, is posted from the stubbed frame itself.
  */
 
 /** WebKit mirrors Safari: plain Tab skips links; Option+Tab (Alt+Tab) reaches them. */
@@ -650,6 +651,60 @@ test('a message that finishes sending behind the booking tab moves no focus and 
   await expect(success(page)).toBeVisible();
   await expect(page.locator('[data-inquiry-success]')).toContainText('Thanks, Jamie.');
   await expect(form(page)).toBeHidden();
+});
+
+test('an accepted message and a booked call each signal one lead to Tag Manager, and nothing else does', async ({
+  page,
+}) => {
+  /** The leads on `dataLayer`, as the container reads them (src/lib/lead-tracking.ts). */
+  const leads = () =>
+    page.evaluate(() =>
+      ((window as unknown as { dataLayer?: unknown[] }).dataLayer ?? []).filter(
+        (entry) => (entry as { event?: unknown } | null)?.event === 'generate_lead',
+      ),
+    );
+  await page.goto(contactRoutes.sendMessage);
+  expect(await leads(), 'no lead on arrival').toEqual([]);
+
+  // A refused send is no lead.
+  await answerWith(page, 500);
+  await fillMessage(page);
+  await send(page).click();
+  await expect(page.getByRole('alert')).toBeVisible();
+  expect(await leads(), 'no lead from a failed send').toEqual([]);
+
+  // An accepted one is, once: its source, and nothing the visitor typed.
+  await page.unroute(ENDPOINT);
+  await answerWith(page, 200);
+  await send(page).click();
+  await expect(success(page)).toBeVisible();
+  const fromForm = { event: 'generate_lead', lead_source: 'inquiry_form' };
+  expect(await leads()).toEqual([fromForm]);
+
+  // The booking. The same message from the page's own origin is not Calendly's, and is ignored;
+  // a second message from the same source follows it, so by then the first has been dispatched.
+  await bookTab(page).click();
+  await expect(embed(page)).toHaveAttribute('data-booking-state', 'ready');
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        window.addEventListener('message', (e) => e.data === 'settled' && resolve());
+        window.postMessage({ event: 'calendly.event_scheduled', payload: {} }, '*');
+        window.postMessage('settled', '*');
+      }),
+  );
+  expect(await leads(), 'a message from another origin is not a booking').toEqual([fromForm]);
+  // From Calendly's frame, in the order the booking page sends them: a time chosen is not yet a
+  // lead; the confirmation is, once.
+  const calendly = page.frame({ url: /^https:\/\/calendly\.com\// });
+  expect(calendly, 'the booking page is framed from Calendly').toBeTruthy();
+  const post = (name: string) =>
+    calendly!.evaluate((event) => parent.postMessage({ event, payload: {} }, '*'), name);
+  await post('calendly.date_and_time_selected');
+  await post('calendly.event_scheduled');
+  await expect
+    .poll(leads)
+    .toEqual([fromForm, { event: 'generate_lead', lead_source: 'discovery_call' }]);
 });
 
 test('the service pills work from the keyboard and show focus and choice', async ({

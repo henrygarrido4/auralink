@@ -14,10 +14,14 @@
  * and the honeypot it filters spam by. While it sends, the button says so (`data-inquiry-when`
  * swaps its label) and further submits are ignored. When Netlify answers, the form gives way to
  * the confirmation in the same card, which takes focus and names the visitor and the address a
- * reply would go to; its button brings an empty form back. When the request fails (no connection,
- * or an error from the server) an alert appears above the button and takes focus, and nothing the
- * visitor typed is lost. A visually hidden live region announces each step. Nothing is logged.
+ * reply would go to; its button brings an empty form back, and Tag Manager is told of the lead
+ * (`trackLead`, src/lib/lead-tracking.ts), with nothing the visitor typed. When the request fails
+ * (no connection, or an error from the server) an alert appears above the button and takes
+ * focus, nothing the visitor typed is lost, and no lead is signalled. A visually hidden live
+ * region announces each step. Nothing is logged.
  */
+
+import { trackLead } from './lead-tracking';
 
 /** Where the form is posted. Netlify accepts a form at any path of the site that exists. */
 const ENDPOINT = '/';
@@ -111,6 +115,7 @@ function enhance(form: HTMLFormElement): void {
     success.hidden = false;
     success.focus();
     announce('Your message was sent.');
+    trackLead('inquiry_form');
   };
 
   const failed = () => {

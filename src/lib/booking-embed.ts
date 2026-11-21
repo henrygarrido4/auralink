@@ -31,11 +31,20 @@
  * say): the placeholder stays, says so, and keeps the link, which opens the same event on
  * Calendly's site, so booking is never further than one link away; should the scheduler still
  * arrive, it takes over. Without this script the placeholder shows its first words and the link.
- * Nothing is logged, and nothing here reads what the visitor enters in the scheduler.
+ *
+ * A booking is a lead. Calendly's page posts `calendly.event_scheduled` to this window from its
+ * origin once the call is booked (the last of its documented events), and Tag Manager is told
+ * (`trackLead`, src/lib/lead-tracking.ts). The message carries the event's and the invitee's
+ * Calendly addresses; neither is read or passed on. Nothing is logged, and nothing here reads
+ * what the visitor enters in the scheduler.
  */
+
+import { trackLead } from './lead-tracking';
 
 const SCRIPT_SRC = 'https://assets.calendly.com/assets/external/widget.js';
 const CALENDLY_ORIGIN = 'https://calendly.com';
+/** The message Calendly posts once a call is booked and its confirmation shows. */
+const BOOKED = 'calendly.event_scheduled';
 /** How long the scheduler may take before the placeholder offers the link as the way forward. */
 const PATIENCE = 20_000;
 
@@ -155,7 +164,9 @@ function enhance(embed: HTMLElement): void {
   window.addEventListener('message', (event: MessageEvent<{ event?: unknown }>) => {
     if (event.origin !== CALENDLY_ORIGIN) return;
     const name = event.data?.event;
-    if (typeof name === 'string' && name.startsWith('calendly.')) ready();
+    if (typeof name !== 'string' || !name.startsWith('calendly.')) return;
+    ready();
+    if (name === BOOKED) trackLead('discovery_call');
   });
 
   /** Calendly's script sizes the container to the booking page: the page has rendered. */
