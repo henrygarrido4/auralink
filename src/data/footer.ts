@@ -29,7 +29,7 @@ export const footerIndustries: readonly NavItem[] = industries.map((industry) =>
   href: industryHref(industry.name),
 }));
 
-/** Blog deliberately stays a label until editorial content is ready to publish. */
+/** The navbar's links, then Contact. Blog is not listed (owner, 2026-11-21). */
 export const footerCompany: readonly NavItem[] = [
   ...primaryNav,
   { label: 'Contact', href: '/contact/' },

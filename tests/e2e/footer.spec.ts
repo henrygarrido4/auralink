@@ -80,11 +80,9 @@ test('closing contact banner is separate from the site footer', async ({ page })
   await expect(
     footer.getByRole('navigation', { name: 'Footer industries' }).getByRole('link'),
   ).toHaveCount(footerIndustries.length);
-  await expect(
-    footer
-      .getByRole('navigation', { name: 'Footer company' })
-      .getByRole('link', { name: 'Blog', exact: true }),
-  ).toHaveCount(0);
+  await expect(footer.getByRole('navigation', { name: 'Footer company' })).not.toContainText(
+    'Blog',
+  );
   await banner.screenshot({
     path: `reports/screenshots/contact-banner-${test.info().project.name}.png`,
   });

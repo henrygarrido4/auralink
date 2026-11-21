@@ -182,7 +182,7 @@ Locked selected work sites: a project's site may ask visitors for a password. On
 
 `BaseLayout` now renders a separate `ContactBanner` at the end of `main`, then `SiteFooter` through its default footer slot. Set `showContactBanner={false}` on inquiry and utility pages. The footer uses shared catalogues in `src/data/footer.ts`, which derive service and industry links from `src/data/site.ts` and, since 2026-11-20, point each at its detail page (the card's `href`, the industry page matched by name) rather than at a fragment on the hub. Do not duplicate the catalogues in markup. The hub pages keep their stable fragments for in-page links.
 
-The navigation targets Services, Industries, and About hub pages; the inquiry action points to `/contact/`. Blog is intentionally a non-link until editorial content is ready. This supersedes the earlier deferred About, contact, service-hub, and footer notes. Individual service pages and final legal/privacy copy are still separate work.
+The navigation targets Home, Services, Industries, Pricing, and About; the inquiry action points to `/contact/`. Blog left the navbar and the footer on 2026-11-21; `/blog/` stays planned until editorial content is ready. This supersedes the earlier deferred About, contact, service-hub, and footer notes. Individual service pages and final legal/privacy copy are still separate work.
 
 Enable Netlify form detection and check a deployed project-inquiry submission before launch. Static local preview does not process form submissions. No deployment was made as part of preparing this local implementation.
 

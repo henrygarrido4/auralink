@@ -153,6 +153,8 @@ export interface NavItem {
  * Navbar links, in display order. Add an entry's `href` when its page ships
  * (planned paths are listed above), so the site never links to a missing page. Pricing joined
  * the bar with its page (the owner's brief, 2026-11-20), after the two hubs and before About.
+ * Blog left the bar and the footer on 2026-11-21; `/blog/` stays in `plannedRoutes` until
+ * editorial content is ready to publish.
  */
 export const primaryNav: readonly NavItem[] = [
   { label: 'Home', href: '/' },
@@ -160,7 +162,6 @@ export const primaryNav: readonly NavItem[] = [
   { label: 'Industries', href: '/industries/' },
   { label: 'Pricing', href: '/pricing/' },
   { label: 'About', href: '/about/' },
-  { label: 'Blog' },
 ];
 
 /**
