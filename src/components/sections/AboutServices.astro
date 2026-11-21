@@ -7,20 +7,24 @@ import type { IconName } from '@/lib/icons';
 import { serviceCards, services, servicesCta, type ServiceSlug } from '@/data/site';
 
 /**
- * What the studio does, on the About page: the verified service catalogue (`services` in
- * src/data/site.ts) in its three groups, one white card each on the grey band, after the "How we
- * work" cards of uprig.net/about, the owner's reference for this page (2026-11-20). Each card
- * has the group's icon on a near-black tile (the pathway cards of the detail pages), its name, a
- * sentence, and the group's services as links to the pages that present them: the home service
- * card that lists each service, which the industry pages' recommendations lead to as well. A
- * service whose card has no page yet is plain text, never an empty link. The secondary button
- * after the cards is the services hub's own call (`servicesCta`), where the three services that
- * stay off the home page are listed too.
+ * What the studio does, on the About page: three cards on the grey band, one white card each,
+ * after the "How we work" cards of uprig.net/about, the owner's reference for this page
+ * (2026-11-20). Each card has the group's icon on a near-black tile (the pathway cards of the
+ * detail pages), its name, a sentence, and its services as a list opened by the logo's pixel.
+ * Website development and Search visibility draw their services from the verified catalogue
+ * (`services` in src/data/site.ts) as links to the pages that present them: the home service card
+ * that lists each service, which the industry pages' recommendations lead to as well. The Digital
+ * advertising card lists its own services (owner's brief, 2026-11-21); they have no page yet, so
+ * they show as plain text, never an empty link. Email marketing stays an optional add-on offered
+ * through the services hub rather than shown here, so its catalogue services are not a card below.
+ * The secondary button after the cards is the services hub's own call (`servicesCta`), where every
+ * service, email marketing included, is listed.
  *
- * The group names and sentences are proposals composed from the owner's service-card sentences,
- * and the heading and introduction paraphrase the home services heading ("Start with one service.
- * Connect the rest."). The service names are the catalogue's, as written. Nothing here states a
- * client, price, statistic, or result. Nothing moves, and no colour fades. No JavaScript.
+ * The group names and sentences are proposals composed from the owner's service-card sentences;
+ * the heading and introduction position website development as the primary service with search
+ * visibility and digital advertising as complementary (owner's brief, 2026-11-21). The catalogue
+ * service names are the catalogue's, as written. Nothing here states a client, price, statistic,
+ * or result. Nothing moves, and no colour fades. No JavaScript.
  */
 interface Props {
   /** Anchor for in-page links and the h2's id. */
@@ -35,14 +39,20 @@ const titleId = `${id}-title`;
 type ServiceGroup = (typeof services)[number]['group'];
 
 interface Group {
-  readonly id: ServiceGroup;
+  /** A catalogue group whose services this card lists, or `advertising`, which brings its own. */
+  readonly id: ServiceGroup | 'advertising';
   readonly title: string;
   readonly text: string;
   /** Decorative; the title carries the meaning. */
   readonly icon: IconName;
+  /**
+   * The services this card lists, for a card not driven by the catalogue. Each has no page yet, so
+   * it shows as plain text, never an empty link.
+   */
+  readonly links?: readonly string[];
 }
 
-/** The catalogue's three groups, in the catalogue's order. */
+/** The three cards, in order: website development leads, then advertising, then search. */
 const groups: readonly Group[] = [
   {
     id: 'website-development',
@@ -51,10 +61,11 @@ const groups: readonly Group[] = [
     icon: 'code-xml',
   },
   {
-    id: 'email',
-    title: 'Email marketing',
-    text: 'Branded emails and automated customer journeys that keep your audience connected after the first visit.',
-    icon: 'mail-clock',
+    id: 'advertising',
+    title: 'Digital advertising',
+    text: 'Reach more potential customers with targeted Google and Meta advertising campaigns that bring the right people to your website and encourage them to take action.',
+    icon: 'target',
+    links: ['Google Ads management', 'Meta (Facebook & Instagram) advertising'],
   },
   {
     id: 'search-visibility',
@@ -64,9 +75,19 @@ const groups: readonly Group[] = [
   },
 ];
 
-/* A catalogue service outside these groups would be left out of the page: fail the build instead. */
+/**
+ * Catalogue groups this section does not present as a card. Email marketing stays an optional
+ * add-on, offered through the services hub rather than shown here (owner's brief, 2026-11-21).
+ */
+const omittedGroups: readonly ServiceGroup[] = ['email'];
+
+/* A catalogue service that is neither shown here nor deliberately omitted would be left out of the
+   page silently: fail the build instead. */
 for (const service of services) {
-  if (!groups.some((group) => group.id === service.group)) {
+  if (
+    !omittedGroups.includes(service.group) &&
+    !groups.some((group) => group.id === service.group)
+  ) {
     throw new Error(`AboutServices: the service "${service.slug}" belongs to no group shown here.`);
   }
 }
@@ -74,14 +95,28 @@ for (const service of services) {
 /** The page that presents a catalogue service: the home card that lists it, once that card has one. */
 const destination = (slug: ServiceSlug) =>
   serviceCards.find((card) => card.services.includes(slug))?.href;
+
+interface CardLink {
+  readonly name: string;
+  /** The page that presents it, when one exists; otherwise the name shows as plain text. */
+  readonly href?: string;
+}
+
+/** A card's links: its own list when it has one, otherwise its catalogue services and their pages. */
+const cardLinks = (group: Group): readonly CardLink[] =>
+  group.links
+    ? group.links.map((name) => ({ name }))
+    : services
+        .filter((service) => service.group === group.id)
+        .map((service) => ({ name: service.name, href: destination(service.slug) }));
 ---
 
 <DetailSection id={id} labelledBy={titleId} tone="muted" mark={mark}>
   <SectionHeading
     id={titleId}
     eyebrow="What we do"
-    heading="Three areas of work, one connected plan."
-    intro="Start with the piece you need most. Each one is built so the others can connect to it later."
+    heading="Websites built to help your business grow."
+    intro="Start with a professional website. Add search visibility and digital advertising to reach more customers as your business grows."
   />
 
   {/* role="list": Safari drops the list role from lists styled without markers. */}
@@ -98,31 +133,23 @@ const destination = (slug: ServiceSlug) =>
           {group.title}
         </h3>
         <p class="mt-3 text-base leading-relaxed text-pretty text-base-content/75">{group.text}</p>
-        {/* The group's services, each opened by a small primary pixel like the logo's. */}
+        {/* The card's services, each opened by a small primary pixel like the logo's. */}
         <ul role="list" class="mt-6 grid gap-3 border-t border-base-300 pt-5">
-          {services
-            .filter((service) => service.group === group.id)
-            .map((service) => {
-              const href = destination(service.slug);
-              return (
-                <li class="flex items-start gap-3 text-base leading-snug font-medium text-base-content">
-                  <span
-                    class="mt-2 size-1.5 shrink-0 rotate-45 bg-primary"
-                    aria-hidden="true"
-                  ></span>
-                  {href ? (
-                    <a
-                      href={href}
-                      class="min-w-0 rounded-sm underline decoration-base-content/30 decoration-1 underline-offset-4 hover:decoration-primary hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
-                    >
-                      {service.name}
-                    </a>
-                  ) : (
-                    <span class="min-w-0">{service.name}</span>
-                  )}
-                </li>
-              );
-            })}
+          {cardLinks(group).map((link) => (
+            <li class="flex items-start gap-3 text-base leading-snug font-medium text-base-content">
+              <span class="mt-2 size-1.5 shrink-0 rotate-45 bg-primary" aria-hidden="true"></span>
+              {link.href ? (
+                <a
+                  href={link.href}
+                  class="min-w-0 rounded-sm underline decoration-base-content/30 decoration-1 underline-offset-4 hover:decoration-primary hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+                >
+                  {link.name}
+                </a>
+              ) : (
+                <span class="min-w-0">{link.name}</span>
+              )}
+            </li>
+          ))}
         </ul>
       </li>
     ))}

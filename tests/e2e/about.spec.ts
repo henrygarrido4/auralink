@@ -7,8 +7,9 @@ import { serviceCards, services, servicesCta, whyPillars } from '../../src/data/
  * description (2026-11-21). After that hero: the founder beside
  * the owner's portrait (AboutStory.astro), how it works as the three `whyPillars` on numbered
  * cards on the dark band (AboutPrinciples.astro), what it does as the service catalogue's three
- * groups on white cards with a link to each service's page and the hub's "View all services"
- * (AboutServices.astro), then the shared contact banner. The portrait is lazy, sized, and
+ * cards on white cards (website development and search visibility linking to each catalogue
+ * service's page, digital advertising listing its own services as plain text) and the hub's
+ * "View all services" (AboutServices.astro), then the shared contact banner. The portrait is lazy, sized, and
  * described; its panel and bar are decorative. From lg the portrait sits right of the copy and
  * the pillar and service cards share a row; below lg everything stacks. Nothing in these sections
  * animates, and the page ships no island.
@@ -24,8 +25,10 @@ const STORY_PARAGRAPHS = [
 const PRINCIPLES_HEADING = 'Why Auralink Studio?';
 const PRINCIPLES_LEAD =
   'Thoughtful websites. Built for performance. A partner invested in your business.';
-const SERVICES_HEADING = 'Three areas of work, one connected plan.';
-const GROUPS = ['Website development', 'Email marketing', 'Search visibility'];
+const SERVICES_HEADING = 'Websites built to help your business grow.';
+const GROUPS = ['Website development', 'Digital advertising', 'Search visibility'];
+/** The digital advertising card's own services, shown as plain text while they have no page. */
+const ADVERTISING = ['Google Ads management', 'Meta (Facebook & Instagram) advertising'];
 
 const story = (page: Page) => page.getByRole('region', { name: STORY_HEADING });
 const principles = (page: Page) => page.getByRole('region', { name: PRINCIPLES_HEADING });
@@ -128,20 +131,36 @@ test('shows how the studio works as the three pillars, numbered, with their chec
   }
 });
 
-test('lists every catalogue service once, in its group, linked to its page', async ({ page }) => {
+test('lists the website and search services as links, advertising as plain text', async ({
+  page,
+}) => {
   await page.goto('/about/');
   const section = offer(page);
   await expect(section.getByRole('heading', { level: 2 })).toHaveText(SERVICES_HEADING);
   await expect(section.getByRole('heading', { level: 3 })).toHaveText(GROUPS);
 
-  for (const service of services) {
+  // Website development and search visibility link each catalogue service to the home card's page.
+  const linked = services.filter((service) => service.group !== 'email');
+  for (const service of linked) {
     const link = section.getByRole('link', { name: service.name, exact: true });
     await expect(link, service.name).toHaveCount(1);
     await expect(link).toHaveAttribute('href', destination(service.slug)!);
   }
-  // Every link in the cards is one of those services; the hub's own call follows the cards.
+  // Email marketing stays an optional add-on on the services hub, not a card here.
+  for (const service of services.filter((service) => service.group === 'email')) {
+    await expect(
+      section.getByText(service.name, { exact: true }),
+      `${service.name} omitted`,
+    ).toHaveCount(0);
+  }
+  // Digital advertising lists its own services as plain text, with no destination page yet.
+  for (const name of ADVERTISING) {
+    await expect(section.getByText(name, { exact: true })).toBeVisible();
+    await expect(section.getByRole('link', { name, exact: true })).toHaveCount(0);
+  }
+  // Every link in the cards is one of those linked services; the hub's own call follows the cards.
   const cardLinks = section.getByRole('list').first().getByRole('link');
-  await expect(cardLinks).toHaveCount(services.length);
+  await expect(cardLinks).toHaveCount(linked.length);
   const hub = section.getByRole('link', { name: servicesCta.label, exact: true });
   await expect(hub).toHaveAttribute('href', servicesCta.href!);
   await expect(hub, 'the secondary button').toHaveClass(/\bbtn-secondary\b/);
