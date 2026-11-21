@@ -64,7 +64,7 @@ test('closing contact banner is separate from the site footer', async ({ page })
   await page.goto('/');
   const banner = page.getByRole('region', { name: 'Have a project in mind?' });
   await expect(page.getByRole('main').locator('#project-contact')).toHaveCount(1);
-  await expect(banner.getByRole('link', { name: "Let's talk" })).toHaveAttribute(
+  await expect(banner.getByRole('link', { name: 'Book a free call' })).toHaveAttribute(
     'href',
     '/contact/',
   );
