@@ -5,7 +5,7 @@ import { heroBenefits, primaryCta } from '../../src/data/site';
  * Home hero (src/components/sections/Hero.astro). Copy and buttons are real HTML, and the device
  * image loads eagerly with its space reserved. Two things move on load, once each. The pencil
  * underline is hidden from assistive technology and already in place under reduced motion. It is
- * drawn under "brings them back" after a short pause and stays attached to its phrase at every
+ * drawn under "should, too" after a short pause and stays attached to its phrase at every
  * width. The benefit icons swing into place on a ring around the devices
  * (src/components/ui/ServiceOrbit.astro), where their labels fade in: one chip per hero benefit,
  * the icon decorative and the label that benefit's text, both resting clear of the laptop and the
@@ -16,7 +16,7 @@ import { heroBenefits, primaryCta } from '../../src/data/site';
  * the navbar's and resumes where it stopped. It takes no room of its own, and never lights under
  * reduced motion.
  */
-const HEADLINE = 'Websites that win customers. Email that brings them back.';
+const HEADLINE = 'Your business works hard. Your website should, too.';
 
 const hero = (page: Page) => page.getByRole('region', { name: HEADLINE });
 const underline = (page: Page) => page.getByRole('heading', { level: 1 }).locator('svg');
@@ -131,10 +131,10 @@ const auraSpin = (aura: Locator) =>
 test('shows the headline, the supporting copy, and both buttons', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(HEADLINE);
-  await expect(hero(page).getByText('Web design + lifecycle email')).toBeVisible();
+  await expect(hero(page).getByText('Websites for growing businesses')).toBeVisible();
   await expect(
     hero(page).getByText(
-      'Custom websites and email journeys that help people find you, choose you, and come back.',
+      'We build professional websites that make your business look established, showcase what you do best, and make it easier for customers to choose you.',
     ),
   ).toBeVisible();
 

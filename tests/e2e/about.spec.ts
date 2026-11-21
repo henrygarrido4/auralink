@@ -3,7 +3,8 @@ import { serviceCards, services, servicesCta, whyPillars } from '../../src/data/
 
 /**
  * About page (src/pages/about/index.astro), laid out after uprig.net/about, the owner's reference
- * (2026-11-20), in this site's own system. After the shared dark hero: who the studio is beside
+ * (2026-11-20), in this site's own system. The hero keeps its headline and shows the owner's
+ * description (2026-11-21). After that hero: the founder beside
  * the owner's portrait (AboutStory.astro), how it works as the three `whyPillars` on numbered
  * cards on the dark band (AboutPrinciples.astro), what it does as the service catalogue's three
  * groups on white cards with a link to each service's page and the hub's "View all services"
@@ -12,12 +13,17 @@ import { serviceCards, services, servicesCta, whyPillars } from '../../src/data/
  * the pillar and service cards share a row; below lg everything stacks. Nothing in these sections
  * animates, and the page ships no island.
  */
-const STORY_HEADING = 'One studio for your website, email, and search.';
+const STORY_HEADING = 'Good businesses deserve to look the part online.';
 const STORY_LEAD =
-  'We help business owners, ecommerce brands, and marketing teams bring their websites, email, and search strategy together. From getting discovered to keeping customers connected, we build thoughtful digital experiences around your business goals.';
+  "I'm the developer and founder behind Auralink Studio. My journey into tech wasn't traditional. Before becoming a developer, I worked as a truck driver, where I learned the value of hard work, consistency, and doing things right.";
+const STORY_PARAGRAPHS = [
+  'Today, I specialize in web development and digital marketing, with professional experience working alongside designers, marketers, and engineers to build digital experiences that connect businesses with their customers.',
+  'I started Auralink Studio to bring that same level of care and attention to businesses of all sizes. I know how much work goes into building something of your own, and I believe your website should reflect that effort.',
+  "Whether you're starting from scratch or improving what you've already built, my goal is to understand your business, create something you're proud of, and help you build a stronger presence online.",
+];
 const PRINCIPLES_HEADING = 'Why Auralink Studio?';
 const PRINCIPLES_LEAD =
-  'Thoughtful websites. Connected email journeys. A partner invested in your business.';
+  'Thoughtful websites. Built for performance. A partner invested in your business.';
 const SERVICES_HEADING = 'Three areas of work, one connected plan.';
 const GROUPS = ['Website development', 'Email marketing', 'Search visibility'];
 
@@ -44,13 +50,23 @@ test('opens with the hero, then who, how, and what, before the contact banner', 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     'A digital presence built around your goals.',
   );
+  await expect(
+    page.getByText(
+      'At Auralink Studio, you work directly with the person designing and building your website. We start by learning what you want more of from your site and what your customers need to know before they choose you.',
+      { exact: true },
+    ),
+  ).toBeVisible();
   await expect(page.locator('main script, astro-island'), 'no island or script').toHaveCount(0);
 });
 
-test('says who the studio is beside the described, lazy portrait', async ({ page }) => {
+test('introduces the founder beside the described, lazy portrait', async ({ page }) => {
   await page.goto('/about/');
+  await expect(story(page).getByText('Meet the founder', { exact: true })).toBeVisible();
   await expect(story(page).getByRole('heading', { level: 2 })).toHaveText(STORY_HEADING);
   await expect(story(page).getByText(STORY_LEAD, { exact: true })).toBeVisible();
+  for (const paragraph of STORY_PARAGRAPHS) {
+    await expect(story(page).getByText(paragraph, { exact: true })).toBeVisible();
+  }
 
   const image = portrait(page);
   await expect(image).toHaveCount(1);

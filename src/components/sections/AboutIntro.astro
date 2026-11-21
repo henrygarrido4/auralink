@@ -12,19 +12,18 @@ import { aboutCta, aboutHighlights, owner, site } from '@/data/site';
  * Auralink Studio works with and what it brings together, beside the portrait the owner supplied.
  * The copy is laid out after the "What we offer" section the owner gave as the reference (a
  * screenshot, 2026-11-20): from lg it takes the wider column, the eyebrow, the heading, the rule,
- * the owner's paragraph, six points in two columns (`aboutHighlights`, each a mark, a title, and
+ * the owner's paragraph (rewritten 2026-11-20), six points in two columns (`aboutHighlights`, each a mark, a title, and
  * one sentence), and the primary call to learn more (`aboutCta`). The photo keeps the treatment
  * the owner preferred (2026-11-20), after the "Space for Freelancers and Creative People" section
  * of the Hub2B reference: from lg it sits left on a frame in the primary colour, offset down and
  * to the right; below lg the copy comes first and the photo follows. The reference's price and
- * guarantee have no place here: prices belong only on the pricing page, and the points restate
- * approved copy. Nothing moves on its own. The button's aura fades and circles under the pointer
+ * guarantee have no place here: prices belong only on the pricing page. Nothing moves on its own. The button's aura fades and circles under the pointer
  * or keyboard focus, and resumes where it stopped. There is no client-side JavaScript.
  *
  * The name card over the photo's lower right corner is the reference's, in this site's colours:
  * the name and the role on white, a hairline, and the owner's mark on a near-black tile. It
- * renders only once `owner.name` is set in src/data/site.ts, because team members and roles are
- * not yet verified (docs/content-strategy.md). Until then the portrait stands alone, as before.
+ * renders only once `owner.name` is set in src/data/site.ts. A personal name is still unpublished
+ * (docs/content-strategy.md), so the portrait stands alone, as before.
  *
  * The photo is the portrait the owner supplied on 2026-11-19, recorded in src/assets/CREDITS.md.
  * It is not captioned beyond that card, and it is not presented as a client or a testimonial.
@@ -54,9 +53,10 @@ const titleId = `${id}-title`;
         </h2>
         <div class="mt-6 h-0.5 w-24 bg-primary" aria-hidden="true"></div>
         <p class="mt-6 max-w-xl text-lg leading-relaxed text-base-content/80">
-          We help business owners, ecommerce brands, and marketing teams bring their websites,
-          email, and search strategy together. From getting discovered to keeping customers
-          connected, we build thoughtful digital experiences around your business goals.
+          We help businesses of all sizes build a stronger presence online through thoughtful web
+          design, development, and search optimization. From creating a professional first
+          impression to making it easier for customers to find and choose you, we build websites
+          that look great, perform well, and support your business goals.
         </p>
 
         {/*

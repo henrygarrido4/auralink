@@ -21,20 +21,70 @@ export const site = {
   language: 'en',
 } as const;
 
+/** The ways to reach the studio directly, and the call it offers. */
+export interface ContactDetails {
+  /** The studio's address, as displayed. */
+  readonly email: string;
+  /** The same address as a `mailto:` link. */
+  readonly emailHref: string;
+  readonly phone: {
+    /** As displayed: `(832) 986-4695`. */
+    readonly display: string;
+    /** As a `tel:` link, in international form. */
+    readonly href: string;
+  };
+  /** The free discovery call, booked through the owner's Calendly event. */
+  readonly booking: {
+    /** The Calendly event's page: what the inline embed shows and what the fallback link opens. */
+    readonly url: string;
+    /** The event's length, as Calendly has it set up. */
+    readonly duration: string;
+    /** Where the call takes place. */
+    readonly platform: string;
+    /** What the call is: the owner's description. */
+    readonly kind: string;
+  };
+}
+
 /**
- * Ways to reach the studio directly. Each stays unset until the owner confirms it:
- * docs/content-strategy.md lists the email address and phone number as not yet verified. The
- * contact page shows its "Direct contact" card, and the inquiry form's failure message offers the
- * address, only once `email` is set (src/components/sections/ContactAside.astro,
- * src/components/sections/ProjectInquiryForm.astro).
+ * Ways to reach the studio directly, approved by the owner for public display on 2026-11-20
+ * (docs/content-strategy.md, "Verified facts"): the address, the phone number, and the Calendly
+ * event for the free discovery call, a 20-minute call on Google Meet. The contact page shows all
+ * three (src/components/sections/ContactOptions.astro), the inquiry form's failure message offers
+ * the address and the number (src/components/sections/ProjectInquiryForm.astro), and the contact
+ * page's structured data carries the address and the number. Nothing else states them; change
+ * them here and every page follows. The owner's personal addresses are never displayed.
  */
-export const contactDetails: { readonly email?: string } = {};
+export const contactDetails: ContactDetails = {
+  email: 'henry@auralinkstudio.com',
+  emailHref: 'mailto:henry@auralinkstudio.com',
+  phone: { display: '(832) 986-4695', href: 'tel:+18329864695' },
+  booking: {
+    url: 'https://calendly.com/henry-auralinkstudio/discovery-call',
+    duration: '20 minutes',
+    platform: 'Google Meet',
+    kind: 'Free introductory call',
+  },
+};
+
+/**
+ * The contact page and its two tabs (ContactOptions.astro), as links. The page opens on the
+ * booking tab, so `page` and `bookCall` show the same thing; `bookCall` also lands on the tab
+ * control itself. Link a button by its wording: one that offers a call leads to `bookCall`, one
+ * that invites a question or a message to `sendMessage`, and a general invitation to `page`.
+ */
+export const contactRoutes = {
+  page: '/contact/',
+  bookCall: '/contact/#book-call',
+  sendMessage: '/contact/#send-message',
+} as const;
 
 /**
  * The person in the home introduction's portrait (src/components/sections/AboutIntro.astro),
- * named on the card over the photo. Team members and roles are not yet verified
- * (docs/content-strategy.md), so both stay unset until the owner confirms them, and the card
- * renders only once `name` is set. `role` is the line under the name ("Owner, developer").
+ * named on the card over the photo. A personal name is not published yet
+ * (docs/content-strategy.md): the About page speaks in the first person as the developer and
+ * founder, and this card stays hidden until the owner sets `name`. `role` is the line under
+ * the name.
  */
 export const owner: { readonly name?: string; readonly role?: string } = {};
 
@@ -114,9 +164,11 @@ export const primaryNav: readonly NavItem[] = [
 ];
 
 /**
- * Navbar call to action. The home hero and service-card inquiry links share the contact page.
+ * Navbar call to action, shared by the home hero and the home directory's "Let's talk". It offers
+ * the call, so it leads to the contact page's booking tab (`contactRoutes.bookCall`, since
+ * 2026-11-20); the service cards' inquiry fallback (src/lib/service-cards.ts) follows it.
  */
-export const primaryCta: NavItem = { label: 'Book a free call', href: '/contact/' };
+export const primaryCta: NavItem = { label: 'Book a free call', href: contactRoutes.bookCall };
 
 /**
  * The home introduction's call to action, under its text, links to the built About page.
@@ -133,10 +185,11 @@ export interface AboutHighlight {
 
 /**
  * The six points the home introduction makes after its paragraph (the owner's request,
- * 2026-11-20: a section like the reference's "What we offer", with the owner's own facts). Each
- * restates approved copy in one line: the pillars in `whyPillars` and the service cards'
- * sentences. The wording is a proposal awaiting the owner's confirmation. None states a price,
- * a client, a statistic, a result, or a guarantee; prices belong only on the pricing page.
+ * 2026-11-20: a section like the reference's "What we offer", with the owner's own facts). Five
+ * restate approved copy in one line: the pillars in `whyPillars` and the service cards'
+ * sentences. The third, Custom-built for your business, is the owner's replacement the same day
+ * for Web and email together. None states a price, a client, a statistic, a result, or a
+ * guarantee; prices belong only on the pricing page.
  */
 export const aboutHighlights: readonly AboutHighlight[] = [
   {
@@ -148,8 +201,9 @@ export const aboutHighlights: readonly AboutHighlight[] = [
     description: 'You know what is included and when to expect it before the work begins.',
   },
   {
-    title: 'Web and email together',
-    description: 'Your website and email marketing planned as one consistent customer journey.',
+    title: 'Custom-built for your business',
+    description:
+      'Every website is thoughtfully designed around your brand, your customers, and what you want to achieve.',
   },
   {
     title: 'Built for search and AI',
@@ -461,8 +515,9 @@ export const featuredProjects: readonly FeaturedProject[] = [
 /**
  * One pillar in the home page's "Why Auralink Studio?" section
  * (src/components/sections/WhyAuralink.astro) and the About page's "How we work"
- * (AboutPrinciples.astro). Copy is the owner's, from the approved mockup of 2026-11-19. It
- * describes how the studio works. It names no client, price, statistic, or result.
+ * (AboutPrinciples.astro). Copy is the owner's: the first and third pillars from the approved
+ * mockup of 2026-11-19, and the middle pillar (Website performance) as the owner rewrote it on
+ * 2026-11-20. It describes how the studio works. It names no client, price, statistic, or result.
  */
 export interface WhyPillar {
   readonly id: string;
@@ -490,14 +545,15 @@ export const whyPillars: readonly WhyPillar[] = [
     icon: 'handshake',
   },
   {
-    id: 'connected-expertise',
-    category: 'Connected expertise',
-    title: ['Web + email.', 'Working together.'],
-    description: 'Connect your website and email marketing into one consistent customer journey.',
+    id: 'website-performance',
+    category: 'Website performance',
+    title: ['Built to impress.', 'Designed to perform.'],
+    description:
+      'A professional website built for speed, search visibility, and a better customer experience.',
     points: [
-      'Web design and development',
-      'Email campaigns and automation',
-      'Consistent brand experience',
+      'Custom website design and development',
+      'SEO and search visibility',
+      'Fast, responsive, mobile-friendly websites',
     ],
     icon: 'link',
   },

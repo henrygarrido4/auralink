@@ -2,24 +2,28 @@
 import Button from '@/components/ui/Button.astro';
 import Eyebrow from '@/components/ui/Eyebrow.astro';
 import Icon from '@/components/ui/Icon.astro';
-import { contactDetails, industries, serviceCards } from '@/data/site';
+import { contactDetails, contactRoutes, industries, serviceCards } from '@/data/site';
 
 /**
- * The project inquiry form on the contact page: a Netlify form in a white card. Its fields follow
- * uprig.net/contact, the owner's reference (2026-11-19), with this studio's services and kinds of
- * business in place of that agency's trades. It asks for what qualifying an inquiry needs and
- * nothing more: a name and an email address, the business and an optional phone number for the
- * free call the site offers, the kind of business (`industries`), the services the visitor is
- * interested in (`serviceCards`, plus "Not sure yet", as several boxes rather than one choice,
- * since the studio offers email and search work alongside websites), the current website, and the
- * message. Only the name, the email address, and the message are required. The website field
- * takes any text, so "mybusiness.com" is not refused.
+ * The project inquiry form on the contact page: a Netlify form, since 2026-11-20 the "Send a
+ * message" panel of the page's two tabs (ContactOptions.astro), whose card and padding it sits in.
+ * Its fields follow uprig.net/contact, the owner's reference (2026-11-19), with this studio's
+ * services and kinds of business in place of that agency's trades. It asks for what qualifying an
+ * inquiry needs and nothing more: a name and an email address, the business and an optional phone
+ * number for the free call the site offers, the kind of business (`industries`), the services the
+ * visitor is interested in (`serviceCards`, plus "Not sure yet", as several boxes rather than one
+ * choice, since the studio offers email and search work alongside websites), the current website,
+ * and the message. Only the name, the email address, and the message are required. The website
+ * field takes any text, so "mybusiness.com" is not refused.
  *
  * The form posts without leaving the page (src/lib/inquiry-form.ts): the script validates it,
- * sends it to Netlify in the background, and swaps the card to the confirmation below, which
- * takes focus. A failure shows the alert above the button and keeps everything typed. Without
- * JavaScript the browser validates and posts it itself, and Netlify shows its own success page:
- * there is no thank-you page (owner, 2026-11-19).
+ * sends it to Netlify in the background, and swaps the panel to the confirmation below, which
+ * takes focus and offers the booking tab as a next step. A failure shows the alert above the
+ * button, with the studio's address and number, and keeps everything typed. Without JavaScript
+ * the browser validates and posts it itself, and Netlify shows its own success page: there is no
+ * thank-you page (owner, 2026-11-19). Should the visitor be on the other tab when an answer
+ * arrives, the panel is `hidden`, so the focus the script asks for goes nowhere, and the
+ * confirmation or the alert waits for them in the panel.
  *
  * Netlify reads the form from the built HTML, so keep `name`, `method`, `data-netlify`, the
  * honeypot, the hidden `form-name` input, and the field names, which label each submission in
@@ -55,10 +59,7 @@ const focusRing =
 const interests = [...serviceCards.map((card) => card.title), 'Not sure yet'];
 ---
 
-<div
-  data-inquiry
-  class="rounded-md border border-base-300 bg-base-100 p-6 text-base-content shadow-sm sm:p-8 lg:p-10"
->
+<div data-inquiry class="text-base-content">
   <form
     name="project-inquiry"
     method="POST"
@@ -79,7 +80,7 @@ const interests = [...serviceCards.map((card) => card.title), 'Not sure yet'];
       </p>
     </div>
 
-    {/* After the heading, so the eyebrow is the first thing under the hero (page-hero.spec.ts). */}
+    {/* After the heading, so the panel opens with the eyebrow and the title, not two hidden fields. */}
     <input type="hidden" name="form-name" value="project-inquiry" />
     <p hidden>
       <label>
@@ -217,20 +218,21 @@ const interests = [...serviceCards.map((card) => card.title), 'Not sure yet'];
       <Icon name="circle-alert" class="mt-0.5 size-5 shrink-0 text-error-content" />
       <p class="text-base leading-relaxed">
         <strong class="font-bold">Your message couldn't be sent.</strong> Please check your
-        connection and try again. Everything you typed is still here.
-        {contactDetails.email && (
-          <>
-            {' '}
-            You can also email us at{' '}
-            <a
-              href={`mailto:${contactDetails.email}`}
-              class:list={['rounded-sm font-bold underline underline-offset-4', focusRing]}
-            >
-              {contactDetails.email}
-            </a>
-            .
-          </>
-        )}
+        connection and try again. Everything you typed is still here. You can also email us at{' '}
+        <a
+          href={contactDetails.emailHref}
+          class:list={['rounded-sm font-bold break-all underline underline-offset-4', focusRing]}
+        >
+          {contactDetails.email}
+        </a>{' '}
+        or call{' '}
+        <a
+          href={contactDetails.phone.href}
+          class:list={['rounded-sm font-bold underline underline-offset-4', focusRing]}
+        >
+          {contactDetails.phone.display}
+        </a>
+        .
       </p>
     </div>
 
@@ -261,7 +263,9 @@ const interests = [...serviceCards.map((card) => card.title), 'Not sure yet'];
 
   {/*
    * The confirmation, in the form's place once Netlify has the message. It takes focus, so the
-   * heading is read at once; the entrance is short and skipped under reduced motion.
+   * heading is read at once; the entrance is short and skipped under reduced motion. "Book a
+   * free call" leads to the other tab (a fragment link, so the tabs script chooses it); "Send
+   * another message" brings an empty form back.
    */}
   <div
     data-inquiry-success
@@ -283,11 +287,12 @@ const interests = [...serviceCards.map((card) => card.title), 'Not sure yet'];
       <span data-inquiry-email class="font-bold wrap-break-word text-base-content"></span>.
     </p>
     <p class="mx-auto mt-3 max-w-xl text-base leading-relaxed text-base-content/70">
-      In the meantime, feel free to look around.
+      If you'd rather talk it through, you can also book a free call.
     </p>
     <div class="mt-8 flex flex-wrap justify-center gap-4">
-      <Button href="/services/" size="lg" variant="secondary" class="transition-none">
-        Explore our services
+      <Button href={contactRoutes.bookCall} size="lg" variant="secondary" class="transition-none">
+        Book a free call
+        <Icon name="calendar-check" class="size-5" />
       </Button>
       <button
         type="button"

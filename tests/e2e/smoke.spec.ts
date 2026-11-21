@@ -22,7 +22,7 @@ test.describe('home page', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Websites that win customers. Email that brings them back.',
+      'Your business works hard. Your website should, too.',
     );
     await expect(page.locator('main#main-content')).toBeVisible();
 

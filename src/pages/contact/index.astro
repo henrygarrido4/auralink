@@ -1,36 +1,53 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import PageIntro from '@/components/sections/PageIntro.astro';
-import ProjectInquiryForm from '@/components/sections/ProjectInquiryForm.astro';
 import ContactAside from '@/components/sections/ContactAside.astro';
+import ContactOptions from '@/components/sections/ContactOptions.astro';
+import PageIntro from '@/components/sections/PageIntro.astro';
 import PageSchema from '@/components/seo/PageSchema.astro';
+import DirectContact from '@/components/ui/DirectContact.astro';
+import { contactDetails } from '@/data/site';
 
 /*
- * Laid out after uprig.net/contact, the owner's reference (2026-11-19): the dark hero, then a
- * light band with the form in a white card and, beside it from lg, the shorter cards that say
- * what happens next and where to look first. The form confirms a sent message in place, so the
- * page is the whole inquiry: there is no thank-you page.
+ * The contact page: two ways in, booking the free discovery call or sending a project inquiry
+ * (the owner's brief, 2026-11-20), after the layout of uprig.net/contact, the owner's reference of
+ * 2026-11-19: the dark hero, then a light band with one white card holding the two tabs and,
+ * beside it from xl, the shorter cards that say what happens next and where to look first. The
+ * hero also carries the studio's address and number, approved the same day, so they are in view
+ * whichever tab is chosen. The form confirms a sent message in place and the scheduler books the
+ * call in place, so the page is the whole inquiry: there is no thank-you page.
  */
 ---
 
 <BaseLayout
   title="Contact"
-  description="Tell Auralink Studio about your website, online store, email marketing, or search visibility project using the project inquiry form."
+  description="Book a free 20-minute discovery call with Auralink Studio, or send a project inquiry about your website, online store, email marketing, or search visibility."
   showContactBanner={false}
 >
   <Fragment slot="head">
-    <PageSchema type="ContactPage" name="Contact Auralink Studio" />
+    <PageSchema
+      type="ContactPage"
+      name="Contact Auralink Studio"
+      contact={{
+        email: contactDetails.email,
+        telephone: contactDetails.phone.href.replace('tel:', ''),
+      }}
+    />
   </Fragment>
   <PageIntro
     eyebrow="Contact"
     title="Let's talk about your project."
     highlight="your project."
-    description="Tell us a little about your business and what you're looking for. Whether you need a new website, an online store, better email marketing, or more visibility in search, we're here to help."
-  />
-  <section aria-label="Project inquiry" class="bg-base-200">
-    {/* The form takes the room the aside's column leaves; the aside keeps a readable width. */}
-    <div class="mx-auto grid max-w-site gap-8 px-6 pt-16 pb-20 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)] lg:items-start lg:gap-10 lg:px-8 lg:pt-20 lg:pb-28 xl:gap-14">
-      <ProjectInquiryForm />
+    description="Book a free discovery call or send a few details about what you'd like to build or improve."
+  >
+    <DirectContact />
+  </PageIntro>
+  <section aria-label="Ways to get in touch" class="bg-base-200">
+    {/*
+     * The card takes the room the aside's column leaves from xl, so the scheduler has the width
+     * of a laptop screen minus a readable column; below xl the aside follows it in two columns.
+     */}
+    <div class="mx-auto grid max-w-site gap-8 px-6 pt-16 pb-20 lg:px-8 lg:pt-20 lg:pb-28 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,21rem)] xl:items-start xl:gap-10 2xl:gap-14">
+      <ContactOptions />
       <ContactAside />
     </div>
   </section>

@@ -10,7 +10,7 @@ import { primaryCta } from '@/data/site';
 /**
  * Home page hero: positioning copy beside the laptop-and-phone image. The image is rendered from
  * the editable sources in design/hero-mockup/ (see its README). Two things move on load, once
- * each: the pencil underline under "brings them back", and the benefit icons, which swing into
+ * each: the pencil underline under "should, too", and the benefit icons, which swing into
  * place on a ring around the devices, where their labels fade in (ServiceOrbit; the owner's
  * choices, 2026-11-18). After that the icons stay put, and a light keeps circling their ring,
  * pointer or not (owner, 2026-11-18). The primary button's aura stays unlit until the pointer or
@@ -38,10 +38,12 @@ const buttonClass =
   <div class="mx-auto flex max-w-site flex-col gap-12 px-6 pt-12 pb-20 sm:pt-16 sm:pb-24 lg:flex-row lg:items-center lg:px-8 lg:pb-28">
     {/* Copy takes about 45% of the row and the image 55%; flex-shrink absorbs the gap. */}
     <div class="min-w-0 lg:basis-9/20">
-      <Eyebrow>Web design + lifecycle email</Eyebrow>
+      <Eyebrow>Websites for growing businesses</Eyebrow>
       {/*
-       * Font size is 10% of the copy column's width, so "brings them back." stays on one line in
-       * Mukta bold, the heading face (--font-headers). The column's width is written in viewport
+       * Font size is 10% of the copy column's width, chosen so that a 17-character line ("brings
+       * them back.", the earlier headline's longest) stayed on one line in Mukta bold, the heading
+       * face (--font-headers). The current longest line, "Your business", is shorter and fits with
+       * room to spare. The column's width is written in viewport
        * units: 100vw - 3rem when stacked; 45% of (100vw - 4rem), less
        * its share of the 3rem gap, from lg; fixed from 1408px, the container's width, hence the
        * 3.645rem cap. The 1.5rem floor only applies below 288px. Change these with the container,
@@ -55,18 +57,19 @@ const buttonClass =
         class="mt-5 pb-[0.1em] text-[clamp(1.5rem,calc(10vw-4.8px),3.5rem)] leading-[1.05] font-bold tracking-tight text-base-content lg:text-[clamp(2rem,calc(4.5vw-5.04px),3.645rem)]"
       >
         {/* One span per line; the explicit spaces keep the words apart in the heading's text. */}
-        <span class="block">Websites that</span> <span class="block">win customers.</span>{' '}
-        <span class="block">Email that</span>{' '}
+        <span class="block">Your business</span> <span class="block">works hard.</span>{' '}
+        <span class="block">Your website</span>{' '}
         <span class="block">
           <span class="relative">
             <PencilUnderline />
-            brings them back
+            should, too
           </span>
           .
         </span>
       </h1>
       <p class="mt-4 max-w-xl text-lg leading-relaxed text-base-content/80 sm:text-xl">
-        Custom websites and email journeys that help people find you, choose you, and come back.
+        We build professional websites that make your business look established, showcase what you
+        do best, and make it easier for customers to choose you.
       </p>
       {/*
        * The primary's aura shines in this text colour: dark, so it shows on the light background.

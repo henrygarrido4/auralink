@@ -35,6 +35,7 @@ import MonitorCog from '../assets/icons/monitor-cog.svg';
 import MoveRight from '../assets/icons/move-right.svg';
 import Palette from '../assets/icons/palette.svg';
 import PawPrint from '../assets/icons/paw-print.svg';
+import Phone from '../assets/icons/phone.svg';
 import Repeat from '../assets/icons/repeat.svg';
 import Scale from '../assets/icons/scale.svg';
 import Search from '../assets/icons/search.svg';
@@ -46,6 +47,7 @@ import Tooth from '../assets/icons/tooth.svg';
 import TrendingUp from '../assets/icons/trending-up.svg';
 import UserPlus from '../assets/icons/user-plus.svg';
 import Utensils from '../assets/icons/utensils.svg';
+import Video from '../assets/icons/video.svg';
 import Workflow from '../assets/icons/workflow.svg';
 
 /**
@@ -98,6 +100,7 @@ export const icons = {
   'move-right': MoveRight,
   palette: Palette,
   'paw-print': PawPrint,
+  phone: Phone,
   repeat: Repeat,
   scale: Scale,
   search: Search,
@@ -109,6 +112,7 @@ export const icons = {
   'trending-up': TrendingUp,
   'user-plus': UserPlus,
   utensils: Utensils,
+  video: Video,
   workflow: Workflow,
 };
 

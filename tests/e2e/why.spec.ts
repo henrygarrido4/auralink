@@ -22,8 +22,7 @@ import { whyPillars } from '../../src/data/site';
  */
 const EYEBROW = "How we're different";
 const HEADING = 'Why Auralink Studio?';
-const SENTENCE =
-  'Thoughtful websites. Connected email journeys. A partner invested in your business.';
+const SENTENCE = 'Thoughtful websites. Built for performance. A partner invested in your business.';
 
 const section = (page: Page) => page.locator('#why-auralink');
 const cards = (page: Page) => section(page).locator('[data-why-card]');

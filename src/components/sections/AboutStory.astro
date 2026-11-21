@@ -4,20 +4,18 @@ import portrait from '@/assets/about/portrait-arms-crossed.webp';
 import SectionHeading from '@/components/ui/SectionHeading.astro';
 
 /**
- * The first section of the About page, straight under the dark hero: who the studio is, beside
- * the portrait the owner supplied. Laid out after the "Why we exist" section of uprig.net/about,
+ * The first section of the About page, straight under the dark hero: the founder, beside the
+ * portrait the owner supplied. Laid out after the "Why we exist" section of uprig.net/about,
  * the owner's reference for this page (2026-11-20), in this site's own system: the copy takes the
  * wider column, as the detail pages' introductions do (DetailIntro.astro), with the dash eyebrow,
- * the h2, the lead paragraph marked with a primary bar, and two short paragraphs at a readable
+ * the h2, the lead paragraph marked with a primary bar, and three paragraphs at a readable
  * measure. The portrait takes the other column from lg and follows the copy below it.
  *
- * The lead paragraph is the owner's, from the home page introduction (AboutIntro.astro). The
- * heading and the two paragraphs after the lead are proposals: they describe how the studio
- * works, from the approved pillars (`whyPillars` in src/data/site.ts), and name no client,
- * result, price, team size, founding date, or location. The photo is the portrait the owner
- * supplied on 2026-11-20 (src/assets/CREDITS.md). The page does not name him or give him a role,
- * since team members and roles are not yet verified (docs/content-strategy.md), and the alt text
- * describes the picture.
+ * The eyebrow, the heading, and the four paragraphs are the owner's, supplied on 2026-11-20.
+ * The copy is first person: the writer is the developer and founder of Auralink Studio. It
+ * publishes no personal name, client, result, price, team size, founding date, or location. The
+ * photo is the portrait the owner supplied the same day (src/assets/CREDITS.md). The alt text
+ * describes the picture and does not name him.
  *
  * The picture's treatment is this page's own, after the reference's photo with its accent bar
  * underneath: the photo on a near-black panel set 20px down and to the right, so it stands off the
@@ -40,22 +38,28 @@ const titleId = `${id}-title`;
       <div class="min-w-0">
         <SectionHeading
           id={titleId}
-          eyebrow="Who we are"
-          heading="One studio for your website, email, and search."
+          eyebrow="Meet the founder"
+          heading="Good businesses deserve to look the part online."
         />
         <p class="mt-8 max-w-2xl border-l-4 border-primary pl-6 text-xl leading-relaxed text-pretty text-base-content">
-          We help business owners, ecommerce brands, and marketing teams bring their websites,
-          email, and search strategy together. From getting discovered to keeping customers
-          connected, we build thoughtful digital experiences around your business goals.
+          I'm the developer and founder behind Auralink Studio. My journey into tech wasn't
+          traditional. Before becoming a developer, I worked as a truck driver, where I learned the
+          value of hard work, consistency, and doing things right.
         </p>
         <p class="mt-5 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
-          A website, email marketing, and search visibility do more when they are planned together:
-          the website explains what you do, email keeps customers in touch, and search brings the
-          right people to both.
+          Today, I specialize in web development and digital marketing, with professional experience
+          working alongside designers, marketers, and engineers to build digital experiences that
+          connect businesses with their customers.
         </p>
         <p class="mt-5 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
-          That is the work of this studio: planning, designing, and building those pieces so they
-          fit your business and your customers, and staying involved after launch.
+          I started Auralink Studio to bring that same level of care and attention to businesses of
+          all sizes. I know how much work goes into building something of your own, and I believe
+          your website should reflect that effort.
+        </p>
+        <p class="mt-5 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
+          Whether you're starting from scratch or improving what you've already built, my goal is to
+          understand your business, create something you're proud of, and help you build a stronger
+          presence online.
         </p>
       </div>
 

@@ -42,6 +42,11 @@ interface HeroCopy {
   icon?: string;
   /** Home, the hub, then the page, on the detail pages only. */
   crumbs?: Crumb[];
+  /**
+   * The tags a page adds after the description through the hero's slot: the contact page's list
+   * of direct-contact links (2026-11-20). Every other page adds nothing.
+   */
+  after?: string[];
 }
 
 const HOME: Crumb = { label: 'Home', href: '/' };
@@ -63,6 +68,7 @@ const TITLES: Record<string, HeroCopy> = {
     title: "Let's talk about your project.",
     highlight: 'your project.',
     eyebrow: 'Contact',
+    after: ['UL'],
   },
   '/industries/': {
     title: 'Digital support for the way your business works.',
@@ -269,7 +275,11 @@ test('every page except the home page opens with the dark hero, straight under t
           eyebrow: eyebrow.textContent?.trim(),
           eyebrowCase: getComputedStyle(eyebrow).textTransform,
           described: !!description.textContent?.trim(),
-          note: description.nextElementSibling?.textContent?.trim(),
+          // The note is a paragraph; what a page adds through the slot (a list) is not one.
+          note:
+            description.nextElementSibling?.tagName === 'P'
+              ? description.nextElementSibling.textContent?.trim()
+              : undefined,
           colours: [
             getComputedStyle(navbar).backgroundColor,
             getComputedStyle(section).backgroundColor,
@@ -307,7 +317,7 @@ test('every page except the home page opens with the dark hero, straight under t
       near(look.gap, 0, 'no gap under the navbar', 0.5);
       expect(
         look.copy,
-        'trail and icon where the page has them, then eyebrow, title, rule, description, and the note where the page has one',
+        'trail and icon where the page has them, then eyebrow, title, rule, description, the note where the page has one, and what the page adds after them',
       ).toEqual([
         ...(expected.crumbs ? ['NAV'] : []),
         ...(expected.icon ? ['svg'] : []),
@@ -316,6 +326,7 @@ test('every page except the home page opens with the dark hero, straight under t
         'DIV',
         'P',
         ...(expected.note ? ['P'] : []),
+        ...(expected.after ?? []),
       ]);
       expect(look.eyebrow, "the page's name as the eyebrow").toBe(expected.eyebrow);
       expect(look.eyebrowCase).toBe('uppercase');

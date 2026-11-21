@@ -30,7 +30,8 @@ import { industries, primaryCta } from '../../src/data/site';
  */
 const EYEBROW = 'Who we work with';
 const HEADING = 'Built for businesses like yours.';
-const SENTENCE = 'Websites and email marketing built around your business.';
+const SENTENCE =
+  'From local service businesses to growing brands, we create professional websites designed around your industry, your customers, and your goals.';
 const QUESTION = "Don't see your business here?";
 const ACTION = "Let's talk";
 const NAMES = industries.map(({ name }) => name);

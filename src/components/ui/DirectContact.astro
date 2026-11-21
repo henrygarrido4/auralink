@@ -1,0 +1,38 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import { contactDetails } from '@/data/site';
+import type { IconName } from '@/lib/icons';
+
+/**
+ * The studio's address and phone number as two pill links, for the contact page's hero
+ * (src/pages/contact/index.astro, through PageIntro's slot), where they are in view whichever tab
+ * is chosen below. Both come from `contactDetails` in src/data/site.ts, approved by the owner
+ * (2026-11-20). Each pill is a 44px target with a primary disc for its decorative icon, white text
+ * on the dark band, and a primary ring on focus; hover changes at once, with no fade. The list
+ * wraps on narrow screens, so the address never breaks.
+ */
+const channels: readonly { icon: IconName; label: string; href: string }[] = [
+  { icon: 'mail', label: contactDetails.email, href: contactDetails.emailHref },
+  { icon: 'phone', label: contactDetails.phone.display, href: contactDetails.phone.href },
+];
+---
+
+{/* role="list": Safari drops the list role from lists styled without markers. */}
+<ul role="list" aria-label="Direct contact" class="mt-8 flex flex-wrap gap-3">
+  {channels.map((channel) => (
+    <li>
+      <a
+        href={channel.href}
+        class="inline-flex min-h-11 max-w-full items-center gap-3 rounded-full border border-neutral-content/25 py-1 pr-5 pl-1.5 text-base font-bold text-base-100 hover:border-primary hover:bg-base-100/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+      >
+        <span
+          class="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-primary-content"
+          aria-hidden="true"
+        >
+          <Icon name={channel.icon} class="size-4" />
+        </span>
+        <span class="min-w-0 break-all">{channel.label}</span>
+      </a>
+    </li>
+  ))}
+</ul>

@@ -1,5 +1,5 @@
 import { checkPageHead, type Engagement, type FaqList, type PageHead } from './detail-pages';
-import { primaryCta, type NavItem } from './site';
+import { contactRoutes, primaryCta, type NavItem } from './site';
 
 /**
  * The pricing page (/pricing/, src/pages/pricing/index.astro), from the owner's brief of
@@ -31,10 +31,14 @@ export const pricingHero = {
   note: 'All packages include a first design preview within two weeks of receiving your deposit, project brief, and required materials.',
 } as const;
 
-/** Where every call to action on the page leads: the inquiry page, which exists. */
+/**
+ * Where the package and Website Care buttons lead: the contact page, which opens on the booking
+ * tab and offers the inquiry form beside it. Their labels name a package, not a call or a
+ * message, so they lead to the page itself rather than to one tab (`contactRoutes`).
+ */
 export const pricingInquiry: Required<NavItem> = {
   label: primaryCta.label,
-  href: primaryCta.href ?? '/contact/',
+  href: contactRoutes.page,
 };
 
 /** US dollars with no cents: `$1,095`. The same formatter serves the cards and the table. */
@@ -396,13 +400,16 @@ export const pricingFaqs: FaqList = {
   ],
 };
 
-/** The closing call to action: the brief's copy, with both buttons leading to the inquiry page. */
+/**
+ * The closing call to action: the brief's copy. Both buttons lead to the contact page; the
+ * question goes to its "Send a message" tab, as its wording asks for one (2026-11-20).
+ */
 export const pricingCta = {
   eyebrow: "Let's build something great",
   heading: 'Ready for a website that works for your business?',
   text: "Tell us what you have in mind. We'll help you choose the right package and plan your next steps.",
   primary: { label: "Let's get started", href: pricingInquiry.href },
-  secondary: { label: 'Have a question?', href: pricingInquiry.href },
+  secondary: { label: 'Have a question?', href: contactRoutes.sendMessage },
 } as const;
 
 /* The head is within the limits the SEO suite enforces, checked at build like the detail pages'. */

@@ -1,5 +1,5 @@
 {
-  "$comment": "Budgets enforced by scripts/perf-audit.mjs (Lighthouse 13 no longer ships --budget-path). Scores are 0-1, metrics are milliseconds except cumulative-layout-shift, resource sizes are transferred kilobytes. Initial values are regression budgets for the starter baseline; raise them only with a note in docs/performance.md.",
+  "$comment": "Budgets enforced by scripts/perf-audit.mjs (Lighthouse 13 no longer ships --budget-path). Scores are 0-1, metrics are milliseconds except cumulative-layout-shift, resource sizes are transferred kilobytes of the site's own resources (a third party's bytes count only as third-party requests). Initial values are regression budgets for the starter baseline; raise them only with a note in docs/performance.md. A route under `routes` takes its own values for the keys it names.",
   "scores": {
     "mobile": { "performance": 0.9, "accessibility": 1, "best-practices": 0.95, "seo": 1 },
     "desktop": { "performance": 0.95, "accessibility": 1, "best-practices": 0.95, "seo": 1 }
@@ -32,5 +32,15 @@
       "font": 100
     },
     "requests": { "total": 30, "third-party": 0 }
+  },
+  "routes": {
+    "/contact/": {
+      "$comment": "The contact page embeds Calendly's scheduler (the owner's decision, 2026-11-20; docs/architecture.md), an iframe that fetches Calendly's own scripts and styles and Stripe's, and whose cookies fail Lighthouse's third-party-cookies audit (best practices 0.77 measured). The allowances are for that embed alone: the page's own resources keep the budgets above.",
+      "scores": {
+        "mobile": { "best-practices": 0.75 },
+        "desktop": { "best-practices": 0.75 }
+      },
+      "resources": { "requests": { "total": 45, "third-party": 25 } }
+    }
   }
 }

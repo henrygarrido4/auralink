@@ -10,8 +10,9 @@ import { whyPillars } from '@/data/site';
  * 2026-11-19) as numbered cards on the dark band of the detail pages, after the "What makes us
  * different" section of uprig.net/about, the owner's reference for this page (2026-11-20). The
  * heading opens on the left and the lead copy answers it on the right from lg, as the reference
- * does; below lg they stack. The lead sentence is the owner's, from that home section. The
- * sentence after it is a proposal that only introduces the three cards.
+ * does; below lg they stack. The lead sentence is the owner's, from that home section, including
+ * the rewrite of 2026-11-20. The sentence after it is a proposal that only introduces the three
+ * cards.
  *
  * Each card is the band's card (DetailProcess.astro) with a primary bar along its top edge, as
  * the reference's cards have: the number, large, in primary, then the category, the two-line
@@ -36,10 +37,10 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
     {/* From lg the lead starts level with the eyebrow's first line. */}
     <div class="min-w-0 lg:pt-1">
       <p class="text-xl leading-relaxed text-pretty text-base-100">
-        Thoughtful websites. Connected email journeys. A partner invested in your business.
+        Thoughtful websites. Built for performance. A partner invested in your business.
       </p>
       <p class="mt-5 text-lg leading-relaxed text-pretty text-neutral-content/80">
-        Three commitments shape every project: who you work with, how the pieces connect, and how
+        Three commitments shape every project: who you work with, how the website performs, and how
         progress is measured.
       </p>
     </div>

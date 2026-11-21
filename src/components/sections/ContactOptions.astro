@@ -1,0 +1,129 @@
+---
+import BookingCalendar from '@/components/sections/BookingCalendar.astro';
+import ProjectInquiryForm from '@/components/sections/ProjectInquiryForm.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/lib/icons';
+
+/**
+ * The two ways to get in touch, on the contact page (the owner's brief, 2026-11-20): "Book a free
+ * call", which shows Calendly's scheduler for the discovery call (BookingCalendar.astro), and
+ * "Send a message", which shows the project inquiry form (ProjectInquiryForm.astro). One white
+ * card holds both: a tab bar at the top, two equal tabs in a `base-200` tray, the chosen one on
+ * the navbar's `neutral` with its icon in `primary` (the colour of every primary call to action
+ * stays for the actions inside the panels), then the chosen panel. The card runs edge to edge on
+ * phones (`-mx-6` against the section's padding), so the scheduler keeps the 320px Calendly
+ * requires at 360px and even 320px wide, and takes its corners and side borders from `sm`.
+ *
+ * The two paths stay independent: neither asks for the other first, and switching keeps
+ * everything each holds, since the panel not chosen is only `hidden`. The behaviour is in
+ * src/lib/contact-tabs.ts (the WAI-ARIA tabs pattern, the fragment in the URL, Back and Forward)
+ * and src/lib/booking-embed.ts (the scheduler). The tab ids are the fragments the rest of the
+ * site links to, `contactRoutes` in src/data/site.ts: `#book-call` and `#send-message`.
+ *
+ * Without JavaScript the tab bar stays hidden and the two panels follow one another as plain
+ * sections, each under its own heading, the scheduler's panel offering its link to Calendly and
+ * the form validated and posted by the browser. The small inline script under the card applies
+ * the first choice while the HTML is still parsing, so the page never paints both panels and
+ * then hides one.
+ *
+ * The form is in the built HTML exactly as before, so Netlify still detects it: it is never
+ * rendered by a script or moved by one.
+ */
+interface Tab {
+  /** The fragment that opens the tab, and the tab's own id. */
+  id: 'book-call' | 'send-message';
+  label: string;
+  /** Decorative; the label carries the meaning. */
+  icon: IconName;
+}
+
+/** The two tabs, in order: the first is the one the page opens on. The labels are the owner's. */
+const tabs: readonly Tab[] = [
+  { id: 'book-call', label: 'Book a free call', icon: 'calendar-check' },
+  { id: 'send-message', label: 'Send a message', icon: 'mail' },
+];
+
+/**
+ * A tab: a 56px target, bold, at rest in the muted text on the tray, lighter under the pointer,
+ * and on `neutral` with light text once chosen. Changes are at once, with no fade. The ring on
+ * focus is near-black, visible on the tray and clear of the dark tab's own fill by its offset.
+ * A tab is also the target of its fragment, so its scroll margin, added to the page's room for
+ * the navbar, lands the card's top edge in view rather than under the bar.
+ */
+const tab =
+  'group inline-flex min-h-14 scroll-mt-10 items-center justify-center gap-2.5 rounded-md px-3 text-center text-sm leading-tight font-bold text-base-content/70 select-none aria-[selected=false]:hover:bg-base-100 aria-[selected=false]:hover:text-base-content focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral aria-selected:bg-neutral aria-selected:text-neutral-content aria-selected:shadow-sm sm:scroll-mt-16 sm:px-5 sm:text-base';
+/** A panel takes focus from its tab: the ring sits inside the card's edge, which has no room outside. */
+const panel =
+  'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral';
+---
+
+<div
+  data-contact-tabs
+  class="-mx-6 border-y border-base-300 bg-base-100 text-base-content shadow-sm sm:mx-0 sm:rounded-md sm:border"
+>
+  {/* Hidden until the script runs: without it the panels below stand on their own. */}
+  <div
+    data-contact-tablist
+    hidden
+    aria-label="Ways to get in touch"
+    class="mx-4 mt-4 grid grid-cols-2 gap-1.5 rounded-lg bg-base-200 p-1.5 sm:mx-8 sm:mt-8 lg:mx-10 lg:mt-10"
+  >
+    {tabs.map((item) => (
+      <button type="button" id={item.id} data-contact-tab={item.id} class={tab}>
+        <Icon name={item.icon} class="size-5 shrink-0 group-aria-selected:text-primary" />
+        {item.label}
+      </button>
+    ))}
+  </div>
+
+  <section
+    id="book-call-panel"
+    data-contact-panel="book-call"
+    aria-labelledby="book-call-heading"
+    class={panel}
+  >
+    <BookingCalendar />
+  </section>
+
+  <section
+    id="send-message-panel"
+    data-contact-panel="send-message"
+    aria-labelledby="inquiry-title"
+    class:list={['px-6 py-8 sm:px-8 lg:px-10 lg:py-10', panel]}
+  >
+    <ProjectInquiryForm />
+  </section>
+</div>
+
+{/*
+ * Applies the first choice as soon as the card is parsed: the bar shows, the panel the URL's
+ * fragment does not name is hidden, and the scheduler's container takes the room it will need
+ * (`idle`; without a script it keeps the smaller room its placeholder needs), all before the
+ * browser paints the section. Kept to what the eye would catch; src/lib/contact-tabs.ts and
+ * src/lib/booking-embed.ts do the rest once the page's scripts run.
+ */}
+<script is:inline>
+  (() => {
+    const root = document.querySelector('[data-contact-tabs]');
+    if (!root) return;
+    const ids = Array.from(root.querySelectorAll('[data-contact-tab]'), (tab) => tab.id);
+    const hash = decodeURIComponent(location.hash.slice(1));
+    const chosen = ids.includes(hash) ? hash : ids[0];
+    const list = root.querySelector('[data-contact-tablist]');
+    if (list) list.hidden = false;
+    for (const panel of root.querySelectorAll('[data-contact-panel]')) {
+      panel.hidden = panel.getAttribute('data-contact-panel') !== chosen;
+    }
+    for (const embed of root.querySelectorAll('[data-booking-embed]')) {
+      embed.setAttribute('data-booking-state', 'idle');
+    }
+  })();
+</script>
+
+<script>
+  import { enhanceBookingEmbed } from '@/lib/booking-embed';
+  import { enhanceContactTabs } from '@/lib/contact-tabs';
+
+  enhanceContactTabs();
+  enhanceBookingEmbed();
+</script>

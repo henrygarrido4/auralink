@@ -1,18 +1,31 @@
 ---
 import { site } from '@/data/site';
 
+/**
+ * JSON-LD for a hub or utility page: the page's type, name, and URL, the site it belongs to, and
+ * the studio as its subject. The contact page also passes `contact`, the studio's address and
+ * number from `contactDetails`, which the page shows (the owner's approval, 2026-11-20), so the
+ * Organization node carries them too; nothing is marked up that is not visible on the page.
+ */
 interface Props {
-  type: 'AboutPage' | 'ContactPage' | 'CollectionPage';
+  type: 'AboutPage' | 'CollectionPage' | 'ContactPage';
   name: string;
+  /** The studio's visible, approved ways to be reached, for the Organization node. */
+  contact?: { email: string; telephone: string };
 }
-const { type, name } = Astro.props;
+const { type, name, contact } = Astro.props;
 const schema = {
   '@context': 'https://schema.org',
   '@type': type,
   name,
   url: new URL(Astro.url.pathname, site.url).href,
   isPartOf: { '@type': 'WebSite', name: site.name, url: site.url },
-  about: { '@type': 'Organization', name: site.name, url: site.url },
+  about: {
+    '@type': 'Organization',
+    name: site.name,
+    url: site.url,
+    ...(contact && { email: contact.email, telephone: contact.telephone }),
+  },
 };
 ---
 

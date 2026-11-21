@@ -3,6 +3,7 @@ import DetailSection from '@/components/sections/DetailSection.astro';
 import Icon from '@/components/ui/Icon.astro';
 import SectionHeading from '@/components/ui/SectionHeading.astro';
 import type { FaqList } from '@/data/detail-pages';
+import { contactRoutes } from '@/data/site';
 
 /**
  * The questions prospective clients ask about the page's subject (four on a detail page, eleven
@@ -11,9 +12,9 @@ import type { FaqList } from '@/data/detail-pages';
  * question is an h3 inside the summary, so the page's
  * outline lists it; at its right a plus sign drawn with two bars on a bordered disc turns into a
  * minus on a primary disc when the answer is open. From lg the heading, a sentence, and the link
- * to the inquiry page sit in the left column with the questions beside them, starting level with
- * the h2. Core scope and deliverables stay outside these disclosures, in the sections above.
- * Plain HTML.
+ * to the contact page's "Send a message" tab (it invites a question, so it leads to the form) sit
+ * in the left column with the questions beside them, starting level with the h2. Core scope and
+ * deliverables stay outside these disclosures, in the sections above. Plain HTML.
  */
 interface Props {
   id: string;
@@ -31,7 +32,7 @@ const titleId = `${id}-title`;
     <div class="min-w-0">
       <SectionHeading id={titleId} eyebrow="Questions" heading={faqs.heading} intro={faqs.intro} />
       <a
-        href="/contact/"
+        href={contactRoutes.sendMessage}
         class="mt-6 inline-flex min-h-11 items-center gap-2 rounded-sm font-bold text-base-content underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
       >
         Ask something else

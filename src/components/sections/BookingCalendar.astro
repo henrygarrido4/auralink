@@ -1,0 +1,118 @@
+---
+import Button from '@/components/ui/Button.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { contactDetails } from '@/data/site';
+import type { IconName } from '@/lib/icons';
+
+/**
+ * The booking panel of the contact page (ContactOptions.astro): the free discovery call, with
+ * Calendly's scheduler for the owner's event embedded below a short heading. The owner approved
+ * the call's details and the event on 2026-11-20 (docs/content-strategy.md): a free, 20-minute
+ * introductory call on Google Meet, booked through Calendly, which stays in charge of
+ * availability, time zones, and the booking itself. The copy makes no other claim.
+ *
+ * The heading block follows the form's: the eyebrow, an h2, the short primary rule, then the
+ * call's three facts in a row (its length, where it takes place, what it is), each with a
+ * decorative icon, and one sentence. Under it, the scheduler's container, a full 320px or more at
+ * every width, as Calendly requires: it runs edge to edge on phones, where the card around it
+ * does the same, and sits inside the panel's padding from `sm`. Over the container lies the
+ * placeholder, a calendar icon on a `neutral` disc, a status line, and the "Open booking
+ * calendar" link, which opens the same event on Calendly's site in a new tab. The script
+ * (src/lib/booking-embed.ts) fetches Calendly's script once the page has loaded, creates the
+ * widget while this panel is on show, writes its progress into the status line, and takes the
+ * placeholder away once the scheduler has loaded; if the script cannot be fetched or nothing
+ * loads, the placeholder stays, says so, and keeps the link. Without JavaScript the placeholder's
+ * first words and the link are what the visitor gets. Nothing in the placeholder moves, so there
+ * is nothing to stop under reduced motion. The hidden live region announces the two outcomes.
+ */
+const { booking } = contactDetails;
+
+/** The call in three facts, in the order the owner gave them. */
+const facts: readonly { icon: IconName; text: string }[] = [
+  { icon: 'clock', text: booking.duration },
+  { icon: 'video', text: booking.platform },
+  { icon: 'handshake', text: booking.kind },
+];
+---
+
+<div data-booking>
+  <div class="px-6 pt-8 sm:px-8 lg:px-10 lg:pt-10">
+    <Eyebrow>Discovery call</Eyebrow>
+    <h2 id="book-call-heading" class="mt-4 text-3xl font-bold tracking-tight text-balance">
+      Book a free discovery call
+    </h2>
+    <div class="mt-4 h-0.5 w-12 bg-primary" aria-hidden="true"></div>
+    {/* role="list": Safari drops the list role from lists styled without markers. */}
+    <ul role="list" aria-label="About the call" class="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+      {facts.map((fact) => (
+        <li class="flex items-center gap-2 text-base font-bold text-base-content">
+          <span
+            class="grid size-7 shrink-0 place-items-center rounded-full bg-neutral text-primary"
+            aria-hidden="true"
+          >
+            <Icon name={fact.icon} class="size-4" />
+          </span>
+          {fact.text}
+        </li>
+      ))}
+    </ul>
+    <p class="mt-4 text-base leading-relaxed text-base-content/80">
+      Choose a day and time that suits you. The calendar shows times in your time zone.
+    </p>
+  </div>
+
+  <div class="mt-6 pb-6 sm:px-8 sm:pb-8 lg:px-10 lg:pb-10">
+    {/*
+     * The scheduler's container: Calendly appends its iframe here and, with `resize: true`, sets
+     * this element's height to the booking page's as it grows and shrinks, so nothing scrolls
+     * inside the frame. While the scheduler is on its way (`idle`, `loading`, and `ready` until
+     * Calendly has measured the page; the inline script sets `idle` as the card is parsed), the
+     * minimum height (44rem; Calendly's own snippets give the inline widget 700px) holds the room
+     * for the placeholder and for the scheduler's first screen, so little moves as it arrives,
+     * and the iframe inherits it so it is never a frame's default 150px meanwhile. Once Calendly
+     * has set a height (`data-booking-sized`, src/lib/booking-embed.ts) the floor goes, so the
+     * container follows that height rather than leaving a blank band under a shorter page. With
+     * no script, and when the scheduler has failed to show, the floor is 24rem, the room the
+     * placeholder's message and link need. `box-content`: the height Calendly sets is the booking
+     * page's own, so the border is added outside it and the iframe gets the whole of it.
+     */}
+    <div
+      data-booking-embed
+      data-booking-url={booking.url}
+      class="relative box-content min-h-96 border-y border-base-300 bg-base-100 data-[booking-state=idle]:min-h-176 data-[booking-state=loading]:min-h-176 data-[booking-state=ready]:min-h-176 sm:rounded-md sm:border [&>iframe]:block [&>iframe]:min-h-[inherit] [&>iframe]:w-full [&[data-booking-state][data-booking-sized]]:min-h-0"
+    >
+      <div
+        data-booking-placeholder
+        class="absolute inset-0 z-10 grid place-items-center bg-base-100 px-5 py-10 text-center sm:rounded-md"
+      >
+        <div class="max-w-md">
+          <span
+            class="mx-auto grid size-16 place-items-center rounded-full bg-neutral text-primary"
+            aria-hidden="true"
+          >
+            <Icon name="calendar-check" class="size-8" />
+          </span>
+          <p data-booking-status class="mt-6 text-lg leading-relaxed text-pretty text-base-content">
+            Pick a time in the booking calendar.
+          </p>
+          <div class="mt-6">
+            <Button
+              href={booking.url}
+              variant="secondary"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="transition-none"
+            >
+              Open booking calendar
+              <Icon name="arrow-up-right" class="size-5" />
+              <span class="sr-only">(opens in a new tab)</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {/* Announces the scheduler's arrival or failure to assistive technology; the words are the script's. */}
+    <p data-booking-live class="sr-only" aria-live="polite" aria-atomic="true"></p>
+  </div>
+</div>

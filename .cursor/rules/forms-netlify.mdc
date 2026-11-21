@@ -12,7 +12,7 @@ The site is static. Lead capture uses Netlify Forms; there is no backend, databa
 
 ## Static HTML form, confirmed in place (the pattern in use)
 
-The project inquiry form (`src/components/sections/ProjectInquiryForm.astro`, on `/contact/`) is an ordinary Netlify form that a small script (`src/lib/inquiry-form.ts`) posts in the background and confirms on the same page. There is no thank-you page: the owner retired it on 2026-11-19.
+The project inquiry form (`src/components/sections/ProjectInquiryForm.astro`, on `/contact/`) is an ordinary Netlify form that a small script (`src/lib/inquiry-form.ts`) posts in the background and confirms on the same page. There is no thank-you page: the owner retired it on 2026-11-19. Since 2026-11-20 it is the "Send a message" panel of the contact page's two tabs (`ContactOptions.astro`, `src/lib/contact-tabs.ts`; the other is Calendly's scheduler for the free discovery call, `BookingCalendar.astro`, `src/lib/booking-embed.ts`). The tabs only toggle `hidden` on the panels, so the form stays in the built HTML for Netlify, keeps what was typed across a switch, and an answer that arrives while its panel is hidden pulls no focus (a hidden element cannot be focused) and waits there. The two paths are independent: neither is asked for before the other.
 
 ```astro
 <form name="project-inquiry" method="POST" data-netlify="true" netlify-honeypot="company-website" data-inquiry-form>
@@ -51,7 +51,7 @@ Only when a form needs real client-side state the script pattern cannot give (mu
 - Ask only for what qualifying an inquiry needs: name, email, company, optional phone, kind of business, service interest (several boxes, since the studio offers email and search work alongside websites), current website, message. Only name, email, and message are required; never a required phone number.
 - Use native validation attributes first (`required`, `type="email"`, `minlength`), then enhance. Error text sits next to the field and is referenced by `aria-describedby`.
 - `autocomplete` attributes on identity fields; labels always visible.
-- Direct contact details (an email address, a phone number) come from `contactDetails` in `src/data/site.ts` and render only once set there; none is verified yet (`docs/content-strategy.md`). Never type an address into a template.
+- Direct contact details (the email address, the phone number, the Calendly event) come from `contactDetails` in `src/data/site.ts`, approved by the owner on 2026-11-20 (`docs/content-strategy.md`, "Verified facts"), and the contact page's fragments from `contactRoutes`. Never type an address, a number, or a booking link into a template.
 
 ## Privacy and spam
 
@@ -65,4 +65,4 @@ If the site moves off Netlify, forms need a replacement endpoint (`ENDPOINT` in 
 
 ## Checks for this area
 
-`tests/e2e/contact.spec.ts` covers the contract (name, method, `data-netlify`, the `form-name` input, the honeypot, no `action`, no thank-you route), validation, the sent, failed, and sending states with the request answered by the test (Netlify is never posted to), the pills from the keyboard, the side cards, reduced motion, and the form without JavaScript. Run it with `npx playwright test tests/e2e/contact.spec.ts`; `npm run test:e2e` for accessibility of the form page across engines.
+`tests/e2e/contact.spec.ts` covers the contract (name, method, `data-netlify`, the `form-name` input, the honeypot, no `action`, the form in the built HTML, no thank-you route), the two tabs (the pattern, the fragments, Back and Forward, the keyboard, what a switch keeps, a send that finishes behind the other tab), the scheduler with Calendly stood in for by the test (loaded, deferred, and refused), validation, the sent, failed, and sending states with the request answered by the test (Netlify is never posted to), the pills from the keyboard, the side cards, reduced motion, and the page without JavaScript. Run it with `npx playwright test tests/e2e/contact.spec.ts`; `npm run test:e2e` for accessibility of the form page across engines.

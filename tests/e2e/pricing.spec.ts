@@ -12,7 +12,7 @@ import {
   websiteCare,
   welcomeSeries,
 } from '../../src/data/pricing';
-import { primaryNav, site } from '../../src/data/site';
+import { contactRoutes, primaryNav, site } from '../../src/data/site';
 
 /**
  * The pricing page (src/pages/pricing/index.astro, the owner's brief of 2026-11-20): the shared
@@ -343,7 +343,7 @@ test.describe('questions', () => {
   });
 });
 
-test('the closing call to action offers two ways in, both to the inquiry page', async ({
+test('the closing call to action offers two ways in, both to the contact page', async ({
   page,
 }) => {
   await page.goto(ROUTE);
@@ -353,9 +353,11 @@ test('the closing call to action offers two ways in, both to the inquiry page', 
   const links = section.getByRole('link');
   await expect(links).toHaveCount(2);
   await expect(links.nth(0)).toHaveText(pricingCta.primary.label);
-  await expect(links.nth(0)).toHaveAttribute('href', pricingInquiry.href);
+  await expect(links.nth(0)).toHaveAttribute('href', pricingCta.primary.href);
+  // The question leads to the contact page's "Send a message" tab (2026-11-20).
   await expect(links.nth(1)).toHaveText(pricingCta.secondary.label);
-  await expect(links.nth(1)).toHaveAttribute('href', pricingInquiry.href);
+  await expect(links.nth(1)).toHaveAttribute('href', contactRoutes.sendMessage);
+  expect(pricingCta.primary.href).toBe(pricingInquiry.href);
   // No form, checkout, or booking on the page.
   await expect(page.locator('main form, main input, main select, main textarea')).toHaveCount(0);
 });

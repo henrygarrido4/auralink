@@ -20,6 +20,12 @@
  *      summary and median reports into reports/lighthouse/latest/.
  *   4. Compares the median run against lighthouse.budgets.json and exits 1 on any overage.
  *
+ * Transfer budgets cover the site's own resources, those served from the page's origin; what a
+ * third party sends (the contact page's Calendly scheduler, an iframe with its own scripts and
+ * styles) counts toward the third-party request budget alone and is reported beside the total.
+ * A route listed under `routes` in lighthouse.budgets.json takes its own values for the keys it
+ * names, over the defaults (docs/performance.md, "Budgets").
+ *
  * Lab results are not field Core Web Vitals: INP and real-user LCP/CLS can only come from
  * users of the live site. See docs/performance.md.
  */
@@ -171,19 +177,28 @@ function summarize(report) {
     other: 0,
   };
   let thirdParty = 0;
+  let thirdPartyKB = 0;
   for (const item of items) {
     const kb = (item.transferSize ?? 0) / 1024;
+    let external = false;
+    try {
+      const { protocol, hostname } = new URL(item.url);
+      // data: and blob: URLs parse without a host and never leave the page; only http(s) can be third-party.
+      external = protocol.startsWith('http') && hostname !== 'localhost';
+    } catch {
+      // unparsable URL
+    }
+    if (external) {
+      // Another origin's bytes are its own: counted as a request, reported, and kept out of the
+      // site's transfer budgets (see the header comment).
+      thirdParty += 1;
+      thirdPartyKB += kb;
+      continue;
+    }
     transferKB.total += kb;
     const type = String(item.resourceType ?? 'Other').toLowerCase();
     if (type in transferKB) transferKB[type] += kb;
     else transferKB.other += kb;
-    try {
-      const { protocol, hostname } = new URL(item.url);
-      // data: and blob: URLs parse without a host and never leave the page; only http(s) can be third-party.
-      if (protocol.startsWith('http') && hostname !== 'localhost') thirdParty += 1;
-    } catch {
-      // unparsable URL
-    }
   }
   for (const key of Object.keys(transferKB))
     transferKB[key] = Math.round(transferKB[key] * 10) / 10;
@@ -191,26 +206,46 @@ function summarize(report) {
     scores,
     metrics,
     transferKB,
+    thirdPartyKB: Math.round(thirdPartyKB * 10) / 10,
     requests: { total: items.length, 'third-party': thirdParty },
   };
 }
 
-function checkBudgets(device, summary) {
+/** The budgets for a route: the defaults, with the values its `routes` entry names in their place. */
+function budgetsFor(route) {
+  const own = budgets.routes?.[route];
+  if (!own) return budgets;
+  return {
+    scores: Object.fromEntries(
+      DEVICES.map((device) => [device, { ...budgets.scores[device], ...own.scores?.[device] }]),
+    ),
+    metrics: Object.fromEntries(
+      DEVICES.map((device) => [device, { ...budgets.metrics[device], ...own.metrics?.[device] }]),
+    ),
+    resources: {
+      transferKB: { ...budgets.resources.transferKB, ...own.resources?.transferKB },
+      requests: { ...budgets.resources.requests, ...own.resources?.requests },
+    },
+  };
+}
+
+function checkBudgets(route, device, summary) {
   const failures = [];
-  for (const [category, min] of Object.entries(budgets.scores[device] ?? {})) {
+  const limits = budgetsFor(route);
+  for (const [category, min] of Object.entries(limits.scores[device] ?? {})) {
     const actual = summary.scores[category];
     if (actual === null || actual < min) failures.push(`${category} score ${actual} < ${min}`);
   }
-  for (const [metric, max] of Object.entries(budgets.metrics[device] ?? {})) {
+  for (const [metric, max] of Object.entries(limits.metrics[device] ?? {})) {
     const actual = summary.metrics[metric];
     if (actual === null || actual > max)
       failures.push(`${metric} ${Math.round(actual * 1000) / 1000} > ${max}`);
   }
-  for (const [type, max] of Object.entries(budgets.resources.transferKB ?? {})) {
+  for (const [type, max] of Object.entries(limits.resources.transferKB ?? {})) {
     if (summary.transferKB[type] > max)
       failures.push(`${type} transfer ${summary.transferKB[type]} KB > ${max} KB`);
   }
-  for (const [kind, max] of Object.entries(budgets.resources.requests ?? {})) {
+  for (const [kind, max] of Object.entries(limits.resources.requests ?? {})) {
     if (summary.requests[kind] > max)
       failures.push(`${kind} requests ${summary.requests[kind]} > ${max}`);
   }
@@ -308,7 +343,13 @@ async function main() {
           (a, b) => (a.scores.performance ?? 0) - (b.scores.performance ?? 0),
         );
         const median = sorted[Math.floor(sorted.length / 2)];
-        results.push({ route, device, median, runs, budgetFailures: checkBudgets(device, median) });
+        results.push({
+          route,
+          device,
+          median,
+          runs,
+          budgetFailures: checkBudgets(route, device, median),
+        });
       }
     }
   } finally {
@@ -328,15 +369,18 @@ async function main() {
   const lines = [
     `# Lighthouse baseline (${summary.generatedAt})`,
     '',
-    `Lighthouse ${environment.lighthouse}, ${environment.chrome}, Node ${environment.node}, ${environment.os}. Throttling: ${environment.throttlingMethod}. ${RUNS} run(s) per route and device; the median run by performance score is reported. Routes: ${coverage} (${routes.length}). Lab data only.`,
+    `Lighthouse ${environment.lighthouse}, ${environment.chrome}, Node ${environment.node}, ${environment.os}. Throttling: ${environment.throttlingMethod}. ${RUNS} run(s) per route and device; the median run by performance score is reported. Routes: ${coverage} (${routes.length}). Transfer is the site's own; a third party's bytes follow in parentheses. Lab data only.`,
     '',
     '| Route | Device | Perf | A11y | BP | SEO | FCP | LCP | SI | TBT | CLS | TTI | Transfer | Requests | Budget |',
     '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
   ];
   for (const r of results) {
     const m = r.median;
+    const transfer = m.thirdPartyKB
+      ? `${m.transferKB.total} KB (+${m.thirdPartyKB} KB third-party)`
+      : `${m.transferKB.total} KB`;
     lines.push(
-      `| ${r.route} | ${r.device} | ${m.scores.performance} | ${m.scores.accessibility} | ${m.scores['best-practices']} | ${m.scores.seo} | ${fmt(m.metrics['first-contentful-paint'])} | ${fmt(m.metrics['largest-contentful-paint'])} | ${fmt(m.metrics['speed-index'])} | ${fmt(m.metrics['total-blocking-time'])} | ${fmt(m.metrics['cumulative-layout-shift'], 'cumulative-layout-shift')} | ${fmt(m.metrics.interactive)} | ${m.transferKB.total} KB | ${m.requests.total} | ${r.budgetFailures.length ? 'FAIL' : 'pass'} |`,
+      `| ${r.route} | ${r.device} | ${m.scores.performance} | ${m.scores.accessibility} | ${m.scores['best-practices']} | ${m.scores.seo} | ${fmt(m.metrics['first-contentful-paint'])} | ${fmt(m.metrics['largest-contentful-paint'])} | ${fmt(m.metrics['speed-index'])} | ${fmt(m.metrics['total-blocking-time'])} | ${fmt(m.metrics['cumulative-layout-shift'], 'cumulative-layout-shift')} | ${fmt(m.metrics.interactive)} | ${transfer} | ${m.requests.total} | ${r.budgetFailures.length ? 'FAIL' : 'pass'} |`,
     );
   }
   for (const r of results) {

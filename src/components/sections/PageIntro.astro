@@ -19,7 +19,9 @@ import type { IconName } from '@/lib/icons';
  * primary yellow; the short primary rule; the description in the band's light text; and, when a
  * page passes one, a short `note` under the description with a small primary icon (the pricing
  * page's two-week design preview, 2026-11-20, whose eyebrow is also the brief's own words rather
- * than the page's name). A title with no `highlight` is all white.
+ * than the page's name). A title with no `highlight` is all white. Whatever a page puts in the
+ * default slot follows, still in the copy column: the contact page's direct-contact links
+ * (2026-11-20); every other page leaves it empty.
  *
  * The art is the mark the owner supplied (src/assets/aura-hero.svg), inlined at build time, so it
  * costs no request. It rests on the band's bottom edge at the right: beside the copy from lg, and
@@ -159,6 +161,7 @@ const pixels = [
           <span>{note}</span>
         </p>
       )}
+      <slot />
     </div>
 
     <div data-page-hero-art aria-hidden="true">
