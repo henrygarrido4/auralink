@@ -1,11 +1,11 @@
 ---
-import Eyebrow from '@/components/ui/Eyebrow.astro';
-
 /**
- * The header of a detail-page section: the eyebrow, the h2, the short primary rule, and an
- * optional introduction, left-aligned on the container's edge like the home page's sections.
- * `tone="dark"` is for a `neutral` band: the eyebrow turns primary and the copy light, as the
- * "Why Auralink Studio?" section does.
+ * The header of a detail-page section: the eyebrow, opened by a short primary dash (the mark of
+ * the section labels on uprig.net/seo, the owner's reference for the detail pages' design pass,
+ * 2026-11-20), the h2, and an optional introduction, left-aligned on the container's edge like
+ * the home page's sections. The dash takes the place of the rule the home sections draw under
+ * their headings, so each section opens with one accent, not two. `tone="dark"` is for a
+ * `neutral` band: the label turns primary and the copy light, as the home process's does.
  */
 interface Props {
   /** The h2's id, which the section's `aria-labelledby` names. */
@@ -21,21 +21,24 @@ const dark = tone === 'dark';
 ---
 
 <div class="max-w-3xl">
-  {dark ? (
-    <p class="text-sm font-bold tracking-[0.16em] text-primary uppercase">{eyebrow}</p>
-  ) : (
-    <Eyebrow>{eyebrow}</Eyebrow>
-  )}
+  <p
+    class:list={[
+      'flex items-center gap-3 text-sm font-bold tracking-[0.16em] uppercase',
+      dark ? 'text-primary' : 'text-base-content/70',
+    ]}
+  >
+    <span class="h-0.5 w-6 shrink-0 bg-primary" aria-hidden="true"></span>
+    {eyebrow}
+  </p>
   <h2
     id={id}
     class:list={[
-      'mt-4 text-3xl font-bold tracking-tight text-balance sm:mt-5 sm:text-4xl',
+      'mt-5 text-3xl leading-tight font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl',
       dark ? 'text-base-100' : 'text-base-content',
     ]}
   >
     {heading}
   </h2>
-  <div class="mt-5 h-0.5 w-12 bg-primary" aria-hidden="true"></div>
   {intro && (
     <p
       class:list={[

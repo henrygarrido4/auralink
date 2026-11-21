@@ -1,0 +1,48 @@
+---
+import SectionMark from '@/components/ui/SectionMark.astro';
+
+/**
+ * The band of a detail-page section: the `section` landmark named by its heading, the page
+ * container with the shared vertical rhythm, and the band's tone. `light` is the white page,
+ * `muted` the grey of the home services band, and `dark` the charcoal of the home process, with
+ * its fine lines (`process-lines`), so every dark band on the site is the same one. The light
+ * text colour on the dark band is set here; the copy inside chooses its own shades.
+ *
+ * `mark` lays the logo's mark across one of the band's edges (SectionMark.astro): the section
+ * clips its own half, and when the mark rests on the bottom edge the band grows taller below its
+ * content from lg, so the mark's upper half lies in open space rather than over the last row.
+ */
+interface Props {
+  /** Anchor for in-page links. */
+  id: string;
+  /** The id of the section's h2, which names the landmark. */
+  labelledBy: string;
+  tone?: 'light' | 'muted' | 'dark';
+  /** The edge of this band the shared mark is centred on, if it carries one. */
+  mark?: 'top' | 'bottom';
+}
+
+const { id, labelledBy, tone = 'light', mark } = Astro.props;
+
+const bands = {
+  light: 'bg-base-100',
+  muted: 'bg-base-300/70',
+  dark: 'process-lines bg-neutral/90 text-neutral-content',
+};
+---
+
+<section
+  id={id}
+  aria-labelledby={labelledBy}
+  class:list={[bands[tone], mark && 'relative isolate overflow-clip']}
+>
+  {mark && <SectionMark edge={mark} tone={tone === 'dark' ? 'dark' : 'light'} />}
+  <div
+    class:list={[
+      'mx-auto max-w-site px-6 py-16 sm:py-20 lg:px-8',
+      mark === 'bottom' ? 'lg:pt-24 lg:pb-36' : 'lg:py-24',
+    ]}
+  >
+    <slot />
+  </div>
+</section>

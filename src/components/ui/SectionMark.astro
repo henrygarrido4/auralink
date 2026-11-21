@@ -1,0 +1,36 @@
+---
+import Mark from '@/assets/aura-hero.svg';
+
+/**
+ * The logo's mark laid across the edge between two sections of a detail page, after the Eyler
+ * Creative page the owner gave as the reference (2026-11-20), where one large tinted shape sits
+ * half on a dark section and half on the light one below it. Render it in both sections, with
+ * `edge="bottom"` in the section above and `edge="top"` in the one below; each section clips
+ * its own half, so the two copies read as one shape in two tints (`section-mark` in
+ * src/styles/global.css holds the geometry). `tone` is the section's own band: `dark` gives a
+ * faint light tint, `light` a pale primary one. Decorative, hidden from assistive technology,
+ * still, and hidden below md. The art is the owner's mark (src/assets/aura-hero.svg), used as
+ * supplied, in the viewBox that ends at the artwork, as the hero draws it.
+ */
+interface Props {
+  /** Which edge of its section the mark is centred on. */
+  edge: 'top' | 'bottom';
+  /** The band the mark lies on, which sets its tint. */
+  tone?: 'light' | 'dark';
+}
+
+const { edge, tone = 'light' } = Astro.props;
+---
+
+<Mark
+  data-section-mark={edge}
+  class:list={[
+    'section-mark hidden md:block',
+    tone === 'dark' ? 'text-base-100/8' : 'text-primary/20',
+  ]}
+  viewBox="0 225 1500 1050"
+  width="1500"
+  height="1050"
+  aria-hidden="true"
+  focusable="false"
+/>

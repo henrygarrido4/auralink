@@ -4,9 +4,9 @@ import type { DirectoryBlock } from '@/data/detail-pages';
 /**
  * A `directory` block of a detail page's module (src/data/detail-pages.ts): grouped lists, such
  * as the trades a construction and home services website might belong to, so a visitor
- * recognises their business. Each group is a title, what sets it apart, and its items as quiet
- * grey labels, which are text, not links or filters. Four groups share a row from lg, two from
- * sm. Plain HTML.
+ * recognises their business. Each group is a card with its title, what sets it apart, and its
+ * items as quiet bordered labels, which are text, not links or filters. Four groups share a row
+ * from lg, two from sm. Plain HTML.
  */
 interface Props {
   block: DirectoryBlock;
@@ -26,17 +26,17 @@ const columns = block.groups.length <= 2 ? 'md:grid-cols-2' : 'sm:grid-cols-2 lg
     )}
   </div>
 
-  <div class:list={['mt-8 grid gap-x-8 gap-y-10', columns]}>
+  <div class:list={['mt-8 grid gap-5 lg:gap-6', columns]}>
     {block.groups.map((group) => (
-      <div class="min-w-0 border-t border-base-300 pt-5">
-        <h4 class="text-lg font-bold tracking-tight text-balance text-base-content">
+      <div class="detail-card min-w-0 p-6">
+        <h4 class="text-lg leading-snug font-bold tracking-tight text-balance text-base-content">
           {group.title}
         </h4>
         <p class="mt-2 text-sm leading-relaxed text-pretty text-base-content/75">{group.text}</p>
         {/* role="list": Safari drops the list role from lists styled without markers. */}
-        <ul role="list" class="mt-4 flex flex-wrap gap-2">
+        <ul role="list" class="mt-5 flex flex-wrap gap-2">
           {group.items.map((item) => (
-            <li class="rounded-md bg-base-200 px-2.5 py-1 text-sm font-medium text-base-content">
+            <li class="rounded-md border border-base-300 bg-base-200 px-2.5 py-1 text-sm font-medium text-base-content">
               {item}
             </li>
           ))}

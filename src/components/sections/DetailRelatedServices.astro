@@ -1,61 +1,82 @@
 ---
+import DetailSection from '@/components/sections/DetailSection.astro';
 import Icon from '@/components/ui/Icon.astro';
 import SectionHeading from '@/components/ui/SectionHeading.astro';
 import { serviceCardById, type RelatedServices } from '@/data/detail-pages';
 
 /**
  * The services an industry page recommends: three or four, each with why it matters for that kind
- * of business, on the grey band the home services use. Each is one link to its service page,
- * named by its visible text in order (the service, the reason, "Learn more"), as the home service
- * cards are. This section is the recommendation, not the catalogue: the services hub and the footer
- * list all six. Hover and focus change the tile's edge at once, with no transition. Plain HTML.
+ * of business, as cards on the grey band. Each card is one link to its service page, named by its
+ * visible text in order (the service, the reason, "Learn more"), as the home service cards are:
+ * the service's icon on a primary tile, its name, the reason, and at the foot the arrow box the
+ * home cards end with (`arrow-box`, src/styles/global.css), which fills primary as its arrow
+ * slides through under the pointer or keyboard focus. The pointer also fades in the home cards'
+ * 2px primary frame on the card's edge (a pseudo-element, so nothing moves). This section is the
+ * recommendation, not the catalogue: the services hub and the footer list all nine. Plain HTML.
  */
 interface Props {
   id: string;
   services: RelatedServices;
+  /** The edge of this band the shared logo mark is centred on, if it carries one. */
+  mark?: 'top' | 'bottom';
 }
 
-const { id, services } = Astro.props;
+const { id, services, mark } = Astro.props;
 const titleId = `${id}-title`;
 const items = services.items.map((entry) => ({ ...entry, card: serviceCardById(entry.card) }));
 /** Three across for three, two by two for four, so no row is left short. */
 const columns = items.length === 4 ? 'lg:grid-cols-2 xl:grid-cols-4' : 'lg:grid-cols-3';
+
+/**
+ * The home cards' hover: a 2px primary frame faded in over 300ms. It is laid over the card's own
+ * 1px edge (one pixel outside the padding box), so the grey hairline does not show around it.
+ */
+const frame =
+  'before:pointer-events-none before:absolute before:-inset-px before:rounded-md before:border-2 before:border-primary before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100';
+const linkStates =
+  'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral focus-visible:before:opacity-100';
 ---
 
-<section id={id} aria-labelledby={titleId} class="bg-base-300/70">
-  <div class="mx-auto max-w-site px-6 py-16 sm:py-20 lg:px-8 lg:py-24">
-    <SectionHeading
-      id={titleId}
-      eyebrow="Where we help"
-      heading={services.heading}
-      intro={services.intro}
-    />
+<DetailSection id={id} labelledBy={titleId} tone="muted" mark={mark}>
+  <SectionHeading
+    id={titleId}
+    eyebrow="Where we help"
+    heading={services.heading}
+    intro={services.intro}
+  />
 
-    {/* role="list": Safari drops the list role from lists styled without markers. */}
-    <ul role="list" class:list={['mt-12 grid gap-6 sm:mt-14 md:grid-cols-2', columns]}>
-      {items.map(({ card, relevance }) => (
-        <li class="min-w-0">
-          <a
-            href={card.href}
-            class="group flex h-full flex-col rounded-md border border-base-300 bg-base-100 p-6 text-base-content hover:border-base-content/50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral sm:p-8"
+  {/* role="list": Safari drops the list role from lists styled without markers. */}
+  <ul role="list" class:list={['mt-12 grid gap-6 sm:mt-14 md:grid-cols-2', columns]}>
+    {items.map(({ card, relevance }) => (
+      <li class="min-w-0">
+        <a
+          href={card.href}
+          class:list={[
+            'detail-card group relative flex h-full flex-col p-6 text-base-content sm:p-8',
+            frame,
+            linkStates,
+          ]}
+        >
+          <span
+            class="grid size-14 place-items-center rounded-md bg-primary text-primary-content"
+            aria-hidden="true"
           >
-            <span
-              class="grid size-12 place-items-center rounded-md bg-primary text-primary-content"
-              aria-hidden="true"
-            >
-              <Icon name={card.icon} class="size-6" />
+            <Icon name={card.icon} class="size-7" stroke-width="1.75" />
+          </span>
+          <h3 class="mt-6 text-xl font-bold tracking-tight">{card.title}</h3>
+          <p class="mt-3 text-base leading-relaxed text-pretty text-base-content/75">{relevance}</p>
+          <span class="mt-auto flex items-center gap-4 pt-8 text-sm font-bold">
+            <span class="arrow-box size-12.5 shrink-0 rounded-sm shadow-md group-hover:arrow-box-active group-focus-visible:arrow-box-active">
+              {/* The first arrow waits outside the box, to the left; the second rests in the box. */}
+              <span data-arrow-track>
+                <Icon name="arrow-right" class="size-5" />
+                <Icon name="arrow-right" class="size-5" />
+              </span>
             </span>
-            <h3 class="mt-6 text-xl font-bold tracking-tight">{card.title}</h3>
-            <p class="mt-3 text-base leading-relaxed text-pretty text-base-content/75">
-              {relevance}
-            </p>
-            <span class="mt-auto flex items-center gap-2 pt-6 text-sm font-bold group-hover:underline group-hover:underline-offset-4">
-              Learn more
-              <Icon name="arrow-right" class="size-4" />
-            </span>
-          </a>
-        </li>
-      ))}
-    </ul>
-  </div>
-</section>
+            Learn more
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</DetailSection>

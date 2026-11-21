@@ -17,7 +17,9 @@ import { servicePages } from '@/data/service-pages';
  * eyebrow; who the service helps and when it fits; what the client receives; the service's own
  * module; the four-step process; four questions; the page's invitation; then the shared contact
  * banner. Service pages explain the work and its scope; the industry pages explain the business
- * context.
+ * context. The logo's mark lies across the edge between the dark process band and the questions
+ * (`mark`, SectionMark.astro), half on each, as on the Eyler Creative page the owner gave as the
+ * reference (2026-11-20).
  */
 export function getStaticPaths() {
   return servicePages.map((page) => ({ params: { slug: page.slug }, props: { page } }));
@@ -49,7 +51,7 @@ const hub = { label: 'Services', href: '/services/' };
   <DetailIntro id="fit" introduction={page.introduction} />
   <DetailDeliverables id="deliverables" deliverables={page.deliverables} />
   <DetailModule id="approach" module={page.module} />
-  <DetailProcess id="process" engagement={page.engagement} />
-  <DetailFaq id="faq" faqs={page.faqs} />
+  <DetailProcess id="process" engagement={page.engagement} mark="bottom" />
+  <DetailFaq id="faq" faqs={page.faqs} mark="top" />
   <DetailInvitation id="next-step" invitation={page.invitation} />
 </BaseLayout>

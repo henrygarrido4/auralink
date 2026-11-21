@@ -4,9 +4,10 @@ import type { ComparisonBlock } from '@/data/detail-pages';
 
 /**
  * A `comparison` block of a detail page's module (src/data/detail-pages.ts): two options side by
- * side as a decision guide, each a bordered panel with its title, a sentence, and the signs that
- * point to it, marked with a check. Neither side is coloured as the recommended one; the note
- * under them says how to choose. Plain HTML.
+ * side as a decision guide, each a card whose head, on a grey strip, carries its title and a
+ * sentence, and whose body lists the signs that point to it, each marked with a check on a
+ * primary disc. Neither side is coloured as the recommended one; the note under them says how to
+ * choose. Plain HTML.
  */
 interface Props {
   block: ComparisonBlock;
@@ -25,23 +26,25 @@ const { block } = Astro.props;
     )}
   </div>
 
-  <div class="mt-8 grid gap-6 md:grid-cols-2">
+  <div class="mt-8 grid gap-5 md:grid-cols-2 lg:gap-6">
     {block.columns.map((column) => (
-      <div class="min-w-0 rounded-md border border-base-300 bg-base-100 p-6 sm:p-8">
-        <h4 class="text-xl font-bold tracking-tight text-balance text-base-content">
-          {column.title}
-        </h4>
-        {column.intro && (
-          <p class="mt-2 text-base leading-relaxed text-pretty text-base-content/75">
-            {column.intro}
-          </p>
-        )}
+      <div class="detail-card min-w-0 overflow-clip">
+        <div class="border-b border-base-300 bg-base-200 px-6 py-5 sm:px-8">
+          <h4 class="text-xl leading-snug font-bold tracking-tight text-balance text-base-content">
+            {column.title}
+          </h4>
+          {column.intro && (
+            <p class="mt-2 text-base leading-relaxed text-pretty text-base-content/75">
+              {column.intro}
+            </p>
+          )}
+        </div>
         {/* role="list": Safari drops the list role from lists styled without markers. */}
-        <ul role="list" class="mt-5 grid gap-3">
+        <ul role="list" class="grid gap-3.5 p-6 sm:p-8">
           {column.items.map((item) => (
             <li class="flex items-start gap-3">
               <span
-                class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-neutral text-neutral-content"
+                class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-primary text-primary-content"
                 aria-hidden="true"
               >
                 <Icon name="check" class="size-3" stroke-width="3" />

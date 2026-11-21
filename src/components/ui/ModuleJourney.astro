@@ -4,10 +4,11 @@ import type { JourneyBlock } from '@/data/detail-pages';
 
 /**
  * A `journey` block of a detail page's module (src/data/detail-pages.ts): a workflow read as
- * steps, each a numbered mark, a small label (a trigger, an action, a stage), a title, and a
- * sentence or two. From md the steps share one row, joined by a hairline that runs from each
- * mark to the next; below md they stack. A note under the steps says that the journey is
- * illustrative, or what it depends on. The numbers are decorative: the list is ordered. Plain HTML.
+ * steps, each a card with a numbered primary mark, a small label (a trigger, an action, a stage),
+ * a title, and a sentence or two. From md the steps share rows, and a hairline runs from each
+ * mark to the next card in its row, across the card's padding and the grid's gap; below md they
+ * stack. A note under the steps says that the journey is illustrative, or what it depends on. The
+ * numbers are decorative: the list is ordered. Plain HTML.
  */
 interface Props {
   block: JourneyBlock;
@@ -15,12 +16,21 @@ interface Props {
 
 const { block } = Astro.props;
 const count = block.steps.length;
+/** Steps per row from md and from lg; the line after a step shows only when the next shares its row. */
+const perRow = count <= 3 ? { md: 3, lg: 3 } : count === 4 ? { md: 2, lg: 4 } : { md: 3, lg: 5 };
 const columns =
   count <= 3
     ? 'md:grid-cols-3'
     : count === 4
       ? 'md:grid-cols-2 lg:grid-cols-4'
       : 'md:grid-cols-3 lg:grid-cols-5';
+const lineTo = (index: number) => {
+  if (index === count - 1) return null;
+  const md = (index + 1) % perRow.md !== 0;
+  const lg = (index + 1) % perRow.lg !== 0;
+  if (!md && !lg) return null;
+  return ['hidden', md && 'md:block', lg ? 'lg:block' : 'lg:hidden'];
+};
 ---
 
 <div>
@@ -34,34 +44,44 @@ const columns =
   </div>
 
   {/* role="list": Safari drops the list role from lists styled without markers. */}
-  <ol role="list" class:list={['mt-8 grid gap-x-6 gap-y-8', columns]}>
-    {block.steps.map((step, index) => (
-      <li class="relative flex min-w-0 flex-col">
-        <div class="flex items-center gap-4">
-          <span
-            class="grid size-10 shrink-0 place-items-center rounded-full bg-neutral font-(family-name:--font-headers) text-sm font-bold text-neutral-content"
-            aria-hidden="true"
-          >
-            {index + 1}
-          </span>
-          {/* The line to the next step, across the grid's gap; the last step has none. */}
-          {index < count - 1 && (
-            <span class="hidden h-px flex-1 bg-base-300 md:block md:-mr-6" aria-hidden="true" />
-          )}
-        </div>
-        <p class="mt-5 text-xs font-bold tracking-[0.16em] text-base-content/70 uppercase">
-          {step.label}
-        </p>
-        <h4 class="mt-1 text-lg font-bold tracking-tight text-balance text-base-content">
-          {step.title}
-        </h4>
-        <p class="mt-2 text-base leading-relaxed text-pretty text-base-content/75">{step.text}</p>
-      </li>
-    ))}
+  <ol role="list" class:list={['mt-8 grid gap-5 lg:gap-6', columns]}>
+    {block.steps.map((step, index) => {
+      const line = lineTo(index);
+      return (
+        <li class="detail-card flex min-w-0 flex-col p-6">
+          <div class="flex items-center gap-4">
+            <span
+              class="grid size-10 shrink-0 place-items-center rounded-full bg-primary font-(family-name:--font-headers) text-sm font-bold text-primary-content"
+              aria-hidden="true"
+            >
+              {index + 1}
+            </span>
+            {/*
+             * The line to the next card: it leaves this card through its 24px padding and
+             * crosses the 20px gap (24px from lg), and the next card paints over the overshoot.
+             * The list is not positioned, so the cards stay above it.
+             */}
+            {line && (
+              <span
+                class:list={['h-px flex-1 bg-base-300 md:-mr-11 lg:-mr-12', line]}
+                aria-hidden="true"
+              />
+            )}
+          </div>
+          <p class="mt-5 text-xs font-bold tracking-[0.16em] text-base-content/70 uppercase">
+            {step.label}
+          </p>
+          <h4 class="mt-1 text-lg leading-snug font-bold tracking-tight text-balance text-base-content">
+            {step.title}
+          </h4>
+          <p class="mt-2 text-base leading-relaxed text-pretty text-base-content/75">{step.text}</p>
+        </li>
+      );
+    })}
   </ol>
 
   {block.note && (
-    <p class="mt-8 flex max-w-3xl items-start gap-3 text-sm leading-relaxed text-base-content/75">
+    <p class="mt-6 flex max-w-3xl items-start gap-3 text-sm leading-relaxed text-base-content/75">
       <Icon name="circle-alert" class="mt-0.5 size-4 shrink-0" />
       <span>{block.note}</span>
     </p>

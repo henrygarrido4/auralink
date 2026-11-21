@@ -20,7 +20,9 @@ import { industries } from '@/data/site';
  * the services where the page says so); a brief process where it helps; four questions; the
  * page's invitation; then the shared contact banner. Industry pages explain the business context;
  * the service pages explain the work and its scope. Every example describes prospective work and
- * needs: no client, result, or figure.
+ * needs: no client, result, or figure. The logo's mark lies across the edge between the dark
+ * challenges band and the section after it (`mark`, SectionMark.astro), half on each, as on the
+ * Eyler Creative page the owner gave as the reference (2026-11-20).
  */
 export function getStaticPaths() {
   return industryPages.map((page) => ({ params: { slug: page.slug }, props: { page } }));
@@ -51,9 +53,13 @@ const industry = industries.find((entry) => entry.name === page.name)!;
     description={page.description}
   />
   <DetailIntro id="who" introduction={page.introduction} />
-  <DetailChallenges id="challenges" challenges={page.challenges} />
-  {page.moduleFirst && <DetailModule id="approach" module={page.module} />}
-  <DetailRelatedServices id="services" services={page.services} />
+  <DetailChallenges id="challenges" challenges={page.challenges} mark="bottom" />
+  {page.moduleFirst && <DetailModule id="approach" module={page.module} mark="top" />}
+  <DetailRelatedServices
+    id="services"
+    services={page.services}
+    mark={page.moduleFirst ? undefined : 'top'}
+  />
   {!page.moduleFirst && <DetailModule id="approach" module={page.module} />}
   {page.engagement && <DetailProcess id="process" engagement={page.engagement} />}
   <DetailFaq id="faq" faqs={page.faqs} />

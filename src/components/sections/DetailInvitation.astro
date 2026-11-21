@@ -6,8 +6,8 @@ import type { Invitation } from '@/data/detail-pages';
 /**
  * The page-specific invitation that closes a detail page's main content, straight before the
  * shared contact banner, whose "Let's talk" is the button: a heading in the page's own terms, a
- * sentence, and what is useful to share in a first message, so a visitor knows what to bring.
- * It promises no response time, price, or availability. Plain HTML.
+ * sentence, and, in a card beside them from lg, what is useful to share in a first message, so a
+ * visitor knows what to bring. It promises no response time, price, or availability. Plain HTML.
  */
 interface Props {
   id: string;
@@ -18,21 +18,22 @@ const { id, invitation } = Astro.props;
 const titleId = `${id}-title`;
 ---
 
-<section id={id} aria-labelledby={titleId} class="border-t border-base-300 bg-base-200">
+<section id={id} aria-labelledby={titleId} class="bg-base-300/70">
   <div class="mx-auto max-w-site px-6 py-14 lg:px-8 lg:py-20">
-    <div class="grid gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16 xl:gap-24">
+    <div class="grid gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-center lg:gap-16 xl:gap-24">
       <SectionHeading
         id={titleId}
         eyebrow="Next step"
         heading={invitation.heading}
         intro={invitation.text}
       />
-      <div class="min-w-0 lg:pt-14">
-        <p class="text-sm font-bold tracking-[0.16em] text-base-content/70 uppercase">
+      <div class="detail-card min-w-0 p-6 sm:p-8">
+        <p class="flex items-center gap-3 text-sm font-bold tracking-[0.16em] text-base-content/70 uppercase">
+          <span class="h-0.5 w-6 shrink-0 bg-primary" aria-hidden="true"></span>
           Useful to share
         </p>
         {/* role="list": Safari drops the list role from lists styled without markers. */}
-        <ul role="list" class="mt-4 grid gap-3">
+        <ul role="list" class="mt-5 grid gap-3.5">
           {invitation.bring.map((item) => (
             <li class="flex items-start gap-3 text-base leading-snug text-base-content">
               <span

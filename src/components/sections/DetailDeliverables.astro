@@ -1,59 +1,65 @@
 ---
+import DetailSection from '@/components/sections/DetailSection.astro';
 import SectionHeading from '@/components/ui/SectionHeading.astro';
 import type { Deliverables } from '@/data/detail-pages';
 
 /**
- * What a service page's client receives: four to six numbered deliverables in one flat panel,
- * its white cells parted by 1px rules as the home directory's are, three across from lg and two
- * from sm. Each cell is its number on a primary square, a title, and what the title means in
- * practice. The note under the panel says what is agreed separately or offered only as it
- * actually is, so nothing is promised by omission. Plain HTML.
+ * What a service page's client receives: four to six numbered deliverables as cards on the grey
+ * band, after the numbered cards of uprig.net/seo (the owner's reference, 2026-11-20): each is
+ * its number, large, at the left, with the title and what it means in practice beside it. The
+ * number is Mukta with a primary full stop, as the home process numbers its steps. Three across
+ * from xl, two from md. The note under the cards says what is agreed separately or offered only
+ * as it actually is, so nothing is promised by omission; it is a white callout opened by a primary
+ * bar. Plain HTML.
  */
 interface Props {
   id: string;
   deliverables: Deliverables;
+  /** The edge of this band the shared logo mark is centred on, if it carries one. */
+  mark?: 'top' | 'bottom';
 }
 
-const { id, deliverables } = Astro.props;
+const { id, deliverables, mark } = Astro.props;
 const titleId = `${id}-title`;
 const number = (index: number) => String(index + 1).padStart(2, '0');
 ---
 
-<section id={id} aria-labelledby={titleId} class="bg-base-300/70">
-  <div class="mx-auto max-w-site px-6 py-16 sm:py-20 lg:px-8 lg:py-24">
-    <SectionHeading
-      id={titleId}
-      eyebrow="What you receive"
-      heading={deliverables.heading}
-      intro={deliverables.intro}
-    />
+<DetailSection id={id} labelledBy={titleId} tone="muted" mark={mark}>
+  <SectionHeading
+    id={titleId}
+    eyebrow="What you receive"
+    heading={deliverables.heading}
+    intro={deliverables.intro}
+  />
 
-    {/* role="list": Safari drops the list role from lists styled without markers. */}
-    <ol
-      role="list"
-      class="mt-12 grid gap-px border border-base-300 bg-base-300 sm:mt-14 sm:grid-cols-2 lg:grid-cols-3"
-    >
-      {deliverables.items.map((deliverable, index) => (
-        <li class="flex min-w-0 flex-col bg-base-100 p-6 sm:p-8">
-          <span
-            class="grid size-10 place-items-center bg-primary font-(family-name:--font-headers) text-sm font-bold text-primary-content"
-            aria-hidden="true"
-          >
-            {number(index)}
-          </span>
-          <h3 class="mt-5 text-xl font-bold tracking-tight text-balance text-base-content">
+  {/* role="list": Safari drops the list role from lists styled without markers. */}
+  <ol role="list" class="mt-12 grid gap-5 sm:mt-14 md:grid-cols-2 lg:gap-6 xl:grid-cols-3">
+    {deliverables.items.map((deliverable, index) => (
+      <li class="detail-card flex min-w-0 gap-5 p-6 sm:p-7">
+        {/* Two digits and the stop, in a fixed column so the titles line up across the row. */}
+        <p
+          class="w-14 shrink-0 font-(family-name:--font-headers) text-4xl leading-none font-bold tracking-tight text-base-content tabular-nums"
+          aria-hidden="true"
+        >
+          {number(index)}
+          <span class="text-primary">.</span>
+        </p>
+        <div class="min-w-0">
+          <h3 class="text-xl leading-snug font-bold tracking-tight text-balance text-base-content">
             {deliverable.title}
           </h3>
-          <p class="mt-3 text-base leading-relaxed text-pretty text-base-content/75">
+          <p class="mt-2 text-base leading-relaxed text-pretty text-base-content/75">
             {deliverable.text}
           </p>
-        </li>
-      ))}
-    </ol>
+        </div>
+      </li>
+    ))}
+  </ol>
 
-    <p class="mt-8 max-w-3xl text-base leading-relaxed text-base-content/75">
+  <div class="mt-8 max-w-3xl rounded-md border border-base-300 border-l-4 border-l-primary bg-base-100 p-5 shadow-sm sm:px-6">
+    <p class="text-base leading-relaxed text-base-content/75">
       {/* The explicit space keeps the label and the note apart in the paragraph's text. */}
       <span class="font-bold text-base-content">Scope note.</span> {deliverables.scopeNote}
     </p>
   </div>
-</section>
+</DetailSection>

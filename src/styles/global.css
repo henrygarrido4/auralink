@@ -511,6 +511,61 @@
 }
 
 /*
+ * A card on the industry and service detail pages (the design pass of 2026-11-20, after the cards
+ * of uprig.net/seo, the owner's reference, in this site's own colours): white, a 1px `base-300`
+ * edge, 0.375rem corners, and the small shadow the contact page's cards already use
+ * (ContactAside.astro), so a detail page's cards and the contact page's are one family. The
+ * padding and what goes inside are each component's own. It never moves, and nothing fades on
+ * it; a card that links somewhere adds its own frame and arrow box (DetailRelatedServices.astro).
+ */
+@utility detail-card {
+  @apply rounded-md border border-base-300 bg-base-100 shadow-sm;
+}
+
+/*
+ * Section mark (src/components/ui/SectionMark.astro): the logo's mark, tinted, laid across the
+ * edge between two sections, so one shape belongs to both, after the Eyler Creative page the
+ * owner gave as the reference (2026-11-20). Each of the two sections renders its own copy, held
+ * flush against the right edge of the screen and centred on the shared edge: the section above
+ * puts it on its bottom edge, the one below on its top edge. Each section clips its own copy
+ * (`overflow: clip`), so the upper half shows only on the section above, in that section's tint,
+ * and the lower half only on the one below, in its tint, and neither paints over the other. Both
+ * copies are the same width, a fraction of the viewport, and both sit at `right: 0`, so they
+ * line up as one shape. The whole mark stays inside the screen: the layout suite fails any box
+ * past the viewport, and the reference's bleed over the edge is not possible here.
+ *
+ * It is 24% of the viewport wide, between 11rem and 26rem (26rem at 1733px and wider), so its
+ * half is 146px at most. A section whose bottom edge carries it adds that room to its bottom
+ * padding from lg (DetailSection.astro), and a section whose top edge carries it starts with its
+ * heading on the left, so the mark meets no text. It is hidden below md, where sections run the
+ * full width and the heading would reach under it. Decorative, hidden from assistive technology,
+ * and still: no animation, no pointer events. The file is used as supplied; its fill is taken
+ * from the tint set on the element, as the hero sets its own colour.
+ */
+@utility section-mark {
+  position: absolute;
+  right: 0;
+  z-index: -10;
+  width: clamp(11rem, 24vw, 26rem);
+  height: auto;
+  pointer-events: none;
+
+  & path {
+    fill: currentColor;
+  }
+
+  &[data-section-mark='bottom'] {
+    bottom: 0;
+    translate: 0 50%;
+  }
+
+  &[data-section-mark='top'] {
+    top: 0;
+    translate: 0 -50%;
+  }
+}
+
+/*
  * Home services strip (src/components/sections/ServiceStrip.astro). The only continuous text
  * motion on the site, and only here: the service names travel right to left along a yellow band,
  * with the names from `serviceCards`. src/lib/service-strip.ts sets --service-strip-duration from

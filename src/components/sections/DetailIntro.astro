@@ -1,13 +1,15 @@
 ---
-import Eyebrow from '@/components/ui/Eyebrow.astro';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
 import type { Introduction } from '@/data/detail-pages';
 
 /**
  * The first section of an industry or service detail page, straight under the dark hero: an
- * editorial split. The copy takes the wider column: the eyebrow, the h2, the primary rule, a
- * lead paragraph set larger (the answer first), then one or two short paragraphs at a readable
- * measure. Beside it from lg, and under it below, a quieter list says who the page is for, or when
- * the service fits: a heading and a few titled lines parted by hairline rules. Plain HTML.
+ * editorial split. The copy takes the wider column: the section heading (the dash eyebrow and
+ * the h2), the lead paragraph set larger and marked with a primary bar at its left (the answer
+ * first), then one or two short paragraphs at a readable measure. Beside it from lg, and under it
+ * below, a card says who the page is for, or when the service fits: a label, then a few titled
+ * lines parted by hairline rules, each opened by a small primary pixel like the logo's. The card
+ * starts level with the h2 from lg. Plain HTML.
  */
 interface Props {
   /** Anchor for in-page links and the h2's id. */
@@ -24,15 +26,12 @@ const asideId = `${id}-aside`;
   <div class="mx-auto max-w-site px-6 pt-16 pb-16 sm:pb-20 lg:px-8 lg:pt-20 lg:pb-24">
     <div class="grid gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16 xl:gap-24">
       <div class="min-w-0">
-        <Eyebrow>{introduction.eyebrow}</Eyebrow>
-        <h2
+        <SectionHeading
           id={titleId}
-          class="mt-4 text-3xl font-bold tracking-tight text-balance text-base-content sm:mt-5 sm:text-4xl"
-        >
-          {introduction.heading}
-        </h2>
-        <div class="mt-5 h-0.5 w-12 bg-primary" aria-hidden="true"></div>
-        <p class="mt-6 max-w-2xl text-xl leading-relaxed text-pretty text-base-content">
+          eyebrow={introduction.eyebrow}
+          heading={introduction.heading}
+        />
+        <p class="mt-8 max-w-2xl border-l-4 border-primary pl-6 text-xl leading-relaxed text-pretty text-base-content">
           {introduction.lead}
         </p>
         {introduction.paragraphs.map((paragraph) => (
@@ -42,16 +41,27 @@ const asideId = `${id}-aside`;
         ))}
       </div>
 
-      <div class="min-w-0 lg:pt-14">
-        <h3 id={asideId} class="text-sm font-bold tracking-[0.16em] text-base-content/70 uppercase">
+      <div class="detail-card min-w-0 p-6 sm:p-8 lg:mt-14 lg:self-start">
+        <h3
+          id={asideId}
+          class="flex items-center gap-3 text-sm font-bold tracking-[0.16em] text-base-content/70 uppercase"
+        >
+          <span class="h-0.5 w-6 shrink-0 bg-primary" aria-hidden="true"></span>
           {introduction.aside.heading}
         </h3>
         {/* role="list": Safari drops the list role from lists styled without markers. */}
-        <ul role="list" aria-labelledby={asideId} class="mt-4 border-t border-base-300">
+        <ul role="list" aria-labelledby={asideId} class="mt-5 divide-y divide-base-300">
           {introduction.aside.items.map((item) => (
-            <li class="grid gap-1 border-b border-base-300 py-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-6">
-              <p class="text-base leading-snug font-bold text-base-content">{item.title}</p>
-              <p class="text-base leading-relaxed text-base-content/75">{item.text}</p>
+            <li class="grid gap-1 py-4 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-6">
+              <p class="flex items-start gap-3 text-base leading-snug font-bold text-base-content">
+                {/* A square stood on its corner, like the pixels of the logo's mark. */}
+                <span class="mt-2 size-1.5 shrink-0 rotate-45 bg-primary" aria-hidden="true"></span>
+                <span class="min-w-0">{item.title}</span>
+              </p>
+              {/* Stacked below sm, the text starts under the title's words, past the pixel and its gap. */}
+              <p class="pl-4.5 text-base leading-relaxed text-base-content/75 sm:pl-0">
+                {item.text}
+              </p>
             </li>
           ))}
         </ul>
