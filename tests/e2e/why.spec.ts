@@ -28,7 +28,9 @@ const SENTENCE =
 const section = (page: Page) => page.locator('#why-auralink');
 const cards = (page: Page) => section(page).locator('[data-why-card]');
 const auras = (page: Page) => section(page).locator('[data-why-aura]');
-const mark = (page: Page) => section(page).locator('[data-why-mark]');
+const marks = (page: Page) => section(page).locator('[data-why-mark]');
+const mark = (page: Page, corner: 'top' | 'bottom') =>
+  section(page).locator(`[data-why-mark="${corner}"]`);
 const canHover = (page: Page) =>
   page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
 
@@ -156,9 +158,11 @@ test('follows the services and introduces the three pillars', async ({ page }) =
     colour(page, 'var(--color-neutral)'),
   ]);
   expect(band, 'the band is the flat neutral').toBe(nearBlack);
-  await expect(mark(page), 'one decorative mark').toHaveCount(1);
-  await expect(mark(page)).toHaveAttribute('aria-hidden', 'true');
-  await expect(mark(page)).toHaveAttribute('focusable', 'false');
+  await expect(marks(page), 'two decorative marks').toHaveCount(2);
+  for (const art of await marks(page).all()) {
+    await expect(art).toHaveAttribute('aria-hidden', 'true');
+    await expect(art).toHaveAttribute('focusable', 'false');
+  }
 });
 
 test('every card is white, soft-cornered, and flat, with near-black tiles and marks, in an unlit aura', async ({
@@ -378,58 +382,83 @@ test('three equal columns from lg, stacked below, with the checklists aligned', 
   }
 });
 
-test("the owner's mark lies faint in the band's top right corner from lg, behind the copy and the cards, and inside the screen", async ({
+test("the owner's mark lies faint in the band's top right corner and rises from its bottom left from lg, behind the copy and the cards, and inside the screen", async ({
   page,
 }) => {
   await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
-  const art = mark(page);
-  await expect(art).toHaveCSS('z-index', '-10');
-  await expect(art).toHaveCSS('pointer-events', 'none');
-  // The tint is the primary at a tenth, and the file's own yellow fill gives way to it.
-  await expect(art).toHaveCSS(
-    'color',
-    await colour(page, 'color-mix(in oklab, var(--color-primary) 10%, transparent)'),
-  );
-  const fills = await art
-    .locator('path')
-    .evaluateAll((paths) => paths.map((path) => getComputedStyle(path).fill));
-  expect(fills.length).toBeGreaterThan(0);
-  for (const fill of fills)
-    expect(fill, 'not the file\u2019s own yellow').not.toBe('rgb(247, 219, 21)');
+  const tint = await colour(page, 'color-mix(in oklab, var(--color-primary) 10%, transparent)');
+  for (const art of await marks(page).all()) {
+    await expect(art).toHaveCSS('z-index', '-10');
+    await expect(art).toHaveCSS('pointer-events', 'none');
+    // The tint is the primary at a tenth, and the file's own yellow fill gives way to it.
+    await expect(art).toHaveCSS('color', tint);
+    const fills = await art
+      .locator('path')
+      .evaluateAll((paths) => paths.map((path) => getComputedStyle(path).fill));
+    expect(fills.length).toBeGreaterThan(0);
+    for (const fill of fills) {
+      expect(fill, 'not the file\u2019s own yellow').not.toBe('rgb(247, 219, 21)');
+    }
+  }
 
   for (const width of [1024, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
-    await expect(art, `${width}px: drawn`).toBeVisible();
+    await expect(mark(page, 'top'), `${width}px: the top mark is drawn`).toBeVisible();
+    await expect(mark(page, 'bottom'), `${width}px: the bottom mark is drawn`).toBeVisible();
     const placed = await section(page).evaluate((root) => {
-      const art = root.querySelector('[data-why-mark]')!.getBoundingClientRect();
+      const box = (selector: string) => {
+        const { left, right, top, bottom, width, height } = root
+          .querySelector(selector)!
+          .getBoundingClientRect();
+        return { left, right, top, bottom, width, height };
+      };
       const band = root.getBoundingClientRect();
       const sentence = root.querySelector('h2 + div + p')!.getBoundingClientRect();
       const cards = [...root.querySelectorAll('[data-why-card]')].map((card) =>
         card.getBoundingClientRect(),
       );
       return {
-        art: { left: art.left, right: art.right, top: art.top, bottom: art.bottom },
-        band: { top: band.top, right: band.right },
+        top: box('[data-why-mark="top"]'),
+        bottom: box('[data-why-mark="bottom"]'),
+        band: { top: band.top, right: band.right, bottom: band.bottom, left: band.left },
         sentenceRight: sentence.right,
         cardsTop: Math.min(...cards.map((card) => card.top)),
+        cardsBottom: Math.max(...cards.map((card) => card.bottom)),
         vw: document.documentElement.clientWidth,
       };
     });
-    expect(placed.art.right, `${width}px: inside the screen`).toBeLessThanOrEqual(placed.vw + 1);
-    expect(placed.art.right, `${width}px: against the band's right edge`).toBeCloseTo(
+    const { top, bottom } = placed;
+    expect(top.width, `${width}px: the two marks are the same size`).toBeCloseTo(bottom.width, 0);
+
+    expect(top.right, `${width}px: top mark inside the screen`).toBeLessThanOrEqual(placed.vw + 1);
+    expect(top.right, `${width}px: against the band's right edge`).toBeCloseTo(
       placed.band.right,
       0,
     );
-    expect(placed.art.top, `${width}px: at the band's top`).toBeCloseTo(placed.band.top, 0);
-    expect(placed.art.left, `${width}px: right of the sentence`).toBeGreaterThan(
-      placed.sentenceRight,
+    expect(top.top, `${width}px: at the band's top`).toBeCloseTo(placed.band.top, 0);
+    expect(top.left, `${width}px: right of the sentence`).toBeGreaterThan(placed.sentenceRight);
+    expect(top.bottom, `${width}px: above the cards`).toBeLessThan(placed.cardsTop);
+
+    expect(bottom.left, `${width}px: bottom mark inside the screen`).toBeGreaterThanOrEqual(-1);
+    expect(bottom.left, `${width}px: against the band's left edge`).toBeCloseTo(
+      placed.band.left,
+      0,
     );
-    expect(placed.art.bottom, `${width}px: above the cards`).toBeLessThan(placed.cardsTop);
+    // Centred on the band's bottom edge, which clips its lower half.
+    expect(
+      (bottom.top + bottom.bottom) / 2,
+      `${width}px: centred on the band's bottom edge`,
+    ).toBeCloseTo(placed.band.bottom, 0);
+    expect(bottom.top, `${width}px: its visible half meets no card`).toBeGreaterThan(
+      placed.cardsBottom,
+    );
   }
 
   await page.setViewportSize({ width: 768, height: 900 });
-  await expect(art, 'not drawn below lg, where the copy could run under it').toBeHidden();
+  for (const art of await marks(page).all()) {
+    await expect(art, 'not drawn below lg, where the copy could run under it').toBeHidden();
+  }
 });
 
 test.describe('the aura', () => {

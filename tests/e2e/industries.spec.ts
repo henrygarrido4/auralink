@@ -18,19 +18,9 @@ import { industries, primaryCta } from '../../src/data/site';
  * motion), moving nothing; a coarse pointer never sees that hover. At rest every cell is white,
  * Automotive included. Each name is a link to its industry page (src/data/industry-pages/, since
  * 2026-11-20) stretched over the whole cell, so the cell is the target, its geometry is unchanged,
- * and keyboard focus rings the cell. Nothing else in the list is interactive.
- *
- * Behind the panel lie two cut-out props (since 2026-11-20, the owner's request: the reveal the
- * selected work cards had, with images that suit the directory): a white hard hat whose top 55%
- * rises above the panel's top edge, its right edge 4% of the panel in from the panel's right, and
- * a stethoscope whose bottom 40% drops below the bottom edge, 12% in (on phones 35% and 6% in,
- * clear of the closing line). Decorative (empty alt, lazy, outside the list), inside the panel's width, under
- * the panel where they overlap it, and never over a line of the copy or the button. With motion,
- * each pops out once, over 1s with `ease`, as its own edge of the panel scrolls in and once its
- * image has loaded (src/lib/reveal.ts, `pop-out`), moving no box and shifting no layout; nothing
- * moves without JavaScript, under reduced motion, or when the panel is on screen at load, even as
- * the stylesheet arrives. The reveal is inlined after the section, so the section itself holds no
- * script or island.
+ * and keyboard focus rings the cell. Nothing else in the list is interactive. The section holds
+ * no image, script, or island: the two cut-out props that popped out from behind the panel for
+ * part of 2026-11-20 went at the owner's request.
  *
  * Boxes and styles are read in one `evaluate` on a CSS-located container: Playwright's Firefox
  * crashes on `evaluateAll` inside a region found by its name (testing-playwright.mdc). The layout
@@ -49,18 +39,10 @@ const HOVER_FILL = '#141817';
 const HOVER_INK = '#ffffff';
 /** Every width the layout suite checks, the first at two columns, and the last before xl. */
 const WIDTHS = [360, 390, 640, 768, 1024, 1279, 1280, 1440, 1920];
-/** How much of each prop shows past the panel's edge at rest, in %: the hard hat above, the stethoscope below. */
-const HAT_RISE = 55;
-const stethoscopeDrop = (width: number) => (width >= 640 ? 40 : 35);
-/** How far in from the panel's right edge each prop's right edge sits, as a share of the panel's width. */
-const HAT_INSET = 0.04;
-const stethoscopeInset = (width: number) => (width >= 640 ? 0.12 : 0.06);
 
 const section = (page: Page) => page.getByRole('region', { name: HEADING });
 const list = (page: Page) => page.locator('#who-we-work-with ul');
 const cells = (page: Page) => page.locator('#who-we-work-with li');
-/** The props' pictures, in DOM order: the hard hat, then the stethoscope. */
-const pictures = (page: Page) => page.locator('#who-we-work-with picture[data-reveal]');
 /** One column on phones, two from sm (640px), four from lg (1024px). */
 const columnsAt = (width: number) => (width >= 1024 ? 4 : width >= 640 ? 2 : 1);
 const canHover = (page: Page) =>
@@ -248,105 +230,6 @@ const pathsOf = (icon: string) =>
     ([, d]) => d,
   );
 
-/** Vertical offset in a computed `translate`, in % of the element (Chromium: "0% -55%"). */
-const translateY = (translate: string) =>
-  translate === 'none' ? 0 : Number.parseFloat(translate.trim().split(/\s+/).at(-1) ?? '0');
-
-interface Box {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-/**
- * The props, in DOM order (the hard hat, then the stethoscope), with the panel's box and the
- * boxes of the copy's lines and the button, all in one frame. Each prop's `picture` is the box
- * the reveal watches and its `img` the part that slides, so both are read. Text boxes come from
- * ranges, which bound the lines as set, where an element's box can be far wider than its words.
- */
-const props = (page: Page) =>
-  page.locator('#who-we-work-with').evaluate((region) => {
-    const box = (el: Element): Box => {
-      const { x, y, width, height } = el.getBoundingClientRect();
-      return { x, y, width, height };
-    };
-    const lines = (el: Element): Box[] => {
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      return Array.from(range.getClientRects(), (rect) => ({
-        x: rect.x,
-        y: rect.y,
-        width: rect.width,
-        height: rect.height,
-      }));
-    };
-    const heading = region.querySelector('h2')!;
-    const sentence = heading.nextElementSibling!;
-    const question = Array.from(region.querySelectorAll('p')).find((paragraph) =>
-      paragraph.textContent?.startsWith("Don't see"),
-    )!;
-    const action = region.querySelector('.btn')!;
-    return {
-      panel: box(region.querySelector('ul')!),
-      copy: [...lines(heading), ...lines(sentence), ...lines(question), box(action)],
-      props: Array.from(region.querySelectorAll('picture[data-reveal]'), (picture) => {
-        const img = picture.querySelector('img')!;
-        const style = getComputedStyle(img);
-        return {
-          state: (picture as HTMLElement).dataset.reveal,
-          stage: box(picture),
-          box: box(img),
-          alt: img.getAttribute('alt'),
-          loading: img.getAttribute('loading'),
-          translate: style.translate,
-          transition: `${style.transitionProperty} ${style.transitionDuration} ${style.transitionTimingFunction}`,
-          loaded: img.complete && img.naturalWidth > 0,
-          running: picture
-            .getAnimations({ subtree: true })
-            .filter((animation) => animation.playState === 'running').length,
-        };
-      }),
-    };
-  });
-
-const intersects = (a: Box, b: Box) =>
-  a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
-
-/** Where the section's parts sit relative to the section, so scrolling cannot move them. */
-const placesOf = (page: Page) =>
-  page.locator('#who-we-work-with').evaluate((region) => {
-    const origin = region.getBoundingClientRect();
-    const place = (el: Element) => {
-      const { x, y, width, height } = el.getBoundingClientRect();
-      return [x - origin.x, y - origin.y, width, height];
-    };
-    return [
-      region.querySelector('h2')!,
-      region.querySelector('h2 + p')!,
-      region.querySelector('ul')!,
-      ...Array.from(region.querySelectorAll('li')),
-      region.querySelector('.btn')!,
-    ].map(place);
-  });
-
-/** Whether a cell of the directory is what the pointer would meet at a point of the viewport. */
-const coveredAt = (page: Page, point: { x: number; y: number }) =>
-  page.evaluate(({ x, y }) => {
-    const hit = document.elementFromPoint(x, y);
-    return !!hit && !!hit.closest('#who-we-work-with li');
-  }, point);
-
-/** Scrolls so that `edge` ('top' or 'bottom') of the panel sits at 40% of the viewport's height. */
-const scrollPanelEdgeIntoView = (page: Page, edge: 'top' | 'bottom') =>
-  list(page).evaluate((panel, side) => {
-    const rect = panel.getBoundingClientRect();
-    window.scrollTo({
-      top: rect[side] + window.scrollY - window.innerHeight * 0.4,
-      behavior: 'instant',
-    });
-  }, edge);
-
 test('sits between why auralink and the process, in the place of selected work', async ({
   page,
 }) => {
@@ -404,9 +287,9 @@ test('introduces the directory, then lists every kind of business in order, each
     await expect(links.nth(index)).toHaveAccessibleName(name);
     await expect(links.nth(index)).toHaveAttribute('href', href!);
   }
-  await expect(
-    region.getByRole('list').locator('button, input, [tabindex], img, picture'),
-  ).toHaveCount(0);
+  await expect(region.getByRole('list').locator('button, input, [tabindex]')).toHaveCount(0);
+  // Text and inline icons only: the section shows no image.
+  await expect(region.locator('img, picture')).toHaveCount(0);
 
   await expect(region.getByText(QUESTION, { exact: true })).toBeVisible();
   await expect(region.getByText(ACTION, { exact: true })).toBeVisible();
@@ -955,245 +838,10 @@ test('a coarse pointer does not leave a cell dark, and a tap follows the link', 
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false, reducedMotion: 'no-preference' });
 
-  test('the section renders in full, and the props simply rest', async ({ page }) => {
+  test('the section renders in full', async ({ page }) => {
     await page.goto('/');
     await expect(section(page).getByRole('listitem')).toHaveText(NAMES);
     await expect(section(page).getByText(ACTION, { exact: true })).toBeVisible();
     await expect(section(page).locator('script, astro-island')).toHaveCount(0);
-    // The two props are the section's only images, outside the list.
-    await expect(section(page).locator('img')).toHaveCount(2);
-    await expect(pictures(page)).toHaveCount(2);
-    const seen = await props(page);
-    expect(
-      seen.props.map(({ state }) => state),
-      'nothing prepared them',
-    ).toEqual(['', '']);
-    expect(seen.props.map(({ translate }) => translateY(translate))).toEqual([
-      -HAT_RISE,
-      stethoscopeDrop(page.viewportSize()!.width),
-    ]);
-    expect(
-      seen.props.map(({ running }) => running),
-      'nothing moves',
-    ).toEqual([0, 0]);
-  });
-});
-
-test.describe('the props', () => {
-  test.describe('at rest', () => {
-    // Reduced motion leaves the props where they rest, so their geometry reads without waiting.
-    test.use({ reducedMotion: 'reduce' });
-
-    test('two decorative cut-outs rest behind the panel at its right, the hard hat above its top edge and the stethoscope below its bottom edge, clear of the copy', async ({
-      page,
-    }) => {
-      await page.goto('/');
-      await page.evaluate(() => document.fonts.ready);
-      for (const width of WIDTHS) {
-        await page.setViewportSize({ width, height: 900 });
-        await scrollPanelEdgeIntoView(page, 'top');
-        const { panel, copy, props: seen } = await props(page);
-        const name = `${width}px`;
-        expect(seen, `${name}: two props`).toHaveLength(2);
-        const [hat, stethoscope] = seen;
-        for (const [index, prop] of seen.entries()) {
-          const which = `${name}: prop ${index + 1}`;
-          expect(prop.alt, `${which} is decorative`).toBe('');
-          expect(prop.loading, `${which} is lazy`).toBe('lazy');
-          expect(prop.state, `${which} is left alone under reduced motion`).toBe('');
-          expect(prop.running, `${which} does not move`).toBe(0);
-          // Inside the panel's width, so never past the viewport.
-          expect(prop.box.x, `${which} inside the panel`).toBeGreaterThanOrEqual(panel.x - 0.5);
-          expect(prop.box.x + prop.box.width, `${which} inside the panel`).toBeLessThanOrEqual(
-            panel.x + panel.width + 0.5,
-          );
-          // Tucked in, the whole prop lies behind the panel: its stage is the panel's edge inward.
-          expect(prop.stage.y, `${which} stage inside the panel`).toBeGreaterThanOrEqual(
-            panel.y - 0.5,
-          );
-          expect(
-            prop.stage.y + prop.stage.height,
-            `${which} stage inside the panel`,
-          ).toBeLessThanOrEqual(panel.y + panel.height + 0.5);
-          for (const line of copy) {
-            expect(intersects(prop.box, line), `${which} is clear of the copy`).toBe(false);
-          }
-        }
-        near(
-          ((panel.y - hat.box.y) / hat.box.height) * 100,
-          HAT_RISE,
-          `${name}: the hat rises ${HAT_RISE}%`,
-        );
-        near(
-          ((stethoscope.box.y + stethoscope.box.height - (panel.y + panel.height)) /
-            stethoscope.box.height) *
-            100,
-          stethoscopeDrop(width),
-          `${name}: the stethoscope drops ${stethoscopeDrop(width)}%`,
-        );
-        near(
-          panel.x + panel.width - (hat.box.x + hat.box.width),
-          panel.width * HAT_INSET,
-          `${name}: the hat ${HAT_INSET * 100}% in from the right`,
-          1,
-        );
-        near(
-          panel.x + panel.width - (stethoscope.box.x + stethoscope.box.width),
-          panel.width * stethoscopeInset(width),
-          `${name}: the stethoscope ${stethoscopeInset(width) * 100}% in from the right`,
-          1,
-        );
-        // Under the panel: where a prop and the panel overlap, a cell is what the pointer meets.
-        // Each edge is brought into view in turn, since the panel is taller than a phone's screen.
-        expect(
-          await coveredAt(page, {
-            x: hat.box.x + hat.box.width / 2,
-            y: hat.box.y + hat.box.height * 0.9,
-          }),
-          `${name}: the panel covers the tucked part of the hat`,
-        ).toBe(true);
-        await scrollPanelEdgeIntoView(page, 'bottom');
-        const below = (await props(page)).props[1].box;
-        expect(
-          await coveredAt(page, { x: below.x + below.width / 2, y: below.y + below.height * 0.1 }),
-          `${name}: the panel covers the tucked part of the stethoscope`,
-        ).toBe(true);
-      }
-    });
-  });
-
-  test.describe('motion allowed', () => {
-    test.use({ reducedMotion: 'no-preference' });
-
-    test('each prop pops out once, over 1s, as the panel scrolls in and its image has loaded, moving nothing else', async ({
-      page,
-    }) => {
-      await page.addInitScript(() => {
-        const shifts: number[] = [];
-        Object.assign(window, { shifts });
-        if (PerformanceObserver.supportedEntryTypes.includes('layout-shift')) {
-          new PerformanceObserver((entries) => {
-            for (const entry of entries.getEntries())
-              shifts.push((entry as unknown as { value: number }).value);
-          }).observe({ type: 'layout-shift', buffered: true });
-        }
-      });
-      await page.goto('/');
-      const width = page.viewportSize()!.width;
-
-      // Below the fold at load: both tucked behind the panel once the styles apply, waiting.
-      await expect
-        .poll(async () => (await props(page)).props.map(({ state }) => state))
-        .toEqual(['hidden', 'hidden']);
-      let seen = await props(page);
-      expect(seen.props.map(({ translate }) => translateY(translate))).toEqual([0, 0]);
-      const before = await placesOf(page);
-      const shiftsBefore = await page.evaluate(
-        () => (window as unknown as { shifts: number[] }).shifts.length,
-      );
-
-      // The panel's top edge scrolls in: the hard hat rises, over 1s with `ease`, once loaded.
-      await scrollPanelEdgeIntoView(page, 'top');
-      await expect.poll(async () => (await props(page)).props[0].state).toBe('shown');
-      seen = await props(page);
-      expect(seen.props[0].transition).toBe('translate 1s ease');
-      expect(seen.props[0].loaded, 'the hat loaded before it moved').toBe(true);
-      await expect
-        .poll(async () => translateY((await props(page)).props[0].translate))
-        .toBe(-HAT_RISE);
-
-      // Then its bottom edge: the stethoscope drops.
-      await scrollPanelEdgeIntoView(page, 'bottom');
-      await expect.poll(async () => (await props(page)).props[1].state).toBe('shown');
-      seen = await props(page);
-      expect(seen.props[1].transition).toBe('translate 1s ease');
-      expect(seen.props[1].loaded, 'the stethoscope loaded before it moved').toBe(true);
-      await expect
-        .poll(async () => translateY((await props(page)).props[1].translate))
-        .toBe(stethoscopeDrop(width));
-      await expect
-        .poll(async () => (await props(page)).props.map(({ running }) => running))
-        .toEqual([0, 0]);
-
-      expectSamePlace(await placesOf(page), before, 'no part of the section moved or resized');
-      expect(
-        await page.evaluate(
-          (from) => (window as unknown as { shifts: number[] }).shifts.slice(from),
-          shiftsBefore,
-        ),
-        'no layout shift during the reveal',
-      ).toEqual([]);
-
-      // Once: scrolling away and back does not tuck them in again.
-      await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-      await scrollPanelEdgeIntoView(page, 'top');
-      seen = await props(page);
-      expect(seen.props.map(({ state }) => state)).toEqual(['shown', 'shown']);
-      expect(seen.props.map(({ translate }) => translateY(translate))).toEqual([
-        -HAT_RISE,
-        stethoscopeDrop(width),
-      ]);
-    });
-
-    test('props already on screen at load never move, even as the stylesheet arrives', async ({
-      page,
-    }) => {
-      // Count every transition the props start, from the first frame: WebKit can style the page
-      // before the stylesheet applies, and a transition then would slide them in on load.
-      await page.addInitScript(() => {
-        const moves: string[] = [];
-        Object.assign(window, { propMoves: moves });
-        document.addEventListener(
-          'transitionrun',
-          (event) => {
-            const target = event.target as Element;
-            if (target.matches('#who-we-work-with picture img')) moves.push(event.propertyName);
-          },
-          true,
-        );
-      });
-      // Tall enough to show the whole page at once, so the panel is on screen when the script runs.
-      await page.setViewportSize({ width: 1280, height: 9000 });
-      await page.goto('/');
-      // They turn `shown` once the page has loaded, without moving.
-      await expect
-        .poll(async () => (await props(page)).props.map(({ state }) => state))
-        .toEqual(['shown', 'shown']);
-      const seen = await props(page);
-      expect(seen.props.map(({ translate }) => translateY(translate))).toEqual([
-        -HAT_RISE,
-        stethoscopeDrop(1280),
-      ]);
-      expect(seen.props.map(({ running }) => running)).toEqual([0, 0]);
-      expect(
-        await page.evaluate(() => (window as unknown as { propMoves: string[] }).propMoves),
-        'no prop moved on load',
-      ).toEqual([]);
-    });
-  });
-
-  test.describe('reduced motion', () => {
-    test.use({ reducedMotion: 'reduce' });
-
-    test('the props never tuck in or move, at load or in view', async ({ page }) => {
-      await page.goto('/');
-      const width = page.viewportSize()!.width;
-      for (const edge of ['top', 'bottom'] as const) {
-        await scrollPanelEdgeIntoView(page, edge);
-        const seen = await props(page);
-        expect(
-          seen.props.map(({ state }) => state),
-          edge,
-        ).toEqual(['', '']);
-        expect(
-          seen.props.map(({ translate }) => translateY(translate)),
-          edge,
-        ).toEqual([-HAT_RISE, stethoscopeDrop(width)]);
-        expect(
-          seen.props.map(({ running }) => running),
-          `${edge}: nothing moves`,
-        ).toEqual([0, 0]);
-      }
-    });
   });
 });

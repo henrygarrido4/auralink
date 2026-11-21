@@ -22,8 +22,8 @@ const SCREENSHOT_DIR = 'reports/screenshots';
 
 /*
  * Layout at rest: under reduced motion every entrance effect is skipped, so the full-page
- * screenshots show each section finished. A full-page capture never scrolls, so with motion the
- * home directory's props would still be tucked behind their panel (src/lib/reveal.ts). They move
+ * screenshots show each section finished. A full-page capture never scrolls, so with motion
+ * anything a scroll reveal tucks away (src/lib/reveal.ts) would still be hidden. Reveals move
  * only by `translate`, so the layout checked is the same either way.
  */
 test.use({ reducedMotion: 'reduce' });

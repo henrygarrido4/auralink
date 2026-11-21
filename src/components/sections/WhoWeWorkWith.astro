@@ -1,8 +1,4 @@
 ---
-import type { ImageMetadata } from 'astro';
-import { Picture } from 'astro:assets';
-import hardHat from '@/assets/industries/props/hard-hat.webp';
-import stethoscope from '@/assets/industries/props/stethoscope.webp';
 import Button from '@/components/ui/Button.astro';
 import Eyebrow from '@/components/ui/Eyebrow.astro';
 import Icon from '@/components/ui/Icon.astro';
@@ -32,18 +28,10 @@ import { industryHref } from '@/data/industry-pages';
  * "Let's talk" is the flat charcoal button, following the navbar's call to action (`primaryCta`):
  * a link to the inquiry page once that ships, a placeholder until then.
  *
- * Behind the panel lie two cut-out props, as they lay behind the selected work cards this section
- * replaced (the owner's request, 2026-11-20: the same reveal, with images that suit the directory).
- * They stand for the breadth of the businesses listed, a trade and a clinic: a white hard hat
- * (Construction & Home Services, the first entry) rises above the panel's top edge near its right
- * end, and a stethoscope (Healthcare & Medical, Dental, Veterinary & Pet Care) drops below its
- * bottom edge, a little further in. Both keep to the right, where the copy above and the closing
- * line below never reach; the panel spans the whole container, so, as before, they slide up and
- * down rather than out to the sides. Each pops out once, over 1s, as its own edge of the panel scrolls into
- * view (`pop-out`, src/lib/reveal.ts); otherwise they simply rest. Decorative, with empty alt text
- * and no pointer events, cut from licensed stock photos with no logo or person (credits in
- * src/assets/CREDITS.md). They only suggest kinds of business: never a client's own gear. The
- * reveal is the section's only client-side JavaScript, and it is inlined.
+ * The section has no imagery and no client-side JavaScript. For part of 2026-11-20 two cut-out
+ * props (a hard hat and a stethoscope) popped out from behind the panel with the reveal the
+ * selected work cards had, at the owner's request; the owner then asked for them to go, and they
+ * left with their files and credits the same day.
  */
 interface Props {
   /** Anchor for in-page links. */
@@ -52,36 +40,6 @@ interface Props {
 
 const { id } = Astro.props;
 const titleId = `${id}-title`;
-
-/*
- * The props, painted under the panel with a soft shadow on the band. Each is cropped to its
- * object, and its longer side runs 112px on phones, 144px on tablets, 224px from lg, and 288px
- * from xl, as the selected work props did. Fixing that side lets the width and height attributes
- * give the other one before the file arrives, so loading cannot resize a prop. At rest the hard
- * hat shows 55% of itself above the panel, enough for its vents and the start of its brim, which
- * make it a hard hat rather than a dome, and the stethoscope 40% below it, its earpieces and
- * chestpiece (`--pop-y`); the rest stays tucked behind the panel. The hard hat sits 4% of the
- * panel in from its right edge and the stethoscope 12%, staggered under it. On phones the
- * stethoscope drops 35% and sits 6% in: the closing line starts 40px under the panel and spans
- * most of its width there, so 40% of 112px would reach into the line, and 12% in would put the
- * prop over the question's last word. `sizes` is each prop's own rendered width, from its ratio.
- */
-const prop = 'pop-out pointer-events-none block drop-shadow-[0_16px_14px_rgb(0_0_0/0.22)]';
-const fit = (image: ImageMetadata) =>
-  image.height > image.width
-    ? 'h-28 w-auto sm:h-36 lg:h-56 xl:h-72'
-    : 'h-auto w-28 sm:w-36 lg:w-56 xl:w-72';
-const sizesOf = (image: ImageMetadata) => {
-  const ratio = image.height > image.width ? image.width / image.height : 1;
-  const at = (longer: number) => `${Math.round(longer * ratio)}px`;
-  return `(min-width: 1280px) ${at(288)}, (min-width: 1024px) ${at(224)}, (min-width: 640px) ${at(144)}, ${at(112)}`;
-};
-const propWidths = [160, 288, 448, 576, 864];
-/*
- * Each `picture` is the positioned box the reveal watches, and the only thing in it is its `img`,
- * so the box is where the prop rests tucked in: inside the panel, at the edge it pops past.
- */
-const stage = 'pointer-events-none absolute -z-10';
 ---
 
 <section id={id} aria-labelledby={titleId} class="bg-primary">
@@ -97,78 +55,42 @@ const stage = 'pointer-events-none absolute -z-10';
       Websites and email marketing built around your business.
     </p>
 
-    {/*
-     * `isolate`: the props' negative z-index stays inside this box, under the panel and over the
-     * band. The gap above the panel is the mockup's 48px from lg, where the hard hat rises beside
-     * the copy, clear of it; below lg the sentence can reach the hat's column, and the hat paints
-     * over anything it meets there, so the gap grows to hold the 55% of it that shows: 64px on
-     * phones (it shows 62px) and 80px from sm (79px). The dome
-     * is highest right of its centre and the sentence's last line ends left of it, so the two
-     * keep apart where the gap is tight.
-     */}
-    <div class="relative isolate mt-16 sm:mt-20 lg:mt-12">
-      <Picture
-        src={hardHat}
-        alt=""
-        formats={['avif']}
-        fallbackFormat="webp"
-        widths={propWidths}
-        sizes={sizesOf(hardHat)}
-        pictureAttributes={{ class: `${stage} top-0 right-[4%]`, 'data-reveal': '' }}
-        class={`${prop} ${fit(hardHat)} [--pop-y:-55%]`}
-      />
-      <Picture
-        src={stethoscope}
-        alt=""
-        formats={['avif']}
-        fallbackFormat="webp"
-        widths={propWidths}
-        sizes={sizesOf(stethoscope)}
-        pictureAttributes={{
-          class: `${stage} right-[6%] bottom-0 sm:right-[12%]`,
-          'data-reveal': '',
-        }}
-        class={`${prop} ${fit(stethoscope)} [--pop-y:35%] sm:[--pop-y:40%]`}
-      />
-
-      {/* role="list": Safari drops the list role from lists styled without markers. */}
-      <ul
-        role="list"
-        class="grid auto-rows-fr gap-px bg-base-300 text-base-content sm:grid-cols-2 lg:grid-cols-4"
-      >
-        {industries.map((industry) => {
-          const href = industryHref(industry.name);
-          const Name = href ? 'a' : 'span';
-          return (
-            <li
-              id={industryAnchor(industry.name)}
-              class="directory-cell relative flex min-h-20 items-center gap-4 p-6 has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-neutral lg:min-h-28"
+    {/* role="list": Safari drops the list role from lists styled without markers. */}
+    <ul
+      role="list"
+      class="mt-10 grid auto-rows-fr gap-px bg-base-300 text-base-content sm:mt-12 sm:grid-cols-2 lg:grid-cols-4"
+    >
+      {industries.map((industry) => {
+        const href = industryHref(industry.name);
+        const Name = href ? 'a' : 'span';
+        return (
+          <li
+            id={industryAnchor(industry.name)}
+            class="directory-cell relative flex min-h-20 items-center gap-4 p-6 has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-neutral lg:min-h-28"
+          >
+            <Icon name={industry.icon} class="size-6 shrink-0" stroke-width="1.75" />
+            {/*
+             * 16px from lg to xl, where four columns are narrowest, so no name runs past three
+             * lines. The link's ::after covers the cell, so the whole cell is the target; the
+             * cell draws the focus ring in the link's place.
+             */}
+            <Name
+              href={href}
+              data-directory-name
+              class:list={[
+                'min-w-0 text-lg leading-snug font-medium text-balance after:absolute after:inset-0 focus-visible:outline-none lg:text-base xl:text-lg',
+                // Set outright: WebKit shows a pointer on a link but computes `auto`.
+                href && 'cursor-pointer',
+              ]}
             >
-              <Icon name={industry.icon} class="size-6 shrink-0" stroke-width="1.75" />
-              {/*
-               * 16px from lg to xl, where four columns are narrowest, so no name runs past three
-               * lines. The link's ::after covers the cell, so the whole cell is the target; the
-               * cell draws the focus ring in the link's place.
-               */}
-              <Name
-                href={href}
-                data-directory-name
-                class:list={[
-                  'min-w-0 text-lg leading-snug font-medium text-balance after:absolute after:inset-0 focus-visible:outline-none lg:text-base xl:text-lg',
-                  // Set outright: WebKit shows a pointer on a link but computes `auto`.
-                  href && 'cursor-pointer',
-                ]}
-              >
-                {industry.name}
-              </Name>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+              {industry.name}
+            </Name>
+          </li>
+        );
+      })}
+    </ul>
 
-    {/* `relative`: paints over the stethoscope's shadow, which can reach the row on phones. */}
-    <div class="relative mt-10 flex flex-wrap items-center gap-x-6 gap-y-4 text-base-content">
+    <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4 text-base-content">
       <p class="text-lg font-bold">Don't see your business here?</p>
       <Button
         href={primaryCta.href}
@@ -182,9 +104,3 @@ const stage = 'pointer-events-none absolute -z-10';
     </div>
   </div>
 </section>
-
-<script>
-  import { revealOnScroll } from '@/lib/reveal';
-
-  revealOnScroll();
-</script>
