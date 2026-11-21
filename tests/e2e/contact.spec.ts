@@ -220,9 +220,16 @@ test('the fragment chooses the tab: direct links, a click, Back, and Forward, wi
   await expect(bookPanel(page)).toBeVisible();
   await expect(form(page)).toBeHidden();
 
-  // A click writes the fragment without moving the page.
+  // A click writes the fragment without moving the page. Measure once the page has settled: after
+  // the fonts, whose late arrival re-flows the hero above the card, and two frames after the
+  // scroll, in which the navbar's collapse runs on the scroll timeline and Chromium's scroll
+  // anchoring then pulls the offset back by the bar's shrink (`.cursor/rules/testing-playwright.mdc`).
   await page.goto('/contact/');
+  await page.evaluate(() => document.fonts.ready);
   await messageTab(page).scrollIntoViewIfNeeded();
+  await page.evaluate(
+    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+  );
   const before = await page.evaluate(() => window.scrollY);
   await messageTab(page).click();
   await expect(page).toHaveURL(/\/contact\/#send-message$/);

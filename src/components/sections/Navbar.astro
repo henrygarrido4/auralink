@@ -146,9 +146,29 @@ const linkUnderline =
   const opener = document.querySelector<HTMLButtonElement>('[aria-controls="site-menu"]');
 
   if (menu && opener) {
-    opener.addEventListener('click', () => menu.showModal());
+    /*
+     * Opening moves focus to the close button and closing returns it to this button. A ring on
+     * the control focus lands on is right after a key and noise after a tap. Chromium and Firefox
+     * weigh that themselves; WebKit shows the ring after a pointer too (its bug 247416: the
+     * button `showModal()` focuses, and the one a script focuses afterwards, on iOS and macOS),
+     * so when the visitor's last act was a pointer, focus is moved without one.
+     */
+    let byPointer = false;
+    document.addEventListener('pointerdown', () => (byPointer = true), true);
+    document.addEventListener('keydown', () => (byPointer = false), true);
+    const focusWithoutRing = (element: HTMLElement) => {
+      // A ring already shown is only taken off by focusing again from outside.
+      if (element.matches(':focus-visible')) element.blur();
+      element.focus({ focusVisible: false });
+    };
+
+    opener.addEventListener('click', () => {
+      menu.showModal();
+      const focused = document.activeElement;
+      if (byPointer && focused instanceof HTMLElement) focusWithoutRing(focused);
+    });
     // Safari does not focus a button on click, so return focus to the opener explicitly.
-    menu.addEventListener('close', () => opener.focus());
+    menu.addEventListener('close', () => (byPointer ? focusWithoutRing(opener) : opener.focus()));
     // The dialog element is the scrim; a click that lands on it missed the panel.
     menu.addEventListener('click', (event) => {
       if (event.target === menu) menu.close();

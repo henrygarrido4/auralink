@@ -37,6 +37,12 @@ const playingUntil = (element: Locator) =>
       .map((animation) => Number(animation.effect?.getComputedTiming().endTime)),
   );
 
+/** Whether the control shows its focus ring: `:focus-visible`, which the bar's controls outline. */
+const ringShown = (control: Locator) =>
+  control.evaluate(
+    (el) => el.matches(':focus-visible') && getComputedStyle(el).outlineStyle !== 'none',
+  );
+
 /** Bar and logo heights in CSS pixels. The dialog's logo is outside `header`, so it is not included. */
 const navbarSizes = (page: Page) =>
   page.evaluate(() => {
@@ -214,7 +220,10 @@ test.describe('navbar below the desktop breakpoint', () => {
 
     const dialog = menuDialog(page);
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole('button', { name: 'Close menu' })).toBeFocused();
+    const close = dialog.getByRole('button', { name: 'Close menu' });
+    await expect(close).toBeFocused();
+    // From the keyboard, the ring travels with focus: onto the close button, and back.
+    expect(await ringShown(close), 'the close button wears the ring').toBe(true);
     await expect(dialog.getByRole('listitem')).toHaveText(labels);
     await expect(dialog.getByRole('link', { name: primaryCta.label, exact: true })).toHaveAttribute(
       'href',
@@ -224,6 +233,7 @@ test.describe('navbar below the desktop breakpoint', () => {
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
     await expect(menuButton(page)).toBeFocused();
+    expect(await ringShown(menuButton(page)), 'the menu button wears the ring').toBe(true);
   });
 
   test('closes from the close button and returns focus to the menu button', async ({ page }) => {
@@ -231,6 +241,36 @@ test.describe('navbar below the desktop breakpoint', () => {
     await menuDialog(page).getByRole('button', { name: 'Close menu' }).click();
     await expect(menuDialog(page)).toBeHidden();
     await expect(menuButton(page)).toBeFocused();
+  });
+
+  test('opened and closed by a pointer, focus moves the same way but without a ring', async ({
+    page,
+    hasTouch,
+  }) => {
+    // The owner saw a white circle around the X on a phone (2026-11-21): WebKit puts the
+    // `:focus-visible` ring on the button `showModal()` focuses even after a tap (its bug 247416),
+    // and on the one a script focuses afterwards. The navbar's script moves focus without the ring
+    // when the last act was a pointer; after a key (the test above) the ring stays.
+    await page.goto('/');
+    const close = menuDialog(page).getByRole('button', { name: 'Close menu' });
+    const press = (control: Locator) => (hasTouch ? control.tap() : control.click());
+
+    await press(menuButton(page));
+    await expect(menuDialog(page)).toBeVisible();
+    await expect(close).toBeFocused();
+    expect(await ringShown(close), 'no ring on the close button after a pointer').toBe(false);
+
+    await press(close);
+    await expect(menuDialog(page)).toBeHidden();
+    await expect(menuButton(page)).toBeFocused();
+    expect(await ringShown(menuButton(page)), 'no ring on the menu button after a pointer').toBe(
+      false,
+    );
+
+    // Opened again the same way, the X is still bare.
+    await press(menuButton(page));
+    await expect(close).toBeFocused();
+    expect(await ringShown(close), 'still no ring the second time').toBe(false);
   });
 
   test('closes when the viewport grows to the desktop layout', async ({ page }) => {

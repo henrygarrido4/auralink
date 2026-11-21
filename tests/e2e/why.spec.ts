@@ -572,7 +572,15 @@ test.describe('the shine', () => {
       const onCard = (s: Sample) => s.travel > PARKED + 0.5;
       // The frames after the pointer left and before the band jumped back.
       const fading = samples.filter((s) => s.opacity < 1 && onCard(s));
-      expect(fading.length, `the light fades over more than one frame: ${seen}`).toBeGreaterThan(1);
+      expect(fading.length, `the light fades where it was: ${seen}`).toBeGreaterThan(0);
+      // Over more than one frame, when frames come often enough to catch a 0.15s fade twice. A
+      // runner drawing them 100ms or more apart (CI's WebKit, 2026-11-21) can show it in one only.
+      const next = samples[samples.indexOf(fading[0]) + 1];
+      if (next && next.t - fading[0].t < 75) {
+        expect(fading.length, `the light fades over more than one frame: ${seen}`).toBeGreaterThan(
+          1,
+        );
+      }
       const held = fading[0].travel;
       expect(held, `it fades part way across, where it was: ${seen}`).toBeLessThan(CROSSED);
       for (const [i, s] of fading.entries()) {

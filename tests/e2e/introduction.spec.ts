@@ -57,9 +57,13 @@ test('makes six points after the paragraph, each a mark, a title, and one senten
   expect(listBox!.y).toBeGreaterThan(paragraphBox!.y + paragraphBox!.height);
   expect(buttonBox!.y).toBeGreaterThan(listBox!.y + listBox!.height);
 
-  // Two columns from sm (640px), one below.
-  const rows = await items.evaluateAll((els) =>
-    els.map((el) => Math.round(el.getBoundingClientRect().y)),
+  // Two columns from sm (640px), one below. One `evaluate` on the list, not `evaluateAll` on the
+  // items: Playwright's Firefox crashes the page on `evaluateAll` inside a region found by its
+  // name once that region has been queried (`.cursor/rules/testing-playwright.mdc`, engine notes).
+  const rows = await list.evaluate((el) =>
+    [...el.querySelectorAll(':scope > li')].map((item) =>
+      Math.round(item.getBoundingClientRect().y),
+    ),
   );
   const columns = page.viewportSize()!.width >= 640 ? 2 : 1;
   expect(new Set(rows).size, `${columns} column(s)`).toBe(aboutHighlights.length / columns);

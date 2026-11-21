@@ -55,6 +55,12 @@ test.describe('motion allowed', () => {
         document
           .getAnimations()
           .filter((animation) => animation.playState === 'running')
+          // Only motion that runs on the clock. A scroll-driven animation (the navbar's collapse,
+          // `animation-timeline: scroll()`) moves as far as the visitor scrolls and no further, so
+          // it is not motion that starts on its own. Its timing is a share of the scroll range:
+          // a percentage in Chromium and WebKit, and in Firefox milliseconds of a notional 100 s
+          // timeline, which on a short page reads as longer than five seconds.
+          .filter((animation) => animation.timeline === document.timeline)
           .filter((animation) => Number(animation.effect?.getComputedTiming().endTime) > 5000)
           .filter((animation) => {
             const target = (animation.effect as KeyframeEffect | null)?.target ?? null;
