@@ -13,12 +13,11 @@ import { aboutCta, aboutHighlights, owner, site } from '@/data/site';
  * The copy is laid out after the "What we offer" section the owner gave as the reference (a
  * screenshot, 2026-11-20): from lg it takes the wider column, the eyebrow, the heading, the rule,
  * the owner's paragraph (rewritten 2026-11-20), six points in two columns (`aboutHighlights`, each a mark, a title, and
- * one sentence), and the primary call to learn more (`aboutCta`). The photo keeps the treatment
+ * one sentence), and the outlined secondary call to learn more (`aboutCta`), the hero's "About us". The photo keeps the treatment
  * the owner preferred (2026-11-20), after the "Space for Freelancers and Creative People" section
  * of the Hub2B reference: from lg it sits left on a frame in the primary colour, offset down and
  * to the right; below lg the copy comes first and the photo follows. The reference's price and
- * guarantee have no place here: prices belong only on the pricing page. Nothing moves on its own. The button's aura fades and circles under the pointer
- * or keyboard focus, and resumes where it stopped. There is no client-side JavaScript.
+ * guarantee have no place here: prices belong only on the pricing page. Nothing moves on its own, and there is no client-side JavaScript.
  *
  * The name card over the photo's lower right corner is the reference's, in this site's colours:
  * the name and the role on white, a hairline, and the owner's mark on a near-black tile. It
@@ -87,16 +86,16 @@ const titleId = `${id}-title`;
 
         {/*
          * The reference's spacing and size: 32px under the points on phones and 48px from md, with
-         * an 18px label (lg). The primary's aura shines in this text colour: dark, so it shows on
-         * the white page. The hidden words name the destination for screen readers and search
-         * engines, which "Learn more" alone does not, and the name still starts with the visible
-         * label.
+         * an 18px label (lg). The outlined secondary is the hero's "About us": transparent, with a
+         * near-black label and 1px border. The hidden words name the destination for screen readers
+         * and search engines, which "Learn more" alone does not, and the name still starts with
+         * the visible label.
          */}
-        <div class="mt-8 text-base-content md:mt-12">
+        <div class="mt-8 md:mt-12">
           <Button
             href={aboutCta.href}
             size="lg"
-            aura="hover"
+            variant="secondary"
             class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
           >
             {aboutCta.label}

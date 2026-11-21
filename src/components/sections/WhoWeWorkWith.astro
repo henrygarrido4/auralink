@@ -2,7 +2,7 @@
 import Button from '@/components/ui/Button.astro';
 import Eyebrow from '@/components/ui/Eyebrow.astro';
 import Icon from '@/components/ui/Icon.astro';
-import { industries, primaryCta } from '@/data/site';
+import { contactRoutes, industries } from '@/data/site';
 import { industryAnchor } from '@/data/footer';
 import { industryHref } from '@/data/industry-pages';
 
@@ -26,8 +26,8 @@ import { industryHref } from '@/data/industry-pages';
  * industry page (src/data/industry-pages/, since 2026-11-20) that stretches over the whole cell,
  * so the cell is the target and its padding, icon, and name keep their places; keyboard focus
  * draws the near-black ring on the cell. A name whose page does not exist stays plain text.
- * "Let's talk" is the flat charcoal button, following the navbar's call to action (`primaryCta`):
- * a link to the inquiry page once that ships, a placeholder until then.
+ * "Let's talk" is the flat charcoal button. It links to the contact page itself
+ * (`contactRoutes.page`), as the navbar's button and the closing banner do.
  *
  * The section has no imagery and no client-side JavaScript. For part of 2026-11-20 two cut-out
  * props (a hard hat and a stethoscope) popped out from behind the panel with the reveal the
@@ -95,7 +95,7 @@ const titleId = `${id}-title`;
     <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4 text-base-content">
       <p class="text-lg font-bold">Don't see your business here?</p>
       <Button
-        href={primaryCta.href}
+        href={contactRoutes.page}
         variant="neutral"
         size="lg"
         class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"

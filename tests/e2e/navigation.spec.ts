@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { primaryCta, primaryNav } from '../../src/data/site';
+import { contactRoutes, primaryCta, primaryNav } from '../../src/data/site';
 
 /**
  * Site navbar (src/components/sections/Navbar.astro). The viewport is set per
@@ -51,7 +51,10 @@ test.describe('navbar at desktop width', () => {
     const nav = banner.getByRole('navigation', { name: 'Primary' });
     await expect(nav.getByRole('listitem')).toHaveText(labels);
     await expect(nav.locator('[aria-current="page"]')).toHaveAttribute('href', '/');
-    await expect(banner.getByText(primaryCta.label, { exact: true })).toBeVisible();
+    await expect(banner.getByRole('link', { name: primaryCta.label, exact: true })).toHaveAttribute(
+      'href',
+      contactRoutes.page,
+    );
     await expect(menuButton(page)).toBeHidden();
   });
 
@@ -139,7 +142,10 @@ test.describe('navbar below the desktop breakpoint', () => {
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole('button', { name: 'Close menu' })).toBeFocused();
     await expect(dialog.getByRole('listitem')).toHaveText(labels);
-    await expect(dialog.getByText(primaryCta.label, { exact: true })).toBeVisible();
+    await expect(dialog.getByRole('link', { name: primaryCta.label, exact: true })).toHaveAttribute(
+      'href',
+      contactRoutes.page,
+    );
 
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();

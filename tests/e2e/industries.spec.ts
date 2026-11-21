@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { industryHref } from '../../src/data/industry-pages';
-import { industries, primaryCta } from '../../src/data/site';
+import { contactRoutes, industries } from '../../src/data/site';
 
 /**
  * Home page "Who we work with" (src/components/sections/WhoWeWorkWith.astro), after Why Auralink
@@ -12,8 +12,8 @@ import { industries, primaryCta } from '../../src/data/site';
  * columns from lg, two from sm, one on phones, filled row by row, its cells touching across 1px
  * grey rules and every row as tall as the others (105-115px from lg); in each cell the entry's
  * decorative 24px icon, 16px before the name and centred beside it; then, 40px below, "Don't see
- * your business here?" and the flat charcoal "Let's talk", which follows the navbar's call to
- * action (`primaryCta`). Under a fine hovering pointer the cell beneath it, and only that one,
+ * your business here?" and the flat charcoal "Let's talk", which links to the contact page.
+ * Under a fine hovering pointer the cell beneath it, and only that one,
  * fills `#141817` and turns its name, icon, and underline white over 240ms (at once under reduced
  * motion), moving nothing; a coarse pointer never sees that hover. At rest every cell is white,
  * Automotive included. Each name is a link to its industry page (src/data/industry-pages/, since
@@ -528,7 +528,7 @@ test("everything starts on the shared container's left edge, at every width", as
   }
 });
 
-test("Let's talk: a flat charcoal pill with a light label and an arrow, following the navbar", async ({
+test("Let's talk: a flat charcoal pill with a light label and an arrow, linking to the contact page", async ({
   page,
 }) => {
   await page.goto('/');
@@ -560,16 +560,10 @@ test("Let's talk: a flat charcoal pill with a light label and an arrow, followin
   expect(look.textShadow).toBe('none');
   expect(look.arrow, 'the arrow is decorative').toEqual(['true', 'false']);
 
-  if (primaryCta.href) {
-    await expect(region.getByRole('link', { name: ACTION })).toHaveAttribute(
-      'href',
-      primaryCta.href,
-    );
-  } else {
-    // A placeholder until the inquiry page ships, as the navbar's own button is.
-    await expect(action).not.toHaveAttribute('href');
-    await expect(region.getByRole('link')).toHaveCount(0);
-  }
+  await expect(region.getByRole('link', { name: ACTION })).toHaveAttribute(
+    'href',
+    contactRoutes.page,
+  );
 });
 
 test.describe('the hover', () => {

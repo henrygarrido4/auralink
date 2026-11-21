@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { heroBenefits, primaryCta } from '../../src/data/site';
+import { contactRoutes, heroBenefits, primaryCta } from '../../src/data/site';
 
 /**
  * Home hero (src/components/sections/Hero.astro). Copy and buttons are real HTML, and the device
@@ -138,11 +138,10 @@ test('shows the headline, the supporting copy, and both buttons', async ({ page 
     ),
   ).toBeVisible();
 
-  // The primary button follows the navbar's call to action, link or placeholder alike.
+  // The primary button uses the navbar's label and links to the contact page.
   const primary = hero(page).getByText(primaryCta.label, { exact: true });
   await expect(primary).toBeVisible();
-  if (primaryCta.href) await expect(primary).toHaveAttribute('href', primaryCta.href);
-  else await expect(primary, 'no destination yet').not.toHaveAttribute('href');
+  await expect(primary).toHaveAttribute('href', contactRoutes.page);
 
   const about = hero(page).getByRole('link', { name: 'About us' });
   await expect(about).toHaveAttribute('href', '#about');

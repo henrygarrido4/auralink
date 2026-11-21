@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { aboutCta, aboutHighlights, owner, site } from '../../src/data/site';
 
 /**
@@ -8,11 +8,11 @@ import { aboutCta, aboutHighlights, owner, site } from '../../src/data/site';
  * down and right by the room made for it, with a name card over the photo's lower right corner
  * once `owner.name` is set. Beside it, after the owner's reference (2026-11-20), the copy, the
  * six `aboutHighlights` in two columns from sm (each a decorative mark, an h3, and one sentence),
- * and the primary call to learn more: a link to the About page once `aboutCta.href` is set and a
- * placeholder until then, named for that page by words only assistive technology reads, 32px
- * under the points on phones and 48px from 768px, with an 18px label. It changes colour at once,
- * and its aura stays unlit until the pointer reaches it, then fades out and resumes where it
- * stopped. From lg the portrait sits left of the copy; below, the copy comes first.
+ * and the outlined secondary call to learn more, the hero's "About us": a link to the About page
+ * once `aboutCta.href` is set and a placeholder until then, named for that page by words only
+ * assistive technology reads, 32px under the points on phones and 48px from 768px, with an 18px
+ * label. It changes colour at once and has no border light. From lg the portrait sits left of the
+ * copy; below, the copy comes first.
  */
 const HEADING = 'A digital presence built around your goals.';
 /** The button's whole text: the visible label, then the hidden words naming its destination. */
@@ -29,20 +29,6 @@ test('follows the process, before the closing contact banner', async ({ page }) 
   );
   expect(order.slice(-3)).toEqual(['process', 'about', 'project-contact']);
 });
-
-/** The aura's own spin, not the glow copies, and how strongly the light shines. */
-const auraSpin = (aura: Locator) =>
-  aura.evaluate((el) => {
-    const spin = el.getAnimations().find((animation) => {
-      const effect = animation.effect as KeyframeEffect | null;
-      return (animation as CSSAnimation).animationName === 'aura' && !effect?.pseudoElement;
-    });
-    return {
-      playing: spin?.playState === 'running',
-      time: spin ? Number(spin.currentTime) : null,
-      strength: getComputedStyle(el).getPropertyValue('--aura-light').trim(),
-    };
-  });
 
 test('makes six points after the paragraph, each a mark, a title, and one sentence', async ({
   page,
@@ -79,11 +65,26 @@ test('makes six points after the paragraph, each a mark, a title, and one senten
   expect(new Set(rows).size, `${columns} column(s)`).toBe(aboutHighlights.length / columns);
 });
 
-test('the copy ends with the primary call to learn more about the studio', async ({ page }) => {
+test('the copy ends with the outlined call to learn more about the studio', async ({ page }) => {
   await page.goto('/');
   const cta = button(page);
   await expect(cta).toBeVisible();
-  await expect(cta, 'the primary button').toHaveClass(/\bbtn-primary\b/);
+  await expect(cta, 'the outlined secondary button').toHaveClass(/\bbtn-secondary\b/);
+  await expect(cta).toHaveClass(/\bbtn-outline\b/);
+  await expect(section(page).locator('.aura'), 'no border light').toHaveCount(0);
+  await expect(cta).toHaveCSS('transition-property', 'none');
+  // The same outline as the hero's "About us": transparent, near-black label and border.
+  const look = (element: HTMLElement) => {
+    const style = getComputedStyle(element);
+    return {
+      color: style.color,
+      backgroundColor: style.backgroundColor,
+      borderTopColor: style.borderTopColor,
+      borderTopWidth: style.borderTopWidth,
+    };
+  };
+  const heroOutline = page.getByRole('link', { name: 'About us' });
+  expect(await cta.evaluate(look)).toEqual(await heroOutline.evaluate(look));
   if (aboutCta.href) {
     await expect(cta).toHaveAttribute('href', aboutCta.href);
     await expect(section(page).getByRole('link', { name: NAME, exact: true })).toBeVisible();
@@ -108,7 +109,6 @@ test('sits under the points and in line with them, spaced and sized as in the re
   // 32px between the points and the button on phones, and 48px from 768px.
   const gap = page.viewportSize()!.width >= 768 ? 48 : 32;
   expect(ctaBox.y - (listBox.y + listBox.height), 'the space under the points').toBeCloseTo(gap, 0);
-  // The aura takes no room of its own, so the button starts where the points do.
   expect(ctaBox.x, 'in line with the points').toBeCloseTo(listBox.x, 1);
   // The large button, as the reference's call to action in this section.
   await expect(button(page)).toHaveCSS('font-size', '18px');
@@ -189,45 +189,4 @@ test('the portrait sits left of the copy from lg and follows it below', async ({
     ),
     'no sideways scroll at 390',
   ).toBeLessThanOrEqual(1);
-});
-
-test.describe('motion allowed', () => {
-  test.use({ reducedMotion: 'no-preference' });
-
-  test('changes colour at once, and its aura fades and resumes', async ({ page }) => {
-    await page.goto('/');
-    const cta = button(page);
-    await expect(cta).toHaveCSS('transition-property', 'none');
-    const aura = section(page).locator('.aura');
-    await expect(aura, 'one aura, on the button').toHaveCount(1);
-    const resting = await auraSpin(aura);
-    expect(resting.playing, 'nothing runs at rest').toBe(false);
-    expect(resting.strength).toBe('0%');
-    await expect(aura).toHaveCSS('transition-property', '--aura-light');
-    await expect(aura).toHaveCSS('transition-duration', '0.4s');
-
-    if (!(await page.evaluate(() => matchMedia('(hover: hover)').matches))) return;
-    await cta.hover();
-    await expect
-      .poll(async () => (await auraSpin(aura)).playing, 'lit under the pointer')
-      .toBe(true);
-    await expect.poll(async () => (await auraSpin(aura)).time ?? 0).toBeGreaterThan(200);
-    const carried = (await auraSpin(aura)).time ?? 0;
-    await page.mouse.move(0, 400);
-    await expect
-      .poll(async () => (await auraSpin(aura)).playing, 'paused once the pointer leaves')
-      .toBe(false);
-    const paused = (await auraSpin(aura)).time ?? 0;
-    expect(paused, 'the spin holds its place').toBeGreaterThanOrEqual(carried - 50);
-    await expect.poll(async () => (await auraSpin(aura)).strength).toBe('0%');
-    await aura.evaluate((el) => {
-      for (const animation of el.getAnimations()) {
-        if ((animation as CSSAnimation).animationName === 'aura') animation.currentTime = 2500;
-      }
-    });
-    await cta.hover();
-    const resumed = (await auraSpin(aura)).time ?? 0;
-    expect(resumed, 'the spin continues from where it stopped').toBeGreaterThanOrEqual(2400);
-    expect(resumed, 'the spin did not start over').toBeLessThan(3500);
-  });
 });

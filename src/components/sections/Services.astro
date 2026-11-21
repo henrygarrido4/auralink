@@ -15,7 +15,7 @@ import { serviceCardLink } from '@/lib/service-cards';
  * the reference stacks it, over two tiles per row from sm and one on phones. Hub2B centres its
  * introduction and tiles; here both are left-aligned at every width, like the site's other sections
  * (owner, 2026-11-18). Where Hub2B's introduction ends with a "Read more" button, ours ends with the
- * primary call to view all services (`servicesCta`), a placeholder until a page lists them. Under
+ * outlined secondary call to view all services (`servicesCta`), the hero's "About us". Under
  * the pointer each tile shows Hub2B's hover, and the arrow box at its foot, placed as on the service
  * cards of Johnny's Exclusive Barbershop's website, fills with the primary colour as its arrow
  * slides through (ServiceCard.astro).
@@ -87,15 +87,15 @@ const cards = page ? [...serviceCards, ...servicesPageCards] : serviceCards;
         </p>
       )}
       {/*
-       * The large size, the same as the other primary buttons. The aura shines in this text
-       * colour: dark, so it shows on the grey band.
+       * The large size, the same as the other page buttons. The outlined secondary is the hero's
+       * "About us": transparent, with a near-black label and 1px border.
        */}
       {showCta && !page && (
-        <div class="mt-8 text-base-content">
+        <div class="mt-8">
           <Button
             href={servicesCta.href}
             size="lg"
-            aura="hover"
+            variant="secondary"
             class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
           >
             {servicesCta.label}

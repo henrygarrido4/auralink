@@ -11,7 +11,7 @@ import { serviceCardLink } from '../../src/lib/service-cards';
 
 /**
  * Home page services section (src/components/sections/Services.astro): the introduction, ending
- * with the primary call to view all services at the same large size as the other primary buttons,
+ * with the outlined secondary call to view all services, the hero's "About us", at the same large size,
  * and one card (a tile) per `serviceCards` entry, laid out after the Hub2B reference: from xl a
  * four-column grid with the introduction in its first two cells, two tiles beside it and four
  * below. The introduction and everything on the cards are left-aligned at every width. Under the
@@ -258,13 +258,27 @@ test('introduces the services and shows one card per service group, in order', a
   }
 });
 
-test('the introduction ends with the primary call to view all services', async ({ page }) => {
+test('the introduction ends with the outlined call to view all services', async ({ page }) => {
   await page.goto('/');
   const region = section(page);
   const cta = region.getByText(servicesCta.label, { exact: true });
   await expect(cta).toBeVisible();
-  await expect(cta, 'the primary button').toHaveClass(/\bbtn-primary\b/);
-  // The large size, the same as the introduction's primary button and the other page primaries.
+  await expect(cta, 'the outlined secondary button').toHaveClass(/\bbtn-secondary\b/);
+  await expect(cta).toHaveClass(/\bbtn-outline\b/);
+  await expect(region.locator('.aura'), 'no border light').toHaveCount(0);
+  // The same outline as the hero's "About us": transparent, near-black label and border.
+  const look = (element: HTMLElement) => {
+    const style = getComputedStyle(element);
+    return {
+      color: style.color,
+      backgroundColor: style.backgroundColor,
+      borderTopColor: style.borderTopColor,
+      borderTopWidth: style.borderTopWidth,
+    };
+  };
+  const heroOutline = page.getByRole('link', { name: 'About us' });
+  expect(await cta.evaluate(look)).toEqual(await heroOutline.evaluate(look));
+  // The large size, the same as the introduction's outlined button.
   const introductionCta = page.getByText(`${aboutCta.label} about ${site.name}`, { exact: true });
   const buttonSize = (element: HTMLElement) => {
     const style = getComputedStyle(element);

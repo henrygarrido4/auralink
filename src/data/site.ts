@@ -164,9 +164,9 @@ export const primaryNav: readonly NavItem[] = [
 ];
 
 /**
- * Navbar call to action, shared by the home hero and the home directory's "Let's talk". It offers
- * the call, so it leads to the contact page's booking tab (`contactRoutes.bookCall`, since
- * 2026-11-20); the service cards' inquiry fallback (src/lib/service-cards.ts) follows it.
+ * "Book a free call". The navbar, the home hero, and the "Let's talk" buttons use the label and
+ * link to the contact page itself (`contactRoutes.page`). This address is the service cards'
+ * inquiry fallback (src/lib/service-cards.ts): the contact page's booking tab.
  */
 export const primaryCta: NavItem = { label: 'Book a free call', href: contactRoutes.bookCall };
 

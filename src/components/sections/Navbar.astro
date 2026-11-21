@@ -1,7 +1,7 @@
 ---
 import Logo from '@/assets/aura.svg';
 import Button from '@/components/ui/Button.astro';
-import { primaryCta, primaryNav, site } from '@/data/site';
+import { contactRoutes, primaryCta, primaryNav, site } from '@/data/site';
 
 const trimSlash = (path: string) => path.replace(/\/+$/, '') || '/';
 const currentPath = trimSlash(Astro.url.pathname);
@@ -54,7 +54,7 @@ const linkUnderline =
 
     {/* As tall as the bar and clipped vertically, so the button's glow stays inside the bar. */}
     <div class="hidden self-stretch overflow-y-clip lg:flex lg:items-center">
-      <Button href={primaryCta.href} aura class={focusRing}>
+      <Button href={contactRoutes.page} aura class={focusRing}>
         {primaryCta.label}
       </Button>
     </div>
@@ -128,7 +128,7 @@ const linkUnderline =
     </nav>
 
     <div class="border-t border-neutral-content/10 p-6">
-      <Button href={primaryCta.href} size="lg" block aura class={focusRing}>
+      <Button href={contactRoutes.page} size="lg" block aura class={focusRing}>
         {primaryCta.label}
       </Button>
     </div>
