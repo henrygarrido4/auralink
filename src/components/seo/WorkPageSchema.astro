@@ -1,0 +1,58 @@
+---
+import { site } from '@/data/site';
+import { workProjects } from '@/data/work';
+
+/**
+ * JSON-LD for the work page, describing only what the page shows: the page as a `CollectionPage`
+ * of the studio's projects, the breadcrumb from the home page, and the projects as an `ItemList`
+ * of `CreativeWork`s, each named as on the page, described by its lead paragraph, pointing
+ * at its section here and at the site itself (`url`), with the studio as its creator. No client
+ * relationship, result, rating, or review is stated, since the page states none.
+ */
+interface Props {
+  /** The meta description, so the markup and the head agree. */
+  description: string;
+}
+
+const { description } = Astro.props;
+const url = new URL(Astro.url.pathname, site.url).href;
+const organization = { '@type': 'Organization', name: site.name, url: site.url };
+
+const page = {
+  '@type': 'CollectionPage',
+  name: `Our Work | ${site.name}`,
+  description,
+  url,
+  isPartOf: { '@type': 'WebSite', name: site.name, url: site.url },
+  about: organization,
+};
+
+const breadcrumb = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${site.url}/` },
+    { '@type': 'ListItem', position: 2, name: 'Work', item: url },
+  ],
+};
+
+const projects = {
+  '@type': 'ItemList',
+  name: 'Projects',
+  itemListElement: workProjects.map((project, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    item: {
+      '@type': 'CreativeWork',
+      name: project.name,
+      description: project.description,
+      url: project.link.href,
+      mainEntityOfPage: `${url}#${project.id}`,
+      creator: organization,
+    },
+  })),
+};
+
+const schema = { '@context': 'https://schema.org', '@graph': [page, breadcrumb, projects] };
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(schema)} />

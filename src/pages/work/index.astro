@@ -1,0 +1,40 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageIntro from '@/components/sections/PageIntro.astro';
+import WorkOverview from '@/components/sections/WorkOverview.astro';
+import WorkProject from '@/components/sections/WorkProject.astro';
+import DetailInvitation from '@/components/sections/DetailInvitation.astro';
+import WorkPageSchema from '@/components/seo/WorkPageSchema.astro';
+import { checkPageHead } from '@/data/detail-pages';
+import { workPage, workProjects } from '@/data/work';
+
+/*
+ * The work page (the owner's brief, 2026-11-21), laid out after https://uprig.net/work for the
+ * way a project is shown (a browser-framed screenshot beside the copy, with a status note and a
+ * button to the site) and after https://eylercreative.com/results/ for what is said about each
+ * (the challenge, the solution, what we manage), in this site's own system: the shared dark hero;
+ * how to read the projects, with an index of them; one section per project, alternating the grey
+ * and white bands and the side the screenshot sits on; the invitation; then the shared contact
+ * banner. The reference's results figures are left out on purpose: the owner has none to
+ * publish, so each project shows the thinking and the build instead. Every project is in
+ * `workProjects` (src/data/work.ts), which the home page's three cards also read.
+ */
+checkPageHead({ slug: 'work', ...workPage });
+---
+
+<BaseLayout title={workPage.metaTitle} description={workPage.metaDescription}>
+  <Fragment slot="head">
+    <WorkPageSchema description={workPage.metaDescription} />
+  </Fragment>
+  <PageIntro
+    eyebrow="Work"
+    title={workPage.title}
+    highlight={workPage.highlight}
+    description={workPage.description}
+  />
+  <WorkOverview id="overview" />
+  {workProjects.map((project, index) => (
+    <WorkProject project={project} index={index} />
+  ))}
+  <DetailInvitation id="next-step" invitation={workPage.invitation} />
+</BaseLayout>

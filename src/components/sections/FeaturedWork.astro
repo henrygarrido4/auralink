@@ -1,0 +1,98 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import WorkCard from '@/components/ui/WorkCard.astro';
+import { workCta } from '@/data/site';
+import { featuredWork } from '@/data/work';
+
+/**
+ * Home page selected work, after the introduction and before the closing contact banner (the
+ * owner's request, 2026-11-21: a band under the introduction with one card for each of three
+ * projects). The band is the near-black `neutral` of the navbar and the closing banner (the
+ * owner's choice the same day, in place of the yellow first asked for) under an aura of the brand
+ * yellow drawn in CSS (`work-aura`, src/styles/global.css; the owner asked for a background with
+ * an aura-like feel), with a primary eyebrow, the heading in white in bold and light weights over
+ * a short primary rule, and the sentence in the band's light text, left-aligned like the other
+ * sections. The eyebrow, the heading, and the sentence are the owner's (2026-11-21); the heading's
+ * full stop and the sentence's "an" are editorial. The cards (WorkCard.astro) are dark and
+ * translucent, so the aura shows through them, and show each project's own homepage in a browser
+ * window, leading to its section on the work page; the primary text link after the copy
+ * (`workCta`, a plain link rather than a button at the owner's request, 2026-11-21, styled as the
+ * footer's "Start a conversation") leads to the work page itself, where each project is told in
+ * full.
+ *
+ * One grid holds the introduction and the cards, so the tablet rows stay full: below sm the
+ * introduction comes first and the cards stack; from sm the introduction takes the first of two
+ * cells and the three cards fill the other three, two rows of two (the list spans the grid as a
+ * subgrid, as the home services section does); from lg the introduction is a row of its own, with
+ * the link at its right end, and the three cards share the row below. No client-side JavaScript.
+ */
+interface Props {
+  /** Anchor for in-page links. */
+  id: string;
+}
+
+const { id } = Astro.props;
+const titleId = `${id}-title`;
+---
+
+<section id={id} aria-labelledby={titleId} class="work-aura text-neutral-content">
+  <div class="mx-auto max-w-site px-6 py-16 sm:py-20 lg:px-8 lg:py-24">
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+      {/*
+       * `relative` keeps the introduction above the list, which overlaps its cell from sm, so its
+       * text stays selectable and its link clickable.
+       */}
+      <div class="relative sm:col-start-1 sm:row-start-1 lg:col-span-3 lg:flex lg:items-end lg:justify-between lg:gap-12 lg:pb-4">
+        <div class="max-w-3xl">
+          {/* The shared eyebrow locks a dark colour for the light sections; here it is primary. */}
+          <p class="text-sm font-bold tracking-[0.16em] text-primary uppercase">Selected work</p>
+          {/* White, like the inner-page heroes' titles: the band's own light text is a shade greyer. */}
+          <h2
+            id={titleId}
+            class="mt-5 text-3xl font-bold tracking-tight text-balance text-base-100 sm:text-4xl xl:text-5xl"
+          >
+            {/* The explicit space keeps the two lines apart in the heading's text. */}
+            <span class="block">Websites for</span>{' '}
+            <span class="block font-light">local businesses.</span>
+          </h2>
+          <div class="mt-6 h-0.5 w-24 bg-primary" aria-hidden="true"></div>
+          <p class="mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-neutral-content/80">
+            Explore an apartment community website, a barbershop website, and a trucking company
+            website. See what went into each build.
+          </p>
+        </div>
+        {/*
+         * A plain link, not a button (the owner, 2026-11-21): the footer's primary text link on
+         * the same dark, with the arrow, underlined under the pointer at once, with no
+         * transition, and the primary ring on keyboard focus. At least 44px tall as a target.
+         */}
+        <div class="mt-8 shrink-0 lg:mt-0">
+          <a
+            href={workCta.href}
+            class="inline-flex min-h-11 items-center gap-2 rounded-sm text-lg font-bold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+          >
+            {workCta.label}
+            <Icon name="arrow-right" class="size-5" />
+          </a>
+        </div>
+      </div>
+
+      {/*
+       * The list spans the grid and passes its tracks to the cards (subgrid), so the cards and
+       * the introduction share columns, rows, and gaps. From sm the first card starts in the
+       * second cell, beside the introduction; from lg the list takes the second row alone.
+       * role="list": Safari drops the list role from lists styled without markers.
+       */}
+      <ul
+        role="list"
+        class="grid gap-6 sm:col-span-2 sm:col-start-1 sm:row-span-2 sm:row-start-1 sm:grid-cols-subgrid sm:grid-rows-subgrid lg:col-span-3 lg:row-span-1 lg:row-start-2 lg:gap-8"
+      >
+        {featuredWork.map((project) => (
+          <li class="min-w-0 sm:first:col-start-2 lg:first:col-start-1">
+            <WorkCard project={project} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>

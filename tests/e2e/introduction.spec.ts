@@ -3,7 +3,8 @@ import { aboutCta, aboutHighlights, owner, site } from '../../src/data/site';
 
 /**
  * Home page introduction (src/components/sections/AboutIntro.astro), where the hero's About us
- * button lands. It closes the home page, after the process. The portrait keeps the Hub2B
+ * button lands. It follows the process and precedes the selected work (since 2026-11-21) and the
+ * closing contact banner. The portrait keeps the Hub2B
  * treatment the owner preferred (2026-11-20): on a primary frame the photo's own size, offset
  * down and right by the room made for it, with a name card over the photo's lower right corner
  * once `owner.name` is set. Beside it, after the owner's reference (2026-11-20), the copy, the
@@ -22,12 +23,14 @@ const section = (page: Page) => page.getByRole('region', { name: HEADING });
 const button = (page: Page) => section(page).getByText(NAME, { exact: true });
 const points = (page: Page) => section(page).locator('[data-about-points]');
 
-test('follows the process, before the closing contact banner', async ({ page }) => {
+test('follows the process, before the selected work and the closing contact banner', async ({
+  page,
+}) => {
   await page.goto('/');
   const order = await page.evaluate(() =>
     [...document.querySelectorAll('main > section')].map((section) => section.id),
   );
-  expect(order.slice(-3)).toEqual(['process', 'about', 'project-contact']);
+  expect(order.slice(-4)).toEqual(['process', 'about', 'work', 'project-contact']);
 });
 
 test('makes six points after the paragraph, each a mark, a title, and one sentence', async ({

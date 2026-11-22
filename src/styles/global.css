@@ -523,7 +523,8 @@
 }
 
 /*
- * Filtering without JavaScript (the home page's selected work, SelectedWork.astro). A group of
+ * Filtering without JavaScript (first the home page's selected work of 2026-11-18, SelectedWork.astro,
+ * removed on 2026-11-21; on no page since). A group of
  * radio buttons, each inside its own label, chooses which panel shows. Mark the options' container
  * `data-filter-options` and the panels' container `data-filter-panels`, in the same order: the
  * n-th option shows the n-th panel. Up to six options.
@@ -570,6 +571,36 @@
   background-image: url('../assets/process/lines.svg');
   background-position: center;
   background-size: cover;
+}
+
+/*
+ * The band behind the home page's selected work (src/components/sections/FeaturedWork.astro): the
+ * navbar's near-black with an aura of the brand yellow laid over it in CSS alone (the owner's
+ * request, 2026-11-21: a background with an aura-like feel). Three soft radial glows, the largest
+ * rising from the top left behind the heading, a second settling into the bottom right under the
+ * last card, and a faint third between them, each fading to nothing well inside its ellipse so no
+ * edge shows. The yellow is mixed into the dark at low strength, so the band stays near-black
+ * (white text on the brightest point is still over 12:1) and the translucent cards take the glow
+ * through their fill. No image file, no request, and nothing moves.
+ */
+@utility work-aura {
+  background-color: var(--color-neutral);
+  background-image:
+    radial-gradient(
+      ellipse 70% 60% at 12% 0%,
+      color-mix(in oklab, var(--color-primary) 22%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 55% 65% at 92% 100%,
+      color-mix(in oklab, var(--color-primary) 16%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 40% 45% at 65% 35%,
+      color-mix(in oklab, var(--color-primary) 7%, transparent),
+      transparent 70%
+    );
 }
 
 /*

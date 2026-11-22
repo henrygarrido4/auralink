@@ -1,0 +1,185 @@
+---
+import DetailSection from '@/components/sections/DetailSection.astro';
+import BrowserFrame from '@/components/ui/BrowserFrame.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { serviceCardById } from '@/data/detail-pages';
+import { projectStatus, type WorkProject } from '@/data/work';
+
+/**
+ * One project on the work page (the owner's brief, 2026-11-21, after the work page of uprig.net
+ * for the layout and the results page of Eyler Creative for the content). Two columns from lg,
+ * the screenshot and the copy, which swap sides from one project to the next; below lg the
+ * screenshot comes first. The screenshot is the site's own homepage in a browser window
+ * (BrowserFrame.astro) on a primary panel offset down and to the right, the About page's photo
+ * treatment in the brand colour; under it, three things a visitor can see on the site, each with
+ * a Lucide icon on a near-black tile. From lg that column sticks below the navbar while the copy
+ * scrolls past, so the website stays in view while its story is read; nothing animates.
+ *
+ * The copy follows the reference's order: the project's number (decorative, like the detail
+ * pages' numbers: near-black with a primary full stop), how it is built and that it is a live
+ * website (every project is, the owner confirmed on 2026-11-21), the name as the section's h2,
+ * the kind of business and where it is, a lead paragraph, then three blocks under h3 headings that
+ * every project shares: the challenge, the solution, and what we manage, each service a link to
+ * its page. No result, figure, or testimonial is stated anywhere (the owner has none to publish).
+ * The outlined secondary button opens the site in a new tab; visually hidden words complete its
+ * name with the project and the new tab.
+ */
+interface Props {
+  project: WorkProject;
+  /** Its place among the projects, counted from 0; sets the number, the band, and the side. */
+  index: number;
+}
+
+const { project, index } = Astro.props;
+const id = project.id;
+const titleId = `${id}-title`;
+const number = String(index + 1).padStart(2, '0');
+const flipped = index % 2 === 1;
+const services = project.services.map((card) => serviceCardById(card));
+
+const block =
+  'flex items-center gap-3 text-sm font-bold tracking-[0.16em] text-base-content/70 uppercase';
+---
+
+<DetailSection id={id} labelledBy={titleId} tone={flipped ? 'light' : 'muted'}>
+  <div class="grid gap-12 lg:grid-cols-12 lg:gap-x-12 xl:gap-x-16">
+    <div
+      class:list={[
+        'min-w-0 lg:col-span-6 lg:sticky lg:top-28 lg:self-start',
+        flipped && 'lg:order-last',
+      ]}
+    >
+      {/*
+       * The panel is the window's own box moved down and right, inside the container's padding, so
+       * it never passes the screen. `isolate` keeps its negative layer under the window only.
+       */}
+      <div class="relative isolate mr-4 mb-4 sm:mr-6 sm:mb-6">
+        <div
+          class="absolute inset-0 -z-10 translate-x-4 translate-y-4 rounded-lg bg-primary sm:translate-x-6 sm:translate-y-6"
+          aria-hidden="true"
+        ></div>
+        {/*
+         * `sizes`: the window's width inside the container's padding and the panel's room (16px
+         * below sm, 24px from sm): the full width below lg, then half of what the column gap
+         * leaves (48px, 64px from xl), capped with the 88rem container from 1408px.
+         */}
+        <BrowserFrame
+          project={project}
+          crop="full"
+          sizes="(min-width: 1408px) 628px, (min-width: 1280px) calc((100vw - 152px) / 2), (min-width: 1024px) calc((100vw - 136px) / 2), (min-width: 640px) calc(100vw - 72px), calc(100vw - 64px)"
+          class="rounded-lg border border-base-300 shadow-xl"
+        />
+      </div>
+
+      {/* role="list": Safari drops the list role from lists styled without markers. */}
+      <ul role="list" class="mt-10 grid gap-4 sm:mt-12 sm:grid-cols-3">
+        {project.features.map((feature) => (
+          <li class="flex min-w-0 items-start gap-3">
+            <span
+              class="grid size-10 shrink-0 place-items-center rounded-md bg-neutral text-primary"
+              aria-hidden="true"
+            >
+              <Icon name={feature.icon} class="size-5" stroke-width="1.75" />
+            </span>
+            <span class="min-w-0 pt-0.5 text-sm leading-snug font-bold text-base-content">
+              {feature.text}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="min-w-0 lg:col-span-6">
+      {/* Decorative: the index above and the name below already place the project. */}
+      <p
+        class="font-(family-name:--font-headers) text-5xl leading-none font-bold tracking-tight text-base-content sm:text-6xl"
+        aria-hidden="true"
+      >
+        {number}
+        <span class="text-primary">.</span>
+      </p>
+      <p class:list={['mt-6 flex-wrap gap-y-2', block]}>
+        <span class="h-0.5 w-6 shrink-0 bg-primary" aria-hidden="true"></span>
+        <span>{project.platform}</span>
+        <span class="rounded-full border border-base-300 bg-base-100 px-2.5 py-0.5 text-xs tracking-[0.12em]">
+          {projectStatus}
+        </span>
+      </p>
+      <h2
+        id={titleId}
+        class="mt-4 text-3xl leading-tight font-bold tracking-tight text-balance text-base-content sm:text-4xl lg:text-5xl"
+      >
+        {project.name}
+      </h2>
+      <p class="mt-3 text-base font-bold text-base-content/70">
+        {project.location ? `${project.industry} · ${project.location}` : project.industry}
+      </p>
+      <p class="mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
+        {project.description}
+      </p>
+
+      <div class="mt-10 border-t border-base-300 pt-8">
+        <h3 class={block}>
+          <span class="h-0.5 w-6 shrink-0 bg-primary" aria-hidden="true"></span>
+          The challenge
+        </h3>
+        <p class="mt-4 max-w-2xl text-base leading-relaxed text-pretty text-base-content">
+          {project.challenge}
+        </p>
+      </div>
+      <div class="mt-8 border-t border-base-300 pt-8">
+        <h3 class={block}>
+          <span class="h-0.5 w-6 shrink-0 bg-primary" aria-hidden="true"></span>
+          The solution
+        </h3>
+        <p class="mt-4 max-w-2xl text-base leading-relaxed text-pretty text-base-content">
+          {project.solution}
+        </p>
+      </div>
+      <div class="mt-8 border-t border-base-300 pt-8">
+        <h3 class={block}>
+          <span class="h-0.5 w-6 shrink-0 bg-primary" aria-hidden="true"></span>
+          What we manage
+        </h3>
+        {/*
+         * One pill per service, linking to its page; the icon is the service card's. Hover fills
+         * near-black at once, with no fade, as the detail pages' states change.
+         */}
+        <ul role="list" class="mt-4 flex flex-wrap gap-2.5">
+          {services.map((card) => (
+            <li>
+              <a
+                href={card.href}
+                class="inline-flex min-h-11 items-center gap-2 rounded-full border border-base-300 bg-base-100 px-4 py-2 text-sm font-bold text-base-content hover:border-neutral hover:bg-neutral hover:text-neutral-content focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral"
+              >
+                <Icon name={card.icon} class="size-4 shrink-0" stroke-width="2" />
+                {card.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/*
+       * The outlined secondary button (the owner, 2026-11-21, in place of the lit primary): a
+       * near-black pill outline that fills near-black under the pointer, at once, with the
+       * near-black ring on keyboard focus, as the home introduction's "Learn more".
+       */}
+      <div class="mt-10">
+        <Button
+          href={project.link.href}
+          target="_blank"
+          rel="noopener"
+          size="lg"
+          variant="secondary"
+          class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+        >
+          {project.link.label}
+          <span class="sr-only">, {project.name}, opens in a new tab</span>
+          <Icon name="arrow-up-right" class="size-5" />
+        </Button>
+      </div>
+    </div>
+  </div>
+</DetailSection>

@@ -11,7 +11,7 @@ Vue: https://vuejs.org/guide/
 
 ## When to create an island
 
-Create a Vue component only when the UI needs client-side state or browser APIs: a mobile navigation drawer, a filterable work grid, a multi-step contact form, tabs or accordions that must be dynamic, an interactive estimate tool. Static markup, links, lists, and one-off toggles stay in Astro. So does a filter that only chooses which panel shows: a radio group and the `filter-group` utility in `global.css` do it with no script and keep working without JavaScript, as the home page's selected work does. Use an island once a filter needs real state: search, several filters at once, counts, or sorting.
+Create a Vue component only when the UI needs client-side state or browser APIs: a mobile navigation drawer, a filterable work grid, a multi-step contact form, tabs or accordions that must be dynamic, an interactive estimate tool. Static markup, links, lists, and one-off toggles stay in Astro. So does a filter that only chooses which panel shows: a radio group and the `filter-group` utility in `global.css` do it with no script and keep working without JavaScript, as the home page's selected work did in its Hub2B form (2026-11-18 to 2026-11-21). Use an island once a filter needs real state: search, several filters at once, counts, or sorting.
 
 ## Hydration directives
 

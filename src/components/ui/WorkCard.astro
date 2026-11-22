@@ -1,0 +1,84 @@
+---
+import BrowserFrame from '@/components/ui/BrowserFrame.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { projectStatus, type WorkProject } from '@/data/work';
+
+/**
+ * One project as a card in the home page's selected work section (FeaturedWork.astro, the
+ * owner's requests of 2026-11-21): the site's homepage in a browser window across the top, then
+ * one row, with how it is built and that it is a live website over the name at the left and the
+ * arrow box at the right. The owner asked for the cards to be much shorter than the first cut,
+ * which carried a sentence and a "View project" label under the name: both went, so the card is
+ * the screenshot and one row. The whole card is one link to the project's section on the work
+ * page, named by its visible text (the platform, the status, the name), as the service cards that
+ * lead to the inquiry page are named without an action word; the arrow is the action. The
+ * screenshot has empty alt text here, since that text already names the project, and the work
+ * page carries the screenshot's description.
+ *
+ * The card blends into the band rather than sitting white on it (the owner, 2026-11-21): the
+ * detail pages' dark card, a faint light fill with a hairline in the band's light text
+ * (DetailChallenges.astro), so the band's aura shows through it, with the browser bar drawn dark
+ * to match and the name in white. The arrow box is the lead service tile's (`arrow-box-lead`):
+ * filled primary with a near-black arrow, turning white as the arrow slides through, with no
+ * shadow, which would not show on the dark. Under the pointer and keyboard focus the service
+ * cards' 2px primary frame fades in on the card's edge, and the screenshot grows by three percent
+ * inside its window over 0.5s, which clips it, so nothing around it moves. `scale` rests at the
+ * browser's own default, so the stylesheet's arrival starts no transition in WebKit
+ * (`.cursor/rules/styling-tailwind-daisyui.mdc`). The frame is a pseudo-element the stylesheet
+ * creates, so it transitions safely too. Reduced motion makes every change instant. Keyboard
+ * focus adds a primary ring 4px out, the footer's ring on the same dark.
+ */
+interface Props {
+  project: WorkProject;
+}
+
+const { project } = Astro.props;
+
+const frame =
+  'before:pointer-events-none before:absolute before:-inset-px before:z-10 before:rounded-md before:border-2 before:border-primary before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100';
+const focus =
+  'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary focus-visible:before:opacity-100';
+---
+
+<a
+  href={`/work/#${project.id}`}
+  class:list={[
+    'group relative flex h-full flex-col rounded-md border border-neutral-content/15 bg-neutral-content/5 text-neutral-content',
+    frame,
+    focus,
+  ]}
+>
+  {/*
+   * `sizes`: the card's width inside the container's padding, one column below sm, two to lg,
+   * three from lg, capped by the 88rem container from 1408px (three columns with two 32px gaps).
+   */}
+  <BrowserFrame
+    project={project}
+    crop="card"
+    tone="dark"
+    decorative
+    sizes="(min-width: 1408px) 427px, (min-width: 1024px) calc((100vw - 128px) / 3), (min-width: 640px) calc((100vw - 72px) / 2), calc(100vw - 48px)"
+    class="rounded-t-md"
+    imageClass="transition-transform duration-500 ease-out group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
+  />
+  <div class="flex flex-1 items-center justify-between gap-4 p-5 sm:p-6">
+    <div class="min-w-0">
+      <p class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-bold tracking-[0.16em] text-neutral-content/70 uppercase">
+        <span>{project.platform}</span>
+        <span class="rounded-full border border-neutral-content/20 px-2.5 py-0.5 tracking-[0.12em]">
+          {projectStatus}
+        </span>
+      </p>
+      <h3 class="mt-2 text-xl leading-tight font-bold tracking-tight text-balance text-base-100 sm:text-2xl">
+        {project.name}
+      </h3>
+    </div>
+    <span class="arrow-box arrow-box-lead size-12.5 shrink-0 rounded-sm group-hover:arrow-box-lead-active group-focus-visible:arrow-box-lead-active">
+      {/* The first arrow waits outside the box, to the left; the second rests in the box. */}
+      <span data-arrow-track>
+        <Icon name="arrow-right" class="size-5" />
+        <Icon name="arrow-right" class="size-5" />
+      </span>
+    </span>
+  </div>
+</a>

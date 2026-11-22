@@ -242,7 +242,10 @@ test('sits between why auralink and the process, in the place of selected work',
   const at = ids.indexOf('who-we-work-with');
   expect(ids[at - 1], 'after why auralink').toBe('why-auralink');
   expect(ids[at + 1], 'before the process').toBe('process');
-  await expect(page.locator('#work')).toHaveCount(0);
+  // The selected work came back on 2026-11-21, after the introduction, not here.
+  expect(ids.indexOf('work'), 'selected work follows the introduction').toBe(
+    ids.indexOf('about') + 1,
+  );
 });
 
 test('introduces the directory, then lists every kind of business in order, each with its own icon', async ({

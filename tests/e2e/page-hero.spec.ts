@@ -6,6 +6,7 @@ import { industryPages } from '../../src/data/industry-pages';
 import { pricingHead, pricingHero } from '../../src/data/pricing';
 import { servicePages } from '../../src/data/service-pages';
 import { industries } from '../../src/data/site';
+import { workPage } from '../../src/data/work';
 import { builtRoutes } from './routes';
 
 /**
@@ -85,6 +86,11 @@ const TITLES: Record<string, HeroCopy> = {
     title: 'Websites, email, and search that work together.',
     highlight: 'work together.',
     eyebrow: 'Services',
+  },
+  '/work/': {
+    title: workPage.title,
+    highlight: workPage.highlight,
+    eyebrow: 'Work',
   },
   ...Object.fromEntries(
     servicePages.map((page) => {

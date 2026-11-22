@@ -1,0 +1,102 @@
+---
+import { Picture } from 'astro:assets';
+import type { WorkProject } from '@/data/work';
+import { projectScreenshots } from '@/lib/project-screenshots';
+
+/**
+ * A project's homepage screenshot inside a browser window, as the work page of uprig.net (the
+ * owner's reference, 2026-11-21) shows its demonstration: a thin title bar with three window dots
+ * and the site's address, then the page itself. The bar is decorative and hidden from assistive
+ * technology; the screenshot carries the alt text, and the card or section around the frame holds
+ * the real link to the site.
+ *
+ * `crop="card"` shows the top of the page at 16:10 for the home cards (`object-position: top`, so
+ * the site's header and headline stay in view); `crop="full"` shows the whole 4:3 capture on the
+ * work page. The image's own 1920x1440 reserves its box either way, so loading cannot move the
+ * layout. `tone="dark"` draws the bar for the home page's dark cards: a faint light fill and a
+ * hairline in the band's light text, where the light bar would read as a white block on the
+ * near-black. The caller sets the frame's edge, corners, and shadow, and passes `sizes` for the
+ * width the screenshot renders at, and `imageClass` for the image itself (the home cards zoom it a
+ * little under the pointer). Inside a link whose text already names and describes the project
+ * (the home cards), pass `decorative` so the screenshot has empty alt text and the link's name
+ * stays its visible text; the work page keeps the description.
+ */
+interface Props {
+  project: WorkProject;
+  crop: 'card' | 'full';
+  /** The rendered width of the screenshot at each breakpoint, for the browser's `sizes`. */
+  sizes: string;
+  /** The bar's colours: for a white window (the default) or a dark card. */
+  tone?: 'light' | 'dark';
+  /** Empty alt text: the text around the frame describes the project. */
+  decorative?: boolean;
+  /** Applied to the window itself: edge, corners, shadow. */
+  class?: string;
+  /** Applied to the screenshot. */
+  imageClass?: string;
+}
+
+const {
+  project,
+  crop,
+  sizes,
+  tone = 'light',
+  decorative = false,
+  class: className,
+  imageClass,
+} = Astro.props;
+const domain = new URL(project.link.href).hostname;
+const dark = tone === 'dark';
+
+const bar = dark
+  ? 'border-neutral-content/10 bg-neutral-content/10'
+  : 'border-base-300 bg-base-200';
+const dot = dark ? 'bg-neutral-content/30' : 'bg-base-content/15';
+const address = dark
+  ? 'bg-neutral-content/10 text-neutral-content/75'
+  : 'bg-base-100 text-base-content/60';
+---
+
+{/* `@container`: the bar shows the address only when the window is `@sm` (24rem) or wider (below). */}
+<div class:list={['@container overflow-clip', dark ? 'bg-transparent' : 'bg-base-100', className]}>
+  <div
+    class:list={['flex min-h-11 items-center gap-3 border-b px-3.5 py-2.5', bar]}
+    aria-hidden="true"
+  >
+    <span class="flex shrink-0 gap-1.5">
+      <span class:list={['size-2.5 rounded-full', dot]}></span>
+      <span class:list={['size-2.5 rounded-full', dot]}></span>
+      <span class:list={['size-2.5 rounded-full', dot]}></span>
+    </span>
+    {/*
+     * The address, centred in the room the dots leave, as a browser shows it. The longest is 33
+     * characters, about 215px at this size, so it shows only in a window at least 24rem wide (the
+     * home cards from xl, the work page from sm); narrower windows keep the dots alone, and no
+     * text is ever clipped.
+     */}
+    <span
+      class:list={[
+        'mx-auto hidden rounded-full px-3 py-0.5 text-xs leading-5 font-bold tracking-wide whitespace-nowrap @sm:inline-block',
+        address,
+      ]}
+    >
+      {domain}
+    </span>
+    {/* As wide as the dots, so the address is centred in the bar. */}
+    <span class="hidden w-9 shrink-0 @sm:block"></span>
+  </div>
+  <Picture
+    src={projectScreenshots[project.id]}
+    alt={decorative ? '' : project.screenshotAlt}
+    formats={['avif']}
+    fallbackFormat="webp"
+    quality={80}
+    widths={[480, 720, 960, 1200, 1440, 1920]}
+    sizes={sizes}
+    class:list={[
+      'block w-full',
+      crop === 'card' ? 'aspect-16/10 object-cover object-top' : 'h-auto',
+      imageClass,
+    ]}
+  />
+</div>
