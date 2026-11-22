@@ -17,6 +17,11 @@ import { contactRoutes, primaryCta } from '@/data/site';
  * keyboard focus reaches it, then fades and circles like the navbar's. When they leave it fades
  * out and keeps its place, so the next visit continues from there. The buttons themselves change
  * colour at once, without transitions.
+ *
+ * The section clips sideways, at its edges, which are the screen's. While the icons arrive, every
+ * engine counts each one's box with its label, turned, as page width: up to 5px past the right
+ * edge on phones, for about half a second, when the page could scroll sideways (2026-11-22).
+ * Nothing drawn reaches past the edge, so the clip hides nothing.
  */
 interface Props {
   /** Target of the "About us" button. */
@@ -34,7 +39,7 @@ const buttonClass =
   'transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral';
 ---
 
-<section aria-labelledby="hero-title" class="relative isolate bg-base-200">
+<section aria-labelledby="hero-title" class="relative isolate overflow-x-clip bg-base-200">
   <div class="mx-auto flex max-w-site flex-col gap-12 px-6 pt-12 pb-20 sm:pt-16 sm:pb-24 lg:flex-row lg:items-center lg:px-8 lg:pb-28">
     {/* Copy takes about 45% of the row and the image 55%; flex-shrink absorbs the gap. */}
     <div class="min-w-0 lg:basis-9/20">

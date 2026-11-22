@@ -71,7 +71,10 @@ test.describe('home page', () => {
           // Engines may order the keywords differently ("light only", "only light").
           colorScheme: getComputedStyle(root).colorScheme.split(' ').sort().join(' '),
           schemeQueries,
-          colours: Array.from(document.querySelectorAll('*'), (el) => {
+          // Painted elements only; the head never is. Tag Manager's script joins the head at the
+          // first pointer movement, and Playwright's headless Chromium on Linux (CI) reports one
+          // at 0,0 while a tab loads its first page, so only the light render had it.
+          colours: Array.from(document.querySelectorAll('html, body, body *'), (el) => {
             const style = getComputedStyle(el);
             const values = props.map((prop) => style.getPropertyValue(prop)).join(' / ');
             return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}: ${values}`;

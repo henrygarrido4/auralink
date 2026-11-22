@@ -548,6 +548,36 @@ test.describe('motion allowed', () => {
     }
   });
 
+  test('the arriving icons never make the page scroll sideways, at every width', async ({
+    page,
+  }) => {
+    for (const width of [320, 360, 390, 768, 1024, 1280, 1440, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      // Every moment of the arrival, 50ms apart. Each icon's box with its label, turned, counts
+      // as page width: on phones it reached past the edge from about 1.5s to 2.1s (2026-11-22).
+      const widest = await orbit(page).evaluate((frame, names) => {
+        const root = document.documentElement;
+        const arrival = frame
+          .getAnimations({ subtree: true })
+          .filter((animation) => names.includes((animation as CSSAnimation).animationName));
+        arrival.forEach((animation) => animation.pause());
+        let found = { time: 0, sideways: -Infinity, animations: arrival.length };
+        for (let time = 0; time <= 3600; time += 50) {
+          arrival.forEach((animation) => (animation.currentTime = time));
+          const sideways = root.scrollWidth - root.clientWidth;
+          if (sideways > found.sideways) found = { ...found, time, sideways };
+        }
+        return found;
+      }, ORBIT_ARRIVAL);
+      expect(widest.animations, `${width}px: the arrival is running`).toBeGreaterThan(0);
+      expect(
+        widest.sideways,
+        `${width}px: no sideways scroll, ${widest.time}ms into the arrival`,
+      ).toBeLessThanOrEqual(1);
+    }
+  });
+
   test('the buttons change colour without transitions', async ({ page }) => {
     await page.goto('/');
     for (const label of [primaryCta.label, 'About us']) {

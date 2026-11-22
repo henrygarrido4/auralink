@@ -21,7 +21,9 @@ import { heroBenefits } from '@/data/site';
  * its surroundings leave. On load the chips swing into place and their labels fade in, and once the
  * ring has opened a light circles it, like the aura on the site's buttons, for as long as the page
  * is open (owner, 2026-11-18). Nothing else travels after the arrival. Nothing moves under reduced
- * motion. No JavaScript.
+ * motion. No JavaScript. While the chips arrive, browsers count each one's box with its label,
+ * turned, as page width, a few pixels past anything drawn, so whatever holds the ring at the
+ * screen's edge clips sideways (Hero.astro).
  */
 interface Props extends HTMLAttributes<'div'> {
   /**

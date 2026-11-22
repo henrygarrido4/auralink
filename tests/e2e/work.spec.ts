@@ -8,6 +8,7 @@ import {
   workProjects,
   type WorkProject,
 } from '../../src/data/work';
+import { scrollToRest } from './scroll';
 
 /**
  * Selected work (the owner's brief, 2026-11-21). On the home page, FeaturedWork.astro: a
@@ -254,7 +255,9 @@ test('the overview explains the three parts and indexes the projects, each a lin
   // The index works: the second link lands the second project's section under the sticky navbar
   // (`scroll-padding-top` is the bar's 5rem; once scrolled the bar is 4rem, and Chromium's scroll
   // anchoring may keep the content where it was, so the top settles between 4rem and 5rem). On a
-  // phone the screenshot comes first, so the heading itself may be below the fold.
+  // phone the screenshot comes first, so the heading itself may be below the fold. The link is
+  // still before the click: a click during the navbar's collapse left the section where it was.
+  await scrollToRest(links.nth(1));
   await links.nth(1).click();
   await expect(page).toHaveURL(new RegExp(`#${workProjects[1].id}$`));
   const target = projectSection(page, workProjects[1]);

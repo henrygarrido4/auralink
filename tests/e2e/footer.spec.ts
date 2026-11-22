@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from './fixtures';
 import { footerIndustries, footerServices } from '../../src/data/footer';
 import { privacyHero, privacyPage } from '../../src/data/privacy';
+import { scrollToRest } from './scroll';
 
 /** The first link of the footer's lists, which all share one style (`footer-link`). */
 const listLink = (page: Page) =>
@@ -184,6 +185,7 @@ test('a footer link fades to primary under the pointer and back, through its reg
       () =>
         (window as unknown as { footerFades: { property: string; seconds: number }[] }).footerFades,
     );
+  await scrollToRest(link);
   await link.hover();
   await expect.poll(fades, { message: 'the fade in finishes' }).toHaveLength(1);
   expect(await linkLook(page, link)).toMatchObject({ colour: primary, underline: 'underline' });
