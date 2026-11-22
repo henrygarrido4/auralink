@@ -79,6 +79,31 @@ async function fillMessage(page: Page) {
 }
 
 /**
+ * `window.scrollY` once three frames in a row agree on it. A programmatic scroll has not settled
+ * when it returns: in the frames after it the navbar's collapse follows the offset on the scroll
+ * timeline, and scroll anchoring then takes the bar's change back from the offset. After 30 frames
+ * without agreement it gives the last reading, for the caller's assertion to report.
+ */
+const scrollYAtRest = (page: Page) =>
+  page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        let last = Number.NaN;
+        let agreeing = 0;
+        let frames = 0;
+        const read = () => {
+          const y = window.scrollY;
+          agreeing = y === last ? agreeing + 1 : 0;
+          last = y;
+          frames += 1;
+          if (agreeing >= 2 || frames >= 30) resolve(y);
+          else requestAnimationFrame(read);
+        };
+        requestAnimationFrame(read);
+      }),
+  );
+
+/**
  * Answers the form's request in place of Netlify, with the status given, and records the body,
  * which the fields arrive in. Nothing else on the page posts, so only POSTs are taken over.
  */
@@ -221,22 +246,28 @@ test('the fragment chooses the tab: direct links, a click, Back, and Forward, wi
   await expect(bookPanel(page)).toBeVisible();
   await expect(form(page)).toBeHidden();
 
-  // A click writes the fragment without moving the page. Measure once the page has settled: after
-  // the fonts, whose late arrival re-flows the hero above the card, and two frames after the
-  // scroll, in which the navbar's collapse runs on the scroll timeline and Chromium's scroll
-  // anchoring then pulls the offset back by the bar's shrink (`.cursor/rules/testing-playwright.mdc`).
+  // A click writes the fragment without moving the page. Measure where the page comes to rest:
+  // after the fonts, whose late arrival re-flows the hero above the card, with the tab centred by
+  // an instant scroll (the page scrolls smoothly) and past the navbar's 100px collapse range, where
+  // the shut bar no longer follows the offset. Inside the range Linux WebKit's scroll anchoring
+  // leaves a pixel or two of the bar's change to the next layout, which no number of frames
+  // brings, and a tab poking past the viewport's edge is scrolled into view by the click itself
+  // (`.cursor/rules/testing-playwright.mdc`). Both readings are taken the same way.
   await page.goto('/contact/');
   await page.evaluate(() => document.fonts.ready);
-  await messageTab(page).scrollIntoViewIfNeeded();
-  await page.evaluate(
-    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+  await messageTab(page).evaluate((tab) =>
+    tab.scrollIntoView({ block: 'center', behavior: 'instant' }),
   );
-  const before = await page.evaluate(() => window.scrollY);
+  const before = await scrollYAtRest(page);
+  expect(before, 'parked past the navbar collapse range').toBeGreaterThanOrEqual(100);
+  await expect(messageTab(page), 'wholly on screen, so the click scrolls nothing').toBeInViewport({
+    ratio: 1,
+  });
   await messageTab(page).click();
   await expect(page).toHaveURL(/\/contact\/#send-message$/);
   await expect(form(page)).toBeVisible();
   await expect(bookPanel(page)).toBeHidden();
-  expect(await page.evaluate(() => window.scrollY), 'the page stays where it was').toBe(before);
+  expect(await scrollYAtRest(page), 'the page stays where it was').toBe(before);
   // Choosing the chosen tab again writes nothing new.
   await messageTab(page).click();
   await expect(page).toHaveURL(/\/contact\/#send-message$/);
