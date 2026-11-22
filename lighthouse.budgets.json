@@ -25,8 +25,9 @@
   "resources": {
     "$comment": "Third-party requests: every page loads Google Tag Manager's container script from Google (the owner's decision, 2026-11-21; docs/architecture.md, 'Analytics'), one request, and the budget leaves room for a Google Analytics tag and its beacons once the container has one. Anything beyond that in the container is a new decision. Since 2026-11-22 the script is added at the first pointer movement, press, key, touch, or scroll, or three seconds after load, so an audit, which does none of those, may measure zero.",
     "transferKB": {
+      "$comment": "The stylesheet is inlined in every page's head (astro.config.mjs, 2026-11-22), so `document` carries it and `stylesheet` reads 0; the document budget went from 40 to 80 KB for that (docs/performance.md, decision log).",
       "total": 500,
-      "document": 40,
+      "document": 80,
       "script": 120,
       "stylesheet": 60,
       "image": 250,

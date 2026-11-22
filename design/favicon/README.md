@@ -1,6 +1,6 @@
 # Favicon
 
-Editable source for `public/favicon.svg` and `public/favicon.ico`, the site's browser tab icon, linked from the head of `src/layouts/BaseLayout.astro`.
+Editable source for `public/favicon.svg` and `public/favicon.ico`, the site's browser tab icon. The head of `src/layouts/BaseLayout.astro` carries the SVG itself, as a data URL read from the file at build time, so no request is made for it (2026-11-22), and links the ICO by path.
 
 The owner asked for the AURA mark as the favicon on 2026-11-21. The icon is the mark alone, `src/assets/aura-hero.svg`: the full logo is about three times wider than it is tall, so its wordmark would be unreadable in a 16px tab. The mark sits on a near-black tile, as it does in the navbar and on the About section's name card. On its own, its yellow is 1.4:1 against a light tab and its lower pixels fade away at 16px; on the tile it reads in light and dark tabs alike.
 
@@ -16,4 +16,4 @@ node design/favicon/render.mjs
 
 It needs Node and sharp (installed with Astro) and writes both files in place. `LAYOUT` at the top of the script holds the mark's box, the margin, the corner radius, the tile colour, and the ICO's sizes. Run it again whenever the mark changes.
 
-After a change, look at the icon in a light and a dark browser tab at 100% and 200% zoom, and run `npx playwright test tests/e2e/rendering.spec.ts --project=desktop-chromium`, which checks that both files are served. Browsers keep favicons in a cache of their own, so a reload may still show the old icon; open `/favicon.svg` directly or use a private window to see the new one.
+After a change, rebuild (the pages carry a copy of the SVG), look at the icon in a light and a dark browser tab at 100% and 200% zoom, and run `npx playwright test tests/e2e/rendering.spec.ts --project=desktop-chromium`, which checks that both files are served. Browsers keep favicons in a cache of their own, so a reload may still show the old icon; open `/favicon.svg` directly or use a private window to see the new one.

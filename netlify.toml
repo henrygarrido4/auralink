@@ -7,6 +7,15 @@
 [build.environment]
   NODE_VERSION = "24"
 
+# Everything under /_astro/ (fonts, images, scripts) carries its content hash in its name, so a
+# changed file is a new address and the old one can be kept for as long as a browser likes
+# (2026-11-22). Netlify's default, max-age=0 with revalidation, had the browser ask about every
+# font and image again on each page view. Pages keep the default, so a deploy shows at once.
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 # The form's thank-you page was retired on 2026-11-19 (the form confirms in place). Anything that
 # still points there, such as a cached copy of the old form, lands on the contact page instead.
 [[redirects]]

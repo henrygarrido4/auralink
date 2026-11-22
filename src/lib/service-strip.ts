@@ -45,13 +45,19 @@ export function startServiceStrip(root: HTMLElement): void {
     for (const pad of pads()) pad.replaceChildren();
   };
 
+  /*
+   * Reads first, writes after, and nothing is measured once the copies are in: a measurement
+   * then would make the browser lay the page out again on the spot (a forced reflow, 56 ms on
+   * the live home page in PageSpeed Insights, 2026-11-22). A half is the list and its copies side
+   * by side with nothing between them, so its width is the list's times the number of copies.
+   */
   const layout = () => {
     if (reduced.matches) {
       rest();
       return;
     }
 
-    const listWidth = list.scrollWidth;
+    const listWidth = list.getBoundingClientRect().width;
     const viewportWidth = viewport.clientWidth;
     if (listWidth < 1 || viewportWidth < 1) return;
 
@@ -71,7 +77,7 @@ export function startServiceStrip(root: HTMLElement): void {
       }
     }
 
-    const distance = half.getBoundingClientRect().width;
+    const distance = listWidth * copies;
     root.style.setProperty(
       '--service-strip-duration',
       `${distance / SERVICE_STRIP_SPEED_PX_PER_SECOND}s`,
@@ -80,7 +86,12 @@ export function startServiceStrip(root: HTMLElement): void {
     signature = next;
   };
 
-  layout();
+  /*
+   * The observer reports once as soon as the band has a size, in the same frame, after the
+   * browser's own first layout: the first measurement happens there, so this script never forces
+   * the whole page to be laid out before its first paint. Fonts arriving change the names' widths
+   * without changing the band's, so that case measures again on its own.
+   */
   if (document.fonts) void document.fonts.ready.then(layout);
   reduced.addEventListener('change', layout);
   new ResizeObserver(layout).observe(viewport);

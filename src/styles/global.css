@@ -4,12 +4,26 @@
  * Tailwind v4: https://tailwindcss.com/docs/theme
  * daisyUI 5:   https://daisyui.com/docs/config/
  */
-@import 'tailwindcss';
+/*
+ * Classes are collected from src/ only (`source('..')`, relative to this file). Tailwind would
+ * otherwise read every file in the repository that is not ignored by git, and the class names
+ * quoted in docs/, .cursor/, and tests/ (daisyUI components the site never renders, utilities
+ * given as examples) then went into the stylesheet: a third of it on 2026-11-22.
+ */
+@import 'tailwindcss' source('..');
 @import 'tw-animate-css';
 
 /* daisyUI component classes and its light theme, the only one loaded: the site is light only. */
 @plugin 'daisyui' {
   themes: light --default;
+  /*
+   * Components the site does not render, left out so that a plain word in a comment, a data file,
+   * or a script ("menu", "steps", "table") does not put their styles in every page: 41 KB of CSS
+   * on 2026-11-22. Starting to use one of these means taking its name off this list.
+   */
+  exclude:
+    alert, badge, breadcrumbs, card, chat, divider, fieldset, footer, hero, join, label, link, list,
+    menu, modal, progress, range, stack, status, steps, swap, tab, table;
 }
 
 /*
