@@ -4,6 +4,7 @@ import { expect, test, type Page } from './fixtures';
 import { industryPath, serviceCardById, servicePath } from '../../src/data/detail-pages';
 import { industryPages } from '../../src/data/industry-pages';
 import { pricingHead, pricingHero } from '../../src/data/pricing';
+import { privacyHero } from '../../src/data/privacy';
 import { servicePages } from '../../src/data/service-pages';
 import { industries } from '../../src/data/site';
 import { workPage } from '../../src/data/work';
@@ -81,6 +82,11 @@ const TITLES: Record<string, HeroCopy> = {
     highlight: pricingHead.highlight,
     eyebrow: pricingHero.eyebrow,
     note: pricingHero.note,
+  },
+  '/privacy/': {
+    title: privacyHero.title,
+    highlight: privacyHero.highlight,
+    eyebrow: privacyHero.eyebrow,
   },
   '/services/': {
     title: 'Websites, email, and search that work together.',

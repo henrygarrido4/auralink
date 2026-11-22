@@ -1,0 +1,29 @@
+---
+import PolicyMarker from '@/components/ui/PolicyMarker.astro';
+import type { PolicyText } from '@/data/privacy';
+
+/**
+ * One sentence of the privacy policy (src/data/privacy.ts), part by part: words, links, and the
+ * owner's open questions as [CONFIRM: …] markers. Links are underlined like the site's other
+ * links in running text (AboutServices.astro) and open in the same tab.
+ */
+interface Props {
+  parts: readonly PolicyText[];
+}
+
+const { parts } = Astro.props;
+const link =
+  'rounded-sm underline decoration-base-content/30 decoration-1 underline-offset-4 hover:decoration-primary hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral';
+---
+
+{parts.map((part) =>
+  typeof part === 'string' ? (
+    part
+  ) : 'href' in part ? (
+    <a href={part.href} class={link}>
+      {part.text}
+    </a>
+  ) : (
+    <PolicyMarker>[CONFIRM: {part.confirm}]</PolicyMarker>
+  ),
+)}

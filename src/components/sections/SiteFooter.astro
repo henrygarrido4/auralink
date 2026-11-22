@@ -1,7 +1,7 @@
 ---
 import Logo from '@/assets/aura.svg';
 import FooterMap from '@/components/ui/FooterMap.astro';
-import { footerCompany, footerIndustries, footerServices } from '@/data/footer';
+import { footerCompany, footerIndustries, footerLegal, footerServices } from '@/data/footer';
 import { site } from '@/data/site';
 
 const groups = [
@@ -16,6 +16,8 @@ const groups = [
 ];
 const focusRing =
   'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary';
+/** The bottom row's links: the legal links and "Back to top", small and light, yellow on hover. */
+const smallLink = 'rounded-sm underline-offset-4 hover:text-primary hover:underline';
 ---
 
 <footer class="relative isolate overflow-hidden bg-neutral text-neutral-content">
@@ -103,13 +105,17 @@ const focusRing =
       ))}
     </div>
     <div class="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-neutral-content/15 pt-6 text-sm text-neutral-content/70">
-      <p>
-        © {new Date().getFullYear()} {site.name}. All rights reserved.
-      </p>
-      <a
-        href="#top"
-        class:list={['rounded-sm underline-offset-4 hover:text-primary hover:underline', focusRing]}
-      >
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+        <p>
+          © {new Date().getFullYear()} {site.name}. All rights reserved.
+        </p>
+        {footerLegal.map((link) => (
+          <a href={link.href} class:list={[smallLink, focusRing]}>
+            {link.label}
+          </a>
+        ))}
+      </div>
+      <a href="#top" class:list={[smallLink, focusRing]}>
         Back to top
       </a>
     </div>

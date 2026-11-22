@@ -46,6 +46,13 @@
         "desktop": { "best-practices": 0.75 }
       },
       "resources": { "requests": { "total": 45, "third-party": 25 } }
+    },
+    "/privacy/": {
+      "$comment": "SEO score only: the privacy policy is a draft (the owner's request, 2026-11-22), and while `draft` in src/data/privacy.ts is true the page is noindex on purpose, which Lighthouse's is-crawlable audit, the only one that fails, counts against SEO (0.66 measured). Remove this with the noindex once the policy is approved. docs/performance.md, decision log, 2026-11-22.",
+      "scores": {
+        "mobile": { "seo": 0.66 },
+        "desktop": { "seo": 0.66 }
+      }
     }
   }
 }

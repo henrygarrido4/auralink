@@ -6,9 +6,10 @@ import { site } from '@/data/site';
  * the studio as its subject. The contact page also passes `contact`, the studio's address and
  * number from `contactDetails`, which the page shows (the owner's approval, 2026-11-20), so the
  * Organization node carries them too; nothing is marked up that is not visible on the page.
+ * `WebPage` is for a page with no more specific type, such as the privacy policy.
  */
 interface Props {
-  type: 'AboutPage' | 'CollectionPage' | 'ContactPage';
+  type: 'AboutPage' | 'CollectionPage' | 'ContactPage' | 'WebPage';
   name: string;
   /** The studio's visible, approved ways to be reached, for the Organization node. */
   contact?: { email: string; telephone: string };

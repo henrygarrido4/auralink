@@ -67,6 +67,12 @@ export const contactDetails: ContactDetails = {
 };
 
 /**
+ * Where the studio is based: the state and the country, as the owner stated them on 2026-11-22
+ * for the privacy policy (src/data/privacy.ts). No street address or service area is published.
+ */
+export const businessLocation = { region: 'Texas', country: 'United States' } as const;
+
+/**
  * The contact page and its two tabs (ContactOptions.astro), as links. The page opens on the
  * booking tab, so `page` and `bookCall` show the same thing; `bookCall` also lands on the tab
  * control itself. Link a button by its wording: one that offers a call leads to `bookCall`, one

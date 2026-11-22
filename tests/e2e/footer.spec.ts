@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from './fixtures';
 import { footerIndustries, footerServices } from '../../src/data/footer';
+import { privacyHero, privacyPage } from '../../src/data/privacy';
 
 /** The first link of the footer's lists, which all share one style (`footer-link`). */
 const listLink = (page: Page) =>
@@ -107,6 +108,17 @@ test('every footer service and industry link leads to its own detail page', asyn
       );
     });
   }
+});
+
+test('the bottom row links to the privacy policy, a page of its own', async ({ page }) => {
+  await page.goto('/');
+  const link = page.getByRole('contentinfo').getByRole('link', { name: privacyPage.name });
+  await expect(link).toHaveAttribute('href', privacyPage.href);
+  // Beside the copyright line, outside the three columns of links.
+  await expect(link.locator('xpath=ancestor::nav')).toHaveCount(0);
+  await link.click();
+  await expect(page).toHaveURL(new RegExp(`${privacyPage.href}$`));
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(privacyHero.title);
 });
 
 test('an industry footer link lands on that industry page', async ({ page }) => {

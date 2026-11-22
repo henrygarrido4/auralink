@@ -1,4 +1,5 @@
 import { industryHref } from './industry-pages';
+import { privacyPage } from './privacy';
 import { industries, primaryNav, serviceCards, servicesPageCards, type NavItem } from './site';
 
 /** Stable fragment for an industry directory entry on the home and industries pages. */
@@ -33,4 +34,12 @@ export const footerIndustries: readonly NavItem[] = industries.map((industry) =>
 export const footerCompany: readonly NavItem[] = [
   ...primaryNav,
   { label: 'Contact', href: '/contact/' },
+];
+
+/**
+ * The legal links in the footer's bottom row, beside the copyright line: the privacy policy (the
+ * owner's request, 2026-11-22; a draft until the owner and a lawyer have settled it).
+ */
+export const footerLegal: readonly NavItem[] = [
+  { label: privacyPage.name, href: privacyPage.href },
 ];

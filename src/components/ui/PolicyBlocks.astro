@@ -1,0 +1,41 @@
+---
+import PolicyText from '@/components/ui/PolicyText.astro';
+import type { PolicyBlock } from '@/data/privacy';
+
+/**
+ * A run of the privacy policy's paragraphs and bulleted lists (src/data/privacy.ts), in the
+ * policy's body size. The bullets are the small primary diamonds of the site's other lists
+ * (AboutServices.astro); `role="list"` keeps the list's semantics where its markers are hidden.
+ */
+interface Props {
+  blocks: readonly PolicyBlock[];
+  class?: string;
+}
+
+const { blocks, class: className } = Astro.props;
+const text = 'text-base leading-relaxed text-pretty text-base-content/80 sm:text-lg';
+---
+
+<div class:list={['grid gap-4', className]}>
+  {blocks.map((block) =>
+    'paragraph' in block ? (
+      <p class={text}>
+        <PolicyText parts={block.paragraph} />
+      </p>
+    ) : (
+      <ul role="list" class="grid gap-3">
+        {block.list.map((item) => (
+          <li class:list={['flex gap-3', text]}>
+            <span
+              class="mt-2.5 size-1.5 shrink-0 rotate-45 bg-primary sm:mt-3"
+              aria-hidden="true"
+            />
+            <span class="min-w-0">
+              <PolicyText parts={item} />
+            </span>
+          </li>
+        ))}
+      </ul>
+    ),
+  )}
+</div>
