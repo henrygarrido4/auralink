@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page } from './fixtures';
+import { privacyHero, privacyPage } from '../../src/data/privacy';
 import { contactDetails, contactRoutes, serviceCards } from '../../src/data/site';
 import { watchConsole } from './console';
 import { builtRoutes } from './routes';
@@ -186,6 +187,25 @@ test('the form keeps the Netlify contract, is in the built HTML, and the thank-y
   expect(builtRoutes()).not.toContain('/contact/thank-you/');
   const response = await page.goto('/contact/thank-you/');
   expect(response?.status()).toBe(404);
+});
+
+test('beside Send message, the form links to the privacy policy, which is published and indexable', async ({
+  page,
+}) => {
+  await page.goto(contactRoutes.sendMessage);
+  const link = form(page).getByRole('link', { name: 'privacy policy' });
+  await expect(link).toHaveAttribute('href', privacyPage.href);
+  await expect(link.locator('xpath=..')).toHaveText(
+    'We use what you send only to respond to your inquiry. Our privacy policy has the details.',
+  );
+  await link.click();
+  await expect(page).toHaveURL(new RegExp(`${privacyPage.href}$`));
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(privacyHero.title);
+  // Approved on 2026-11-22: no longer noindex, and no review markers left on the page.
+  await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+  await expect(page.locator('main')).not.toContainText(
+    /\[CONFIRM|\[CHECK WITH A LAWYER|Draft, not legal advice/,
+  );
 });
 
 test('two tabs open on the call, with the tabs pattern and the other panel out of reach', async ({

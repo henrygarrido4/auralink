@@ -38,7 +38,7 @@ export const footerCompany: readonly NavItem[] = [
 
 /**
  * The legal links in the footer's bottom row, beside the copyright line: the privacy policy (the
- * owner's request, 2026-11-22; a draft until the owner and a lawyer have settled it).
+ * owner's request, 2026-11-22, approved by the owner the same day).
  */
 export const footerLegal: readonly NavItem[] = [
   { label: privacyPage.name, href: privacyPage.href },

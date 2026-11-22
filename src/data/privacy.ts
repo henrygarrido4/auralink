@@ -1,30 +1,25 @@
 import { businessLocation, contactDetails, contactRoutes, site } from './site';
 
 /**
- * The privacy policy page (src/pages/privacy/index.astro): a DRAFT the owner asked for on
- * 2026-11-22, in plain English. It covers what the site collects, why, who receives it, cookies
- * and tracking, how long it is kept, how to ask for a copy, a correction, or deletion, and how to
- * get in touch.
+ * The privacy policy page (src/pages/privacy/index.astro), in plain English: drafted at the
+ * owner's request on 2026-11-22 and approved by the owner the same day, after every open question
+ * was answered; the owner chose to publish it without a lawyer's review. It covers what the site
+ * collects, why, who receives it, cookies and tracking, how long it is kept, how to ask for a
+ * copy, a correction, or deletion, and how to get in touch.
  *
  * Every statement about what the site does comes from the site itself: the inquiry form's fields
  * (src/components/sections/ProjectInquiryForm.astro), the booking embed, and the records in
- * docs/architecture.md ("Booking and the contact tabs", "Analytics: Google Tag Manager"). What
- * only the owner can say is a `confirm` marker, with the proposed wording or the open question
- * inside. A section whose content depends on the law where the business, its visitors, or its
- * clients are has `lawyer` set and shows [CHECK WITH A LAWYER] under its heading.
- *
- * While `draft` is true the page is `noindex` and closes with the draft reminder. Before it goes
- * live: resolve every marker, have a lawyer review the marked sections, remove the markers, set
- * `draft` to false, and drop the reminder.
+ * docs/architecture.md ("Booking and the contact tabs", "Analytics: Google Tag Manager"), and
+ * the account settings checked on 2026-11-22; what only the owner could say is in the owner's
+ * answers of that day (docs/content-strategy.md, "Verified facts"). When a practice changes,
+ * change this copy and the effective date together.
  */
-export const draft = true;
 
 /** Where the page lives, and its name in navigation: the footer link and the hero's eyebrow. */
 export const privacyPage = { href: '/privacy/', name: 'Privacy policy' } as const;
 
-/** Part of a sentence: plain words, a link, or something only the owner can confirm. */
-export type PolicyText =
-  string | { readonly text: string; readonly href: string } | { readonly confirm: string };
+/** Part of a sentence: plain words or a link. */
+export type PolicyText = string | { readonly text: string; readonly href: string };
 
 /** A paragraph, or a bulleted list whose items are sentences. */
 export type PolicyBlock =
@@ -42,8 +37,6 @@ export interface PolicySection {
   /** The section's anchor, used by the list of contents. */
   readonly id: string;
   readonly heading: string;
-  /** The section depends on local law: shown as [CHECK WITH A LAWYER] under the heading. */
-  readonly lawyer?: boolean;
   readonly blocks?: readonly PolicyBlock[];
   readonly parts?: readonly PolicyPart[];
 }
@@ -69,7 +62,9 @@ const based = `${businessLocation.region}, ${businessLocation.country}`;
 
 /** Read before the sections: when the policy applies, then the answer in brief. */
 export const privacyIntro: readonly PolicyBlock[] = [
-  { paragraph: ['Effective date: ', { confirm: 'the date this policy takes effect' }, '.'] },
+  {
+    paragraph: ['Effective date: November 22, 2026.'],
+  },
   {
     paragraph: [
       'In short: we collect what you send us through the contact form, what you give Calendly when you book a call, and how you use the site. We use it to reply to you, to run and improve the site, and to measure our advertising. Netlify, Calendly, Google, and Meta handle parts of it for us. We do not sell it for money. Email ',
@@ -86,10 +81,7 @@ export const privacySections: readonly PolicySection[] = [
     blocks: [
       {
         paragraph: [
-          `This policy covers ${domain}, the website of ${site.name} ("we" and "us"), a web design, development, and marketing studio based in ${based}. `,
-          {
-            confirm: 'the legal name of the business, if it differs, such as an LLC',
-          },
+          `This policy covers ${domain}, the website of ${site.name} ("we" and "us"), a web design, development, and marketing studio based in ${based}. ${site.name} is owned and operated by Henrry Garrido.`,
         ],
       },
       {
@@ -118,9 +110,7 @@ export const privacySections: readonly PolicySection[] = [
         blocks: [
           {
             paragraph: [
-              `The booking calendar on our contact page is Calendly's. To book the free call, you give Calendly your name and email address `,
-              { confirm: 'and the answers to any questions your Calendly event asks' },
-              `, and it records the time you choose and your time zone. The call takes place on ${contactDetails.booking.platform}.`,
+              `The booking calendar on our contact page is Calendly's. When you book a discovery call, Calendly collects your name, email address, chosen time, time zone, and any answer you give about your business and what you'd like help with. The call takes place on ${contactDetails.booking.platform}.`,
             ],
           },
         ],
@@ -145,11 +135,7 @@ export const privacySections: readonly PolicySection[] = [
           },
           {
             paragraph: [
-              'When you send the form or book a call, the site also tells Google Analytics and Meta that a lead came in, and whether it came from the form or a booking. It does not send your name, email address, phone number, or message. ',
-              {
-                confirm:
-                  'automatic advanced matching is off for the pixel in Meta Events Manager. If it is on, the pixel reads form fields such as your email address and phone number and sends them to Meta in scrambled (hashed) form, and this paragraph must say so',
-              },
+              'When you send the form or book a call, we tell Google Analytics and Meta which action occurred. The lead event does not include your name, email address, phone number, or message.',
             ],
           },
           {
@@ -182,25 +168,14 @@ export const privacySections: readonly PolicySection[] = [
           ],
           ['To do the work, and keep the records it needs, if you become a client.'],
           ['To see how people use the site, which pages help and which do not, and to improve it.'],
-          [
-            'To measure whether our advertising on Google and Meta leads to inquiries ',
-            {
-              confirm:
-                'and to show our ads to people who have visited the site, if you use retargeting',
-            },
-            '.',
-          ],
+          ['To measure whether our advertising leads to inquiries.'],
           ['To keep the site and the form secure and free of spam.'],
           ['To meet our legal, tax, and accounting obligations.'],
         ],
       },
       {
         paragraph: [
-          'Writing to us or booking a call does not put you on a mailing list. ',
-          {
-            confirm:
-              'if you send marketing emails to people who inquire, say so here and explain how to unsubscribe',
-          },
+          'Sending us a message or booking a call does not subscribe you to a mailing list.',
         ],
       },
     ],
@@ -208,7 +183,6 @@ export const privacySections: readonly PolicySection[] = [
   {
     id: 'who-we-share-it-with',
     heading: 'Who we share it with',
-    lawyer: true,
     blocks: [
       {
         paragraph: [
@@ -219,7 +193,7 @@ export const privacySections: readonly PolicySection[] = [
         list: [
           [
             { text: 'Netlify', href: 'https://www.netlify.com/privacy/' },
-            ' hosts the website and receives the messages you send through the form.',
+            ' hosts the website, and receives and stores the information you submit through our contact form.',
           ],
           [
             { text: 'Calendly', href: 'https://calendly.com/legal/privacy-notice' },
@@ -229,18 +203,17 @@ export const privacySections: readonly PolicySection[] = [
           ],
           [
             { text: 'Google', href: 'https://policies.google.com/privacy' },
-            ` runs Google Tag Manager, which loads our analytics and advertising tags; Google Analytics 4, which produces our site statistics; and ${contactDetails.booking.platform}, where calls take place. `,
-            { confirm: 'add your email provider, such as Google Workspace' },
+            ` runs Google Tag Manager, which loads our analytics and advertising tags; Google Analytics 4, which produces our site statistics; and Google Calendar and ${contactDetails.booking.platform}, which handle booking invitations and calls.`,
+          ],
+          [
+            `Namecheap Private Email hosts our business email, including messages you send to ${contactDetails.email}.`,
           ],
           [
             { text: 'Meta', href: 'https://www.facebook.com/privacy/policy/' },
             ' runs the Meta pixel, which measures visits and leads from our advertising on Facebook and Instagram.',
           ],
           [
-            {
-              confirm:
-                'list any other tools you copy inquiries into, such as a CRM, a spreadsheet, or an email marketing service',
-            },
+            'We also copy inquiry details, such as who got in touch and when, into a spreadsheet we use to keep track of inquiries.',
           ],
         ],
       },
@@ -251,7 +224,7 @@ export const privacySections: readonly PolicySection[] = [
       },
       {
         paragraph: [
-          'We do not sell your information for money. Some state privacy laws count sharing information with advertising platforms, as the Meta pixel does, as a "sale" or "sharing", and give residents the right to opt out. The choices under Cookies and tracking stop that sharing from your browser.',
+          'We do not sell your information for money. Some state privacy laws count sharing information with advertising platforms, as the Meta pixel does, as a "sale" or "sharing", and give residents the right to opt out.',
         ],
       },
     ],
@@ -259,7 +232,6 @@ export const privacySections: readonly PolicySection[] = [
   {
     id: 'cookies-and-tracking',
     heading: 'Cookies and tracking',
-    lawyer: true,
     blocks: [
       {
         paragraph: [
@@ -281,13 +253,12 @@ export const privacySections: readonly PolicySection[] = [
       },
       {
         paragraph: [
-          'These tags start when a page loads; the site does not ask first. ',
-          { confirm: 'whether you will add a cookie banner that asks before these tags load' },
+          'Google Analytics and the Meta pixel load when you visit our site. We do not currently ask for your permission before they load. Calendly displays its own cookie notice in the booking calendar.',
         ],
       },
       {
         paragraph: [
-          'You can block or delete cookies in your browser settings, install the ',
+          'You can clear previously stored cookies in your browser. If you visit again, our analytics and advertising tags may load again. You can also install the ',
           {
             text: 'Google Analytics opt-out browser add-on',
             href: 'https://tools.google.com/dlpage/gaoptout',
@@ -305,22 +276,17 @@ export const privacySections: readonly PolicySection[] = [
   {
     id: 'how-long-we-keep-it',
     heading: 'How long we keep it',
-    lawyer: true,
     blocks: [
       {
         list: [
           [
-            'Form messages, emails, and booking records: ',
-            { confirm: 'two years after our last contact' },
-            ', unless you become a client.',
+            'We keep non-client inquiry messages, booking records, and their spreadsheet entries for up to six months from the date we receive them. If you become a client, see client records below.',
           ],
           [
             'Client records: while we work together, then as long as the law requires us to keep business, tax, and accounting records.',
           ],
           [
-            'Google Analytics: visit-level data for ',
-            { confirm: '2 or 14 months, the data retention setting in GA4' },
-            '. Reports built from it do not identify you and may be kept longer.',
+            'Google Analytics keeps event-level data for 2 months. It keeps user-level data for 14 months, and that period restarts with new activity. Aggregated reports may remain available longer.',
           ],
           ["Meta pixel data: as set out in Meta's own policies."],
           ["Netlify's server logs: as Netlify's own policies set out."],
@@ -333,20 +299,17 @@ export const privacySections: readonly PolicySection[] = [
   {
     id: 'your-choices',
     heading: 'How to see, correct, or delete your information',
-    lawyer: true,
     blocks: [
       {
         paragraph: [
           'Email ',
           email,
-          ' to ask what information we hold about you, to correct it, or to delete it. Write from the address you used with us, or tell us which one it was, so we can find your records and know the request is yours. Put "Privacy request" in the subject line. We will reply within ',
-          { confirm: '45 days' },
-          '.',
+          ' to ask what information we hold about you, to correct it, or to delete it. Write from the address you used with us, or tell us which one it was, so we can find your records and know the request is yours. Put "Privacy request" in the subject line. We respond to privacy requests within 45 days.',
         ],
       },
       {
         paragraph: [
-          "We can delete what we hold directly: your form messages, emails, and Calendly bookings. Analytics and advertising data is tied to a random ID in your browser's cookies, not to your name or email address, so we usually cannot look it up. To stop it being collected, delete your cookies and use the choices under Cookies and tracking.",
+          "We can delete what we hold directly: your form messages, emails, and Calendly bookings. Analytics and advertising data is tied to a random ID in your browser's cookies, not to your name or email address, so we usually cannot look it up. You can clear those cookies in your browser, but our analytics and advertising tags may load again if you visit again.",
         ],
       },
       {
@@ -364,7 +327,6 @@ export const privacySections: readonly PolicySection[] = [
   {
     id: 'children',
     heading: "Children's privacy",
-    lawyer: true,
     blocks: [
       {
         paragraph: [
@@ -376,15 +338,10 @@ export const privacySections: readonly PolicySection[] = [
   {
     id: 'outside-the-us',
     heading: 'Visitors outside the United States',
-    lawyer: true,
     blocks: [
       {
         paragraph: [
-          'We run this site from the United States, and the companies above may process information in the United States and other countries. If you visit from elsewhere, your information will be handled in the United States, where privacy laws may differ from yours. ',
-          {
-            confirm:
-              'whether you serve visitors or clients outside the US, such as in the EU, the UK, or Canada',
-          },
+          'We run this site from the United States, and the companies above may process information in the United States and other countries. If you visit from elsewhere, your information will be handled in the United States, where privacy laws may differ from yours. We market our services to businesses in the United States.',
         ],
       },
     ],
@@ -427,15 +384,8 @@ export const privacySections: readonly PolicySection[] = [
         ],
       },
       {
-        paragraph: [
-          `${site.name}, ${based}. `,
-          { confirm: 'a mailing address, if you want one listed' },
-        ],
+        paragraph: [`${site.name}, ${based}.`],
       },
     ],
   },
 ];
-
-/** The closing reminder, shown while `draft` is true (the owner's brief: end with it). */
-export const draftReminder =
-  'This is a draft, not legal advice. It was written on November 22, 2026, from what this website does today, and no lawyer has reviewed it. Before it goes live, settle each [CONFIRM] item, have a lawyer check the sections marked [CHECK WITH A LAWYER] for Texas and anywhere else your visitors and clients are, and remove the markers.';

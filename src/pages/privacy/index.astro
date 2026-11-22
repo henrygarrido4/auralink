@@ -3,20 +3,18 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageIntro from '@/components/sections/PageIntro.astro';
 import PrivacyPolicy from '@/components/sections/PrivacyPolicy.astro';
 import PageSchema from '@/components/seo/PageSchema.astro';
-import { draft, privacyHead, privacyHero } from '@/data/privacy';
+import { privacyHead, privacyHero } from '@/data/privacy';
 
 /*
- * The privacy policy, linked from every page's footer: a draft the owner asked for on
- * 2026-11-22, with the copy and its open questions in src/data/privacy.ts. A utility page, so no
- * closing contact banner. While the policy is a draft the page asks search engines not to index
- * it.
+ * The privacy policy, linked from every page's footer and beside the contact form's button,
+ * approved by the owner on 2026-11-22, with the copy in src/data/privacy.ts. A utility page, so no
+ * closing contact banner.
  */
 ---
 
 <BaseLayout
   title={privacyHead.title}
   description={privacyHead.description}
-  noindex={draft}
   showContactBanner={false}
 >
   <Fragment slot="head">

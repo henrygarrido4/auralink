@@ -1,15 +1,12 @@
 ---
 import PolicyBlocks from '@/components/ui/PolicyBlocks.astro';
-import PolicyMarker from '@/components/ui/PolicyMarker.astro';
-import { draft, draftReminder, privacyIntro, privacySections } from '@/data/privacy';
+import { privacyIntro, privacySections } from '@/data/privacy';
 
 /**
  * The privacy policy under the page's hero (src/pages/privacy/index.astro), one readable column
  * on the white page: the effective date and the answer in brief, a list of contents linking to
  * each section, then the sections, each a `section` named by its h2, with h3 parts where a
- * section has them. A section that depends on local law shows [CHECK WITH A LAWYER] under its
- * heading. While the policy is a draft it ends with the reminder that it is not legal advice.
- * The copy is all in src/data/privacy.ts. No JavaScript, and nothing moves.
+ * section has them. The copy is all in src/data/privacy.ts. No JavaScript, and nothing moves.
  */
 
 const link =
@@ -48,11 +45,6 @@ const link =
           >
             {section.heading}
           </h2>
-          {section.lawyer && (
-            <p class="mt-3 text-sm sm:text-base">
-              <PolicyMarker>[CHECK WITH A LAWYER]</PolicyMarker>
-            </p>
-          )}
           {section.blocks && <PolicyBlocks blocks={section.blocks} class="mt-4" />}
           {section.parts?.map((part) => (
             <Fragment>
@@ -62,15 +54,6 @@ const link =
           ))}
         </section>
       ))}
-
-      {draft && (
-        <div class="mt-16 rounded-box border-2 border-primary p-6 sm:p-8">
-          <p class="text-lg font-bold text-base-content">Draft, not legal advice</p>
-          <p class="mt-2 text-base leading-relaxed text-pretty text-base-content/80 sm:text-lg">
-            {draftReminder}
-          </p>
-        </div>
-      )}
     </div>
   </div>
 </div>
