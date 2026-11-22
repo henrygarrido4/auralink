@@ -18,14 +18,16 @@ import { projectStatus, type WorkProject } from '@/data/work';
  * The card blends into the band (the owner, 2026-11-21): on the white band of 2026-11-22 it is
  * frosted white, 70% opaque over a blur, with a hairline and a soft shadow, so the band's yellow
  * aura tints it without muddying the text, with the light browser bar and the name in
- * near-black. The arrow box is the lead service tile's (`arrow-box-lead`): filled primary with a
- * near-black arrow, turning white as the arrow slides through. Under the pointer and keyboard focus the service
- * cards' 2px primary frame fades in on the card's edge, and the screenshot grows by three percent
- * inside its window over 0.5s, which clips it, so nothing around it moves. `scale` rests at the
- * browser's own default, so the stylesheet's arrival starts no transition in WebKit
- * (`.cursor/rules/styling-tailwind-daisyui.mdc`). The frame is a pseudo-element the stylesheet
- * creates, so it transitions safely too. Reduced motion makes every change instant. Keyboard
- * focus adds a near-black ring 4px out, since the yellow alone is too light on white.
+ * near-black. The arrow box is the service tiles' (`arrow-box`; the owner, 2026-11-22, in place
+ * of the lead tile's primary box): white, with a hairline edge, a small shadow, and a near-black
+ * arrow, filling primary as the arrow slides through. Under the pointer and keyboard focus the
+ * service cards' 2px primary frame fades in on the card's edge, the arrow box fills, and the
+ * screenshot grows by three percent inside its window over 0.5s, which clips it, so nothing
+ * around it moves. `scale` rests at the browser's own default, so the stylesheet's arrival
+ * starts no transition in WebKit (`.cursor/rules/styling-tailwind-daisyui.mdc`). The frame is a
+ * pseudo-element the stylesheet creates, so it transitions safely too. Reduced motion makes every
+ * change instant. Keyboard focus adds a near-black ring 4px out, since the yellow alone is too
+ * light on white.
  */
 interface Props {
   project: WorkProject;
@@ -71,7 +73,7 @@ const focus =
         {project.name}
       </h3>
     </div>
-    <span class="arrow-box arrow-box-lead size-12.5 shrink-0 rounded-sm group-hover:arrow-box-lead-active group-focus-visible:arrow-box-lead-active">
+    <span class="arrow-box size-12.5 shrink-0 rounded-sm shadow-md group-hover:arrow-box-active group-focus-visible:arrow-box-active">
       {/* The first arrow waits outside the box, to the left; the second rests in the box. */}
       <span data-arrow-track>
         <Icon name="arrow-right" class="size-5" />

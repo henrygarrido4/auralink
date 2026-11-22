@@ -17,9 +17,10 @@ import { scrollToRest } from './scroll';
  * near-black heading, the primary rule, the sentence, the near-black "View all projects" text
  * link to the work page, and one frosted white card per project (WorkCard.astro): the site's
  * homepage in a browser window, how it is built and that it is a live website, the name, and the
- * primary arrow box, the whole card one link to the project's section on the work page. Three
- * across from lg, two by two with the introduction in the first cell from sm, stacked below. The
- * screenshot grows a little under the pointer, and nothing transitions on load.
+ * service tiles' white arrow box, the whole card one link to the project's section on the work
+ * page. Three across from lg, two by two with the introduction in the first cell from sm, stacked
+ * below. Under the pointer the screenshot grows a little and the arrow box fills primary, as it
+ * does on keyboard focus, and nothing transitions on load.
  *
  * The work page (src/pages/work/index.astro): the shared hero, how to read the projects with an
  * index of them (WorkOverview.astro), one section per project (WorkProject.astro) with the
@@ -94,6 +95,8 @@ test('the home page shows three project cards after the introduction, on the whi
 
   await expect(cards(page)).toHaveCount(featuredWork.length);
   expect(featuredWork.length).toBe(3);
+  const white = await resolve(page, 'var(--color-base-100)');
+  const ink = await resolve(page, 'var(--color-primary-content)');
   for (const [index, project] of featuredWork.entries()) {
     const card = cards(page).nth(index);
     const link = card.getByRole('link');
@@ -104,9 +107,13 @@ test('the home page shows three project cards after the introduction, on the whi
     await expect(link).toHaveAccessibleName(`${project.platform} ${projectStatus} ${project.name}`);
     await expect(card.getByRole('heading', { level: 3 })).toHaveText(project.name);
     // Frosted white, so the band's aura tints it (engines write the 70% alpha as `/ 0.7` in
-    // oklab or `, 0.7` in rgba); the arrow box is the lead tile's.
+    // oklab or `, 0.7` in rgba). The arrow box is the service tiles' (the owner, 2026-11-22):
+    // white at rest, lifted off the card by a shadow, with the near-black arrow.
     await expect(link).toHaveCSS('background-color', /[/,] ?0\.7\)$/);
-    await expect(card.locator('.arrow-box')).toHaveClass(/\barrow-box-lead\b/);
+    const arrowBox = card.locator('.arrow-box');
+    await expect(arrowBox).toHaveCSS('background-color', white);
+    await expect(arrowBox).toHaveCSS('color', ink);
+    await expect(arrowBox).not.toHaveCSS('box-shadow', 'none');
     // The screenshot is decorative here: the card's text describes the project, and the work
     // page carries the description. Lazy: the band is far below the first screen.
     const screenshot = card.locator('img');
@@ -158,7 +165,7 @@ test('three cards share a row from lg, the introduction takes the first of four 
   ).toBeLessThanOrEqual(1);
 });
 
-test('a card grows its screenshot under the pointer, shows a ring on focus, and transitions nothing on load', async ({
+test('a card grows its screenshot and fills its arrow box under the pointer, fills the box and shows a ring on focus, and transitions nothing on load', async ({
   page,
   browserName,
 }) => {
@@ -187,12 +194,23 @@ test('a card grows its screenshot under the pointer, shows a ring on focus, and 
   await page.setViewportSize({ width: 1280, height: 800 });
   const card = cards(page).first().getByRole('link');
   const screenshot = card.locator('img');
+  const scale = () => screenshot.evaluate((img) => getComputedStyle(img).scale);
+  // The arrow box rests white and fills primary under the pointer and on keyboard focus, as the
+  // service tiles' boxes do (the owner, 2026-11-22).
+  const fill = () =>
+    card.locator('.arrow-box').evaluate((box) => getComputedStyle(box).backgroundColor);
+  const white = await resolve(page, 'var(--color-base-100)');
+  const primary = await resolve(page, 'var(--color-primary)');
   await expect(screenshot).toHaveCSS('scale', 'none');
+  expect(await fill(), 'the arrow box rests white').toBe(white);
   if (await page.evaluate(() => matchMedia('(hover: hover)').matches)) {
+    await scrollToRest(card);
     await card.hover();
-    await expect.poll(() => screenshot.evaluate((img) => getComputedStyle(img).scale)).toBe('1.03');
+    await expect.poll(scale).toBe('1.03');
+    await expect.poll(fill, 'the arrow box fills under the pointer').toBe(primary);
     await page.mouse.move(0, 0);
-    await expect.poll(() => screenshot.evaluate((img) => getComputedStyle(img).scale)).toBe('none');
+    await expect.poll(scale).toBe('none');
+    await expect.poll(fill, 'the arrow box is white again once the pointer leaves').toBe(white);
   }
 
   // From the "View all projects" link, Tab reaches the first card, which wears the ring.
@@ -204,6 +222,7 @@ test('a card grows its screenshot under the pointer, shows a ring on focus, and 
     return [el.matches(':focus-visible'), style.outlineStyle, style.outlineWidth];
   });
   expect(ring).toEqual([true, 'solid', '2px']);
+  await expect.poll(fill, 'keyboard focus fills the arrow box').toBe(primary);
 });
 
 test('the work page opens with the hero and runs the overview, the four projects, the invitation, and the banner', async ({

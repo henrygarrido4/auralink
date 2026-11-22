@@ -2,9 +2,9 @@ import { expect, test, type Page } from './fixtures';
 import { aboutCta, aboutHighlights, owner, site } from '../../src/data/site';
 
 /**
- * Home page introduction (src/components/sections/AboutIntro.astro), where the hero's About us
- * button lands. It follows the process and precedes the selected work (since 2026-11-21) and the
- * closing contact banner. The portrait keeps the Hub2B
+ * Home page introduction (src/components/sections/AboutIntro.astro). It follows the process and
+ * precedes the selected work (since 2026-11-21) and the closing contact banner. The portrait
+ * keeps the Hub2B
  * treatment the owner preferred (2026-11-20): on a primary frame the photo's own size, offset
  * down and right by the room made for it, with a name card over the photo's lower right corner
  * once `owner.name` is set. Beside it, after the owner's reference (2026-11-20), the copy, the

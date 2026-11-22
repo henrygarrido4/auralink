@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from './fixtures';
 import { contactRoutes, heroBenefits, primaryCta } from '../../src/data/site';
+import { scrollToRest } from './scroll';
 
 /**
  * Home hero (src/components/sections/Hero.astro). Copy and buttons are real HTML, and the device
@@ -143,9 +144,13 @@ test('shows the headline, the supporting copy, and both buttons', async ({ page 
   await expect(primary).toBeVisible();
   await expect(primary).toHaveAttribute('href', contactRoutes.page);
 
+  // About us opens the About page (the owner, 2026-11-22), not the introduction further down.
   const about = hero(page).getByRole('link', { name: 'About us' });
-  await expect(about).toHaveAttribute('href', '#about');
-  await expect(page.locator('#about').getByRole('heading', { level: 2 })).toBeVisible();
+  await expect(about).toHaveAttribute('href', '/about/');
+  await scrollToRest(about);
+  await about.click();
+  await expect(page).toHaveURL(/\/about\/$/);
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
 
 test('loads the device image eagerly with its space reserved', async ({ page }) => {

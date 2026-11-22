@@ -8,8 +8,9 @@ import Icon from '@/components/ui/Icon.astro';
 import { aboutCta, aboutHighlights, owner, site } from '@/data/site';
 
 /**
- * Home page introduction, after the process and the target of the hero's "About us" button: who
- * Auralink Studio works with and what it brings together, beside the portrait the owner supplied.
+ * Home page introduction, after the process: who Auralink Studio works with and what it brings
+ * together, beside the portrait the owner supplied. The hero's "About us" button opens the About
+ * page itself (the owner, 2026-11-22), not this section.
  * The copy is laid out after the "What we offer" section the owner gave as the reference (a
  * screenshot, 2026-11-20): from lg it takes the wider column, the eyebrow, the heading, the rule,
  * the owner's paragraph (rewritten 2026-11-20), six points in two columns (`aboutHighlights`, each a mark, a title, and
@@ -28,7 +29,7 @@ import { aboutCta, aboutHighlights, owner, site } from '@/data/site';
  * It is not captioned beyond that card, and it is not presented as a client or a testimonial.
  */
 interface Props {
-  /** Anchor for in-page links, such as the hero's "About us" button. */
+  /** Anchor for in-page links. */
   id: string;
 }
 
