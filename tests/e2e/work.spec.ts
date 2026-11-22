@@ -11,11 +11,11 @@ import {
 
 /**
  * Selected work (the owner's brief, 2026-11-21). On the home page, FeaturedWork.astro: a
- * near-black band under an aura of the primary yellow drawn in CSS (`work-aura`), after the
- * introduction and before the contact banner, with the primary eyebrow, the white heading, the
- * primary rule, the sentence, the primary "View all projects" text link to the work page, and
- * one dark, translucent card per project (WorkCard.astro): the site's homepage in a browser
- * window with a dark bar, how it is built and that it is a live website, the name, and the
+ * white band under an aura of the primary yellow drawn in CSS (`work-aura`, white since
+ * 2026-11-22), after the introduction and before the contact banner, with the shared eyebrow, the
+ * near-black heading, the primary rule, the sentence, the near-black "View all projects" text
+ * link to the work page, and one frosted white card per project (WorkCard.astro): the site's
+ * homepage in a browser window, how it is built and that it is a live website, the name, and the
  * primary arrow box, the whole card one link to the project's section on the work page. Three
  * across from lg, two by two with the introduction in the first cell from sm, stacked below. The
  * screenshot grows a little under the pointer, and nothing transitions on load.
@@ -57,7 +57,7 @@ const resolve = (page: Page, value: string) =>
 
 const box = async (locator: Locator) => (await locator.boundingBox())!;
 
-test('the home page shows three project cards after the introduction, on the near-black band', async ({
+test('the home page shows three project cards after the introduction, on the white aura band', async ({
   page,
 }) => {
   await page.goto('/');
@@ -67,22 +67,22 @@ test('the home page shows three project cards after the introduction, on the nea
   expect(order.slice(-3)).toEqual(['about', 'work', 'project-contact']);
 
   const section = homeSection(page);
-  // The near-black band of the navbar and the closing banner (the owner's choice, 2026-11-21),
-  // under three soft radial glows of the primary yellow drawn in CSS: no image file is fetched.
-  await expect(section).toHaveCSS('background-color', await resolve(page, 'var(--color-neutral)'));
+  // White, like the introduction above (the owner, 2026-11-22), under three soft radial glows of
+  // the primary yellow drawn in CSS: no image file is fetched.
+  await expect(section).toHaveCSS('background-color', await resolve(page, 'var(--color-base-100)'));
   const glows = await section.evaluate((el) => getComputedStyle(el).backgroundImage);
   expect(glows.match(/radial-gradient\(/g)?.length, 'three glows').toBe(3);
   expect(glows, 'no image file').not.toContain('url(');
   await expect(section.getByText('Selected work', { exact: true })).toBeVisible();
   await expect(section.getByRole('heading', { level: 2 })).toHaveText(HOME_HEADING);
 
-  // A plain primary text link to the work page, the footer's "Start a conversation" on the same
-  // dark: no button classes, no border light, at least 44px tall, and underlined under the pointer.
+  // A plain near-black text link to the work page (the yellow is too light to read on white): no
+  // button classes, no border light, at least 44px tall, and underlined under the pointer.
   const all = section.getByRole('link', { name: workCta.label });
   await expect(all).toHaveAttribute('href', workCta.href!);
   await expect(all).not.toHaveClass(/\bbtn\b/);
   await expect(section.locator('.aura, .btn')).toHaveCount(0);
-  await expect(all).toHaveCSS('color', await resolve(page, 'var(--color-primary)'));
+  await expect(all).toHaveCSS('color', await resolve(page, 'var(--color-base-content)'));
   expect((await box(all)).height, 'a 44px target').toBeGreaterThanOrEqual(44);
   await expect(all).toHaveCSS('text-decoration-line', 'none');
   if (await page.evaluate(() => matchMedia('(hover: hover)').matches)) {
@@ -102,9 +102,9 @@ test('the home page shows three project cards after the introduction, on the nea
     // name; the arrow is the action, and the browser bar is decorative and adds nothing.
     await expect(link).toHaveAccessibleName(`${project.platform} ${projectStatus} ${project.name}`);
     await expect(card.getByRole('heading', { level: 3 })).toHaveText(project.name);
-    // Dark and translucent, so the band's aura shows through (engines write the 5% alpha as
-    // `/ 0.05` in oklab or `, 0.05` in rgba); the arrow box is the lead tile's.
-    await expect(link).toHaveCSS('background-color', /[/,] ?0\.05\)$/);
+    // Frosted white, so the band's aura tints it (engines write the 70% alpha as `/ 0.7` in
+    // oklab or `, 0.7` in rgba); the arrow box is the lead tile's.
+    await expect(link).toHaveCSS('background-color', /[/,] ?0\.7\)$/);
     await expect(card.locator('.arrow-box')).toHaveClass(/\barrow-box-lead\b/);
     // The screenshot is decorative here: the card's text describes the project, and the work
     // page carries the description. Lazy: the band is far below the first screen.

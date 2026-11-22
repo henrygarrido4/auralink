@@ -13,9 +13,7 @@ import { projectScreenshots } from '@/lib/project-screenshots';
  * `crop="card"` shows the top of the page at 16:10 for the home cards (`object-position: top`, so
  * the site's header and headline stay in view); `crop="full"` shows the whole 4:3 capture on the
  * work page. The image's own 1920x1440 reserves its box either way, so loading cannot move the
- * layout. `tone="dark"` draws the bar for the home page's dark cards: a faint light fill and a
- * hairline in the band's light text, where the light bar would read as a white block on the
- * near-black. The caller sets the frame's edge, corners, and shadow, and passes `sizes` for the
+ * layout. The caller sets the frame's edge, corners, and shadow, and passes `sizes` for the
  * width the screenshot renders at, and `imageClass` for the image itself (the home cards zoom it a
  * little under the pointer). Inside a link whose text already names and describes the project
  * (the home cards), pass `decorative` so the screenshot has empty alt text and the link's name
@@ -26,8 +24,6 @@ interface Props {
   crop: 'card' | 'full';
   /** The rendered width of the screenshot at each breakpoint, for the browser's `sizes`. */
   sizes: string;
-  /** The bar's colours: for a white window (the default) or a dark card. */
-  tone?: 'light' | 'dark';
   /** Empty alt text: the text around the frame describes the project. */
   decorative?: boolean;
   /** Applied to the window itself: edge, corners, shadow. */
@@ -36,29 +32,15 @@ interface Props {
   imageClass?: string;
 }
 
-const {
-  project,
-  crop,
-  sizes,
-  tone = 'light',
-  decorative = false,
-  class: className,
-  imageClass,
-} = Astro.props;
+const { project, crop, sizes, decorative = false, class: className, imageClass } = Astro.props;
 const domain = new URL(project.link.href).hostname;
-const dark = tone === 'dark';
-
-const bar = dark
-  ? 'border-neutral-content/10 bg-neutral-content/10'
-  : 'border-base-300 bg-base-200';
-const dot = dark ? 'bg-neutral-content/30' : 'bg-base-content/15';
-const address = dark
-  ? 'bg-neutral-content/10 text-neutral-content/75'
-  : 'bg-base-100 text-base-content/60';
+const bar = 'border-base-300 bg-base-200';
+const dot = 'bg-base-content/15';
+const address = 'bg-base-100 text-base-content/60';
 ---
 
 {/* `@container`: the bar shows the address only when the window is `@sm` (24rem) or wider (below). */}
-<div class:list={['@container overflow-clip', dark ? 'bg-transparent' : 'bg-base-100', className]}>
+<div class:list={['@container overflow-clip', 'bg-base-100', className]}>
   <div
     class:list={['flex min-h-11 items-center gap-3 border-b px-3.5 py-2.5', bar]}
     aria-hidden="true"

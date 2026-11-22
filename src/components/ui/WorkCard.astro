@@ -15,18 +15,17 @@ import { projectStatus, type WorkProject } from '@/data/work';
  * screenshot has empty alt text here, since that text already names the project, and the work
  * page carries the screenshot's description.
  *
- * The card blends into the band rather than sitting white on it (the owner, 2026-11-21): the
- * detail pages' dark card, a faint light fill with a hairline in the band's light text
- * (DetailChallenges.astro), so the band's aura shows through it, with the browser bar drawn dark
- * to match and the name in white. The arrow box is the lead service tile's (`arrow-box-lead`):
- * filled primary with a near-black arrow, turning white as the arrow slides through, with no
- * shadow, which would not show on the dark. Under the pointer and keyboard focus the service
+ * The card blends into the band (the owner, 2026-11-21): on the white band of 2026-11-22 it is
+ * frosted white, 70% opaque over a blur, with a hairline and a soft shadow, so the band's yellow
+ * aura tints it without muddying the text, with the light browser bar and the name in
+ * near-black. The arrow box is the lead service tile's (`arrow-box-lead`): filled primary with a
+ * near-black arrow, turning white as the arrow slides through. Under the pointer and keyboard focus the service
  * cards' 2px primary frame fades in on the card's edge, and the screenshot grows by three percent
  * inside its window over 0.5s, which clips it, so nothing around it moves. `scale` rests at the
  * browser's own default, so the stylesheet's arrival starts no transition in WebKit
  * (`.cursor/rules/styling-tailwind-daisyui.mdc`). The frame is a pseudo-element the stylesheet
  * creates, so it transitions safely too. Reduced motion makes every change instant. Keyboard
- * focus adds a primary ring 4px out, the footer's ring on the same dark.
+ * focus adds a near-black ring 4px out, since the yellow alone is too light on white.
  */
 interface Props {
   project: WorkProject;
@@ -37,13 +36,13 @@ const { project } = Astro.props;
 const frame =
   'before:pointer-events-none before:absolute before:-inset-px before:z-10 before:rounded-md before:border-2 before:border-primary before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100';
 const focus =
-  'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary focus-visible:before:opacity-100';
+  'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral focus-visible:before:opacity-100';
 ---
 
 <a
   href={`/work/#${project.id}`}
   class:list={[
-    'group relative flex h-full flex-col rounded-md border border-neutral-content/15 bg-neutral-content/5 text-neutral-content',
+    'group relative flex h-full flex-col rounded-md border border-base-content/10 bg-base-100/70 text-base-content shadow-[0_1px_2px_rgb(0_0_0/0.04),0_12px_32px_-12px_rgb(0_0_0/0.14)] backdrop-blur-md',
     frame,
     focus,
   ]}
@@ -55,7 +54,6 @@ const focus =
   <BrowserFrame
     project={project}
     crop="card"
-    tone="dark"
     decorative
     sizes="(min-width: 1408px) 427px, (min-width: 1024px) calc((100vw - 128px) / 3), (min-width: 640px) calc((100vw - 72px) / 2), calc(100vw - 48px)"
     class="rounded-t-md"
@@ -63,13 +61,13 @@ const focus =
   />
   <div class="flex flex-1 items-center justify-between gap-4 p-5 sm:p-6">
     <div class="min-w-0">
-      <p class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-bold tracking-[0.16em] text-neutral-content/70 uppercase">
+      <p class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-bold tracking-[0.16em] text-base-content/70 uppercase">
         <span>{project.platform}</span>
-        <span class="rounded-full border border-neutral-content/20 px-2.5 py-0.5 tracking-[0.12em]">
+        <span class="rounded-full border border-base-content/20 px-2.5 py-0.5 tracking-[0.12em]">
           {projectStatus}
         </span>
       </p>
-      <h3 class="mt-2 text-xl leading-tight font-bold tracking-tight text-balance text-base-100 sm:text-2xl">
+      <h3 class="mt-2 text-xl leading-tight font-bold tracking-tight text-balance text-base-content sm:text-2xl">
         {project.name}
       </h3>
     </div>

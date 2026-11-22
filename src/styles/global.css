@@ -574,31 +574,33 @@
 }
 
 /*
- * The band behind the home page's selected work (src/components/sections/FeaturedWork.astro): the
- * navbar's near-black with an aura of the brand yellow laid over it in CSS alone (the owner's
- * request, 2026-11-21: a background with an aura-like feel). Three soft radial glows, the largest
- * rising from the top left behind the heading, a second settling into the bottom right under the
- * last card, and a faint third between them, each fading to nothing well inside its ellipse so no
- * edge shows. The yellow is mixed into the dark at low strength, so the band stays near-black
- * (white text on the brightest point is still over 12:1) and the translucent cards take the glow
- * through their fill. No image file, no request, and nothing moves.
+ * The band behind the home page's selected work (src/components/sections/FeaturedWork.astro): white,
+ * like the introduction above it, with an aura of the brand yellow laid over it in CSS alone (the
+ * owner asked for a background with an aura-like feel, 2026-11-21, and for the band to be white
+ * rather than near-black, 2026-11-22). Three soft radial glows: the largest behind the heading at
+ * the top left, a second under the last card at the bottom right, and a faint third between them,
+ * where the cards sit, so their frosted fill takes a warm tint. Every glow is centred inside the
+ * band and fades to nothing well inside its ellipse, so the band meets the white introduction
+ * above and the closing banner's photo below on plain white, with no edge. Yellow on white is far
+ * lighter than on the dark, so the mixes are stronger here; the near-black text over the
+ * brightest point still measures above 15:1. No image file, no request, and nothing moves.
  */
 @utility work-aura {
-  background-color: var(--color-neutral);
+  background-color: var(--color-base-100);
   background-image:
     radial-gradient(
-      ellipse 70% 60% at 12% 0%,
-      color-mix(in oklab, var(--color-primary) 22%, transparent),
+      ellipse 50% 38% at 18% 42%,
+      color-mix(in oklab, var(--color-primary) 36%, transparent),
       transparent 70%
     ),
     radial-gradient(
-      ellipse 55% 65% at 92% 100%,
+      ellipse 48% 36% at 84% 62%,
+      color-mix(in oklab, var(--color-primary) 32%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 40% 30% at 50% 55%,
       color-mix(in oklab, var(--color-primary) 16%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      ellipse 40% 45% at 65% 35%,
-      color-mix(in oklab, var(--color-primary) 7%, transparent),
       transparent 70%
     );
 }

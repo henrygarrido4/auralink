@@ -1,4 +1,5 @@
 ---
+import Eyebrow from '@/components/ui/Eyebrow.astro';
 import Icon from '@/components/ui/Icon.astro';
 import WorkCard from '@/components/ui/WorkCard.astro';
 import { workCta } from '@/data/site';
@@ -7,18 +8,17 @@ import { featuredWork } from '@/data/work';
 /**
  * Home page selected work, after the introduction and before the closing contact banner (the
  * owner's request, 2026-11-21: a band under the introduction with one card for each of three
- * projects). The band is the near-black `neutral` of the navbar and the closing banner (the
- * owner's choice the same day, in place of the yellow first asked for) under an aura of the brand
- * yellow drawn in CSS (`work-aura`, src/styles/global.css; the owner asked for a background with
- * an aura-like feel), with a primary eyebrow, the heading in white in bold and light weights over
- * a short primary rule, and the sentence in the band's light text, left-aligned like the other
- * sections. The eyebrow, the heading, and the sentence are the owner's (2026-11-21); the heading's
- * full stop and the sentence's "an" are editorial. The cards (WorkCard.astro) are dark and
- * translucent, so the aura shows through them, and show each project's own homepage in a browser
- * window, leading to its section on the work page; the primary text link after the copy
- * (`workCta`, a plain link rather than a button at the owner's request, 2026-11-21, styled as the
- * footer's "Start a conversation") leads to the work page itself, where each project is told in
- * full.
+ * projects). The band is white, like the introduction above it (the owner, 2026-11-22, in place
+ * of the near-black of 2026-11-21), under an aura of the brand yellow drawn in CSS (`work-aura`,
+ * src/styles/global.css; the owner asked for a background with an aura-like feel), with the
+ * shared eyebrow, the heading in near-black in bold and light weights over a short primary rule,
+ * and the sentence in the light sections' body text, left-aligned like the other sections: the
+ * introduction's own type, so the two read as one run of white. The eyebrow, the heading, and the
+ * sentence are the owner's (2026-11-21); the heading's full stop and the sentence's "an" are
+ * editorial. The cards (WorkCard.astro) are white and frosted, so the aura tints them, and show
+ * each project's own homepage in a browser window, leading to its section on the work page; the
+ * text link after the copy (`workCta`, a plain link rather than a button at the owner's request,
+ * 2026-11-21) leads to the work page itself, where each project is told in full.
  *
  * One grid holds the introduction and the cards, so the tablet rows stay full: below sm the
  * introduction comes first and the cards stack; from sm the introduction takes the first of two
@@ -35,8 +35,12 @@ const { id } = Astro.props;
 const titleId = `${id}-title`;
 ---
 
-<section id={id} aria-labelledby={titleId} class="work-aura text-neutral-content">
-  <div class="mx-auto max-w-site px-6 py-16 sm:py-20 lg:px-8 lg:py-24">
+<section id={id} aria-labelledby={titleId} class="work-aura text-base-content">
+  {/*
+   * A short top: the introduction above is white too and ends with its own deep padding, so the
+   * two read as one run of white rather than two bands with a gap between them.
+   */}
+  <div class="mx-auto max-w-site px-6 pt-6 pb-16 sm:pt-8 sm:pb-20 lg:px-8 lg:pt-10 lg:pb-24">
     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
       {/*
        * `relative` keeps the introduction above the list, which overlaps its cell from sm, so its
@@ -44,32 +48,31 @@ const titleId = `${id}-title`;
        */}
       <div class="relative sm:col-start-1 sm:row-start-1 lg:col-span-3 lg:flex lg:items-end lg:justify-between lg:gap-12 lg:pb-4">
         <div class="max-w-3xl">
-          {/* The shared eyebrow locks a dark colour for the light sections; here it is primary. */}
-          <p class="text-sm font-bold tracking-[0.16em] text-primary uppercase">Selected work</p>
-          {/* White, like the inner-page heroes' titles: the band's own light text is a shade greyer. */}
+          <Eyebrow>Selected work</Eyebrow>
           <h2
             id={titleId}
-            class="mt-5 text-3xl font-bold tracking-tight text-balance text-base-100 sm:text-4xl xl:text-5xl"
+            class="mt-5 text-3xl font-bold tracking-tight text-balance text-base-content sm:text-4xl xl:text-5xl"
           >
             {/* The explicit space keeps the two lines apart in the heading's text. */}
             <span class="block">Websites for</span>{' '}
             <span class="block font-light">local businesses.</span>
           </h2>
           <div class="mt-6 h-0.5 w-24 bg-primary" aria-hidden="true"></div>
-          <p class="mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-neutral-content/80">
+          <p class="mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-base-content/80">
             Explore an apartment community website, a barbershop website, and a trucking company
             website. See what went into each build.
           </p>
         </div>
         {/*
-         * A plain link, not a button (the owner, 2026-11-21): the footer's primary text link on
-         * the same dark, with the arrow, underlined under the pointer at once, with no
-         * transition, and the primary ring on keyboard focus. At least 44px tall as a target.
+         * A plain link, not a button (the owner, 2026-11-21), with the arrow. Near-black, since
+         * the yellow is too light to read on white (1.4:1); the brand yellow comes in as a thick
+         * underline under the pointer, at once, with no transition, and the near-black ring on
+         * keyboard focus, as the introduction's button has. At least 44px tall as a target.
          */}
         <div class="mt-8 shrink-0 lg:mt-0">
           <a
             href={workCta.href}
-            class="inline-flex min-h-11 items-center gap-2 rounded-sm text-lg font-bold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+            class="inline-flex min-h-11 items-center gap-2 rounded-sm text-lg font-bold text-base-content decoration-primary decoration-3 underline-offset-6 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
           >
             {workCta.label}
             <Icon name="arrow-right" class="size-5" />
