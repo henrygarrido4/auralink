@@ -34,19 +34,20 @@ interface Props extends HTMLAttributes<'div'> {
 const { start = 0, class: className, ...rest } = Astro.props;
 
 /**
- * The order around the ring, clockwise from the right-hand place. The same places the service
- * chips used, one benefit where each service was: New subscribers (WordPress), Time saved (custom
- * websites), Repeat customers (email), More bookings (Shopify), More sales (SEO), New inquiries
- * (AEO & GEO). The two at the bottom take the longer labels, the sides the next, and More sales
- * stays on one line because its chip sits highest. A benefit not listed here follows the others.
+ * The order around the ring, clockwise from the right-hand place. When the devices turned to the
+ * left (owner, 2026-11-22), the ring turned with them: each benefit moved to the mirror image of
+ * its place beside the right-facing devices (the places the service chips used), so it keeps the
+ * room it had there. The two at the bottom take the longer labels, the sides the next, and More
+ * sales stays on one line because its chip sits highest. A benefit not listed here follows the
+ * others.
  */
 const order: readonly string[] = [
-  'new-subscribers',
-  'time-saved',
-  'repeat-customers',
   'more-bookings',
-  'more-sales',
+  'repeat-customers',
+  'time-saved',
+  'new-subscribers',
   'new-inquiries',
+  'more-sales',
 ];
 const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length);
 const placed = [...heroBenefits].sort((a, b) => rank(a.id) - rank(b.id));
@@ -57,14 +58,14 @@ const below = 'top-full left-1/2 mt-1 -translate-x-1/2 text-center';
 const above = 'bottom-full left-1/2 mb-1 -translate-x-1/2 text-center';
 /**
  * Where each place's label sits, in the ring's order, so that none lies behind a device or leaves
- * the screen. The labels at the sides hang outward: from the right-hand chip's left edge, and at
- * the left ending a fifth of a chip short of its right edge, where the lid begins.
+ * the screen. The labels at the sides hang outward: at the right starting a fifth of a chip in
+ * from its left edge, where the lid ends, and from the left-hand chip's right edge.
  */
 const namePlaces = [
-  'top-full left-0 mt-1 text-left',
+  'top-full left-1/5 mt-1 text-left',
   below,
   below,
-  'top-full right-1/5 mt-1 text-right',
+  'top-full right-0 mt-1 text-right',
   above,
   above,
 ];

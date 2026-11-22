@@ -208,8 +208,14 @@ export function contactShadow(
   };
 }
 
-/** Publishes the finished frame for render.mjs, which polls `window.__rendered`. */
-export function publish(renderer) {
+/**
+ * Publishes the finished frame for render.mjs, which polls `window.__rendered`. A `mirrored`
+ * frame was drawn to be seen flipped left to right: render.mjs flips the PNG, losslessly, and
+ * the page shows the canvas flipped, so what it shows is what the asset will be.
+ */
+export function publish(renderer, { mirrored = false } = {}) {
+  if (mirrored) renderer.domElement.style.transform = 'scaleX(-1)';
+  window.__mirrored = mirrored;
   window.__rendered = renderer.domElement.toDataURL('image/png');
 }
 

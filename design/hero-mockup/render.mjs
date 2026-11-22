@@ -4,7 +4,8 @@
  * editable sources in this folder (see README.md):
  *
  *   1. screens   screens/*.png            -> reports/hero-mockup/screen-desktop.png, screen-mobile.png
- *   2. devices   scenes/devices.html     -> reports/hero-mockup/devices.png (transparent, 2x size)
+ *   2. devices   scenes/devices.html     -> reports/hero-mockup/devices.png (transparent, 2x size,
+ *                                           flipped left to right when LAYOUT.facing is 'left')
  *   3. asset     devices.png, cropped to its visible pixels and downscaled
  *                                        -> src/assets/hero/laptop-phone.webp
  *
@@ -124,7 +125,10 @@ async function captureScreen(pathname, viewport, dest) {
   writeFileSync(dest, png);
 }
 
-/** Opens a scene page and waits for its PNG data URL. */
+/**
+ * Opens a scene page and waits for its PNG data URL. A scene drawn mirror-image (devices.html's
+ * `LAYOUT.facing`) is flipped left to right here, which is lossless.
+ */
 async function renderScene(path, size) {
   const context = await servingContext();
   const page = await context.newPage();
@@ -135,13 +139,15 @@ async function renderScene(path, size) {
   await page.waitForFunction(() => window.__rendered || window.__renderError, null, {
     timeout: 180_000,
   });
-  const { data, error } = await page.evaluate(() => ({
+  const { data, error, mirrored } = await page.evaluate(() => ({
     data: window.__rendered,
     error: window.__renderError,
+    mirrored: window.__mirrored === true,
   }));
   await context.close();
   if (error) throw new Error(`${path}: ${error}`);
-  return Buffer.from(data.split(',')[1], 'base64');
+  const png = Buffer.from(data.split(',')[1], 'base64');
+  return mirrored ? sharp(png).flop().png().toBuffer() : png;
 }
 
 /**

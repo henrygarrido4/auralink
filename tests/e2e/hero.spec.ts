@@ -168,7 +168,8 @@ test('one labelled benefit chip circles the devices', async ({ page }) => {
     'nothing to focus',
   ).toHaveCount(0);
 
-  // Clockwise from the right: the places the service chips used, one benefit in each.
+  // Clockwise from the right, one benefit in each place: the mirror of the order beside the
+  // right-facing devices, since the devices turned to the left.
   // One evaluate on the frame: Firefox crashes on evaluateAll from this named region.
   const order = await frame.evaluate((frame) =>
     Array.from(
@@ -177,12 +178,12 @@ test('one labelled benefit chip circles the devices', async ({ page }) => {
     ),
   );
   expect(order).toEqual([
-    'new-subscribers',
-    'time-saved',
-    'repeat-customers',
     'more-bookings',
-    'more-sales',
+    'repeat-customers',
+    'time-saved',
+    'new-subscribers',
     'new-inquiries',
+    'more-sales',
   ]);
 
   // Each chip shows its benefit's icon and its label, word for word, and nothing else.

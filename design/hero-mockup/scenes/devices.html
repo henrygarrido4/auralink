@@ -5,9 +5,11 @@
     <title>Hero mockup: laptop and phone</title>
     <!--
       The home hero's device composition: a silver laptop in three-quarter view and an upright
-      phone to its right, showing the stored desktop and mobile screenshots, on a
+      phone beside it, showing the stored desktop and mobile screenshots, on a
       transparent background with soft grounding shadows. Rendered by ../render.mjs.
-      The devices are generic: no maker's logo, notch, or trade dress.
+      The devices are generic: no maker's logo, notch, or trade dress. The scene is modelled
+      turned to the right, with the phone at the laptop's right; LAYOUT.facing turns the
+      image to the left.
     -->
     <script type="importmap">
       {
@@ -45,6 +47,16 @@
 
       /** Composition. Angles in degrees; lengths in centimetres. */
       const LAYOUT = {
+        /**
+         * Which way the devices turn in the image. Everything below models them turned to the
+         * right: the camera at the laptop's front left, the phone at its right, the key light
+         * from the upper left. 'left' (the owner's request, 2026-11-22) renders that same scene
+         * with the screens and the keyboard drawn mirror-image, and render.mjs flips the frame:
+         * the right-facing image's exact mirror, shading and shadows included, with the pages
+         * and the keys reading the right way. The ports and the phone's buttons stay on the
+         * sides the camera sees.
+         */
+        facing: 'left',
         cameraAzimuth: -34,
         cameraElevation: 23,
         cameraDistance: 120,
@@ -72,6 +84,8 @@
       // Exploration: `?layout={"phone":{"x":20,"z":0,"extraYaw":10}}` overrides LAYOUT keys.
       const overrides = new URLSearchParams(location.search).get('layout');
       if (overrides) Object.assign(LAYOUT, JSON.parse(overrides));
+      /** The scene is drawn for a frame that render.mjs flips; see LAYOUT.facing. */
+      const mirrored = LAYOUT.facing === 'left';
       const PHONE = { width: 7.16, height: 14.76, depth: 0.8 };
       const LEGEND_FONT =
         'https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.0/files/inter-latin-500-normal.woff2';
@@ -89,6 +103,13 @@
           loadTexture(renderer, '/out/screen-desktop.png'),
           loadTexture(renderer, '/out/screen-mobile.png'),
         ]);
+        // Pages drawn back to front read the right way once the frame is flipped.
+        if (mirrored) {
+          for (const screen of [desktopScreen, mobileScreen]) {
+            screen.repeat.x = -1;
+            screen.offset.x = 1;
+          }
+        }
 
         const aluminium = new THREE.MeshPhysicalMaterial({
           color: '#d3d5d8',
@@ -278,6 +299,9 @@
 
           const keyboardBack = -D / 2 + 1.5;
           const keyboard = buildKeyboard(T, keyboardBack);
+          // Mirrored about the laptop's centre line, layout and legends both, for the flipped
+          // frame: esc stays top left and the arrows bottom right.
+          if (mirrored) keyboard.group.scale.x = -1;
           group.add(keyboard.group);
 
           // Trackpad: a glass-smooth panel framed by a thin chamfer line.
@@ -526,7 +550,7 @@
         softContact.update([ground, tightContact.group]);
         tightContact.update([ground, softContact.group]);
         renderer.render(scene, camera);
-        publish(renderer);
+        publish(renderer, { mirrored });
       } catch (error) {
         publishError(error);
       }

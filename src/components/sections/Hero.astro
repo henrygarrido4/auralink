@@ -91,13 +91,14 @@ const buttonClass =
      * around the image, less 12px above it (the 3rem gap under the buttons when stacked, the top
      * padding from lg) and, below it, less 36px of the bottom padding on phones and 20px from
      * sm. The names of the lowest icons hang into what is left, so change these with that gap
-     * and those paddings. The first icon rests 5 degrees past three o'clock and the rest follow
-     * every 60. Only a narrow window, about 2 to 10 degrees, keeps every icon clear of the
-     * laptop and the phone at every width. tests/e2e/hero.spec.ts checks the icons and their
-     * labels against the image; a new image needs both tuned again.
+     * and those paddings. The first icon rests 5 degrees above three o'clock and the rest follow
+     * every 60. Only a narrow window, about -10 to -2 degrees, keeps every icon clear of the
+     * laptop and the phone at every width: the mirror of 2 to 10, the window while the devices
+     * faced right. tests/e2e/hero.spec.ts checks the icons and their labels against the image;
+     * a new image needs both tuned again.
      */}
     <ServiceOrbit
-      start={5}
+      start={-5}
       class="mx-auto w-full max-w-2xl min-w-0 [--orbit-above:2.25rem] [--orbit-below:2.75rem] sm:[--orbit-below:4.75rem] lg:mx-0 lg:max-w-none lg:basis-11/20 lg:[--orbit-above:3.25rem] lg:[--orbit-below:5.75rem]"
     >
       <Picture
