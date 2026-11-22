@@ -44,19 +44,43 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : und
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="only light" />
     {/*
-      Google Tag Manager, container GTM-PVBR2FJZ (the owner's decision, 2026-11-21): Google's
-      current install snippet as given, `is:inline` so Astro leaves both tags as they are, and
-      `arguments` kept as written, since gtag.js tells its commands from other dataLayer pushes by
-      that object (eslint.config.js lifts prefer-rest-params for this file's scripts). Tags are
-      configured in the container, not here (docs/architecture.md, "Analytics").
+      Google Tag Manager, container GTM-PVBR2FJZ (the owner's decision, 2026-11-21): the
+      `dataLayer` and `gtag()` lines of Google's install snippet as given, `is:inline` so Astro
+      leaves the script as it is and `gtag` stays global, and `arguments` kept as written, since
+      gtag.js tells its commands from other dataLayer pushes by that object (eslint.config.js lifts
+      prefer-rest-params for this file's scripts). The container script is not in the markup: it
+      is added at the visitor's first pointer movement, press, key, touch, or scroll, or three
+      seconds after `load`, whichever comes first (the owner's decision, 2026-11-22), so that it,
+      and the GA4 and Meta scripts it loads on the live site, about 500 KB in all, no longer arrive
+      before the hero image is shown and count toward its LCP in PageSpeed Insights, which never
+      moves a pointer. Pushes made before then, the lead signal among them
+      (src/lib/lead-tracking.ts), wait in the array and are read when the container loads. Tags,
+      the Meta pixel's base code included, are configured in the container, not here
+      (docs/architecture.md, "Analytics").
     */}
-    <script is:inline async src="https://www.googletagmanager.com/gtm.js?id=GTM-PVBR2FJZ"></script>
     <script is:inline>
       window.dataLayer = window.dataLayer || [];
       function gtag() {
         dataLayer.push(arguments);
       }
       gtag('js', new Date());
+      (() => {
+        const wake = ['mousemove', 'pointerdown', 'keydown', 'touchstart', 'scroll'];
+        let loaded = false;
+        const loadTagManager = () => {
+          if (loaded) return;
+          loaded = true;
+          wake.forEach((type) => window.removeEventListener(type, loadTagManager));
+          const script = document.createElement('script');
+          script.async = true;
+          script.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-PVBR2FJZ';
+          document.head.appendChild(script);
+        };
+        wake.forEach((type) =>
+          window.addEventListener(type, loadTagManager, { once: true, passive: true }),
+        );
+        window.addEventListener('load', () => setTimeout(loadTagManager, 3000));
+      })();
     </script>
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
