@@ -165,10 +165,7 @@ test('three cards share a row from lg, the introduction takes the first of four 
   ).toBeLessThanOrEqual(1);
 });
 
-test('a card grows its screenshot and fills its arrow box under the pointer, fills the box and shows a ring on focus, and transitions nothing on load', async ({
-  page,
-  browserName,
-}) => {
+test('nothing in the selected work section transitions on load', async ({ page }) => {
   await page.addInitScript(() => {
     const runs: string[] = [];
     Object.assign(window, { workRuns: runs });
@@ -180,7 +177,10 @@ test('a card grows its screenshot and fills its arrow box under the pointer, fil
       true,
     );
   });
-  // Tall enough to have the section on screen from the first frame.
+  // Tall enough to have the section on screen from the first frame. The pointer and keyboard
+  // checks have a page of their own: in a phone profile, three device pixels to the CSS pixel,
+  // this window is a 3840 by 27000 pixel surface, and after it shrank WebKit on Linux drew no
+  // new frame for seconds, so the arrow box's 0.3s fill outlasted the poll (CI, 2026-11-22).
   await page.setViewportSize({ width: 1280, height: 9000 });
   await page.goto('/');
   await page.evaluate(
@@ -190,8 +190,14 @@ test('a card grows its screenshot and fills its arrow box under the pointer, fil
     await page.evaluate(() => (window as unknown as { workRuns: string[] }).workRuns),
     'no transition on load',
   ).toEqual([]);
+});
 
+test('a card grows its screenshot and fills its arrow box under the pointer, and fills the box and shows a ring on focus', async ({
+  page,
+  browserName,
+}) => {
   await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
   const card = cards(page).first().getByRole('link');
   const screenshot = card.locator('img');
   const scale = () => screenshot.evaluate((img) => getComputedStyle(img).scale);
@@ -203,8 +209,11 @@ test('a card grows its screenshot and fills its arrow box under the pointer, fil
   const primary = await resolve(page, 'var(--color-primary)');
   await expect(screenshot).toHaveCSS('scale', 'none');
   expect(await fill(), 'the arrow box rests white').toBe(white);
+  // In view and still before the pointer or the keyboard acts (scroll.ts). The fills below need
+  // frames, and in a phone profile WebKit on Linux drew them seconds apart while the hero's load
+  // animations were on screen (a container throttled like CI, 2026-11-22).
+  await scrollToRest(card);
   if (await page.evaluate(() => matchMedia('(hover: hover)').matches)) {
-    await scrollToRest(card);
     await card.hover();
     await expect.poll(scale).toBe('1.03');
     await expect.poll(fill, 'the arrow box fills under the pointer').toBe(primary);

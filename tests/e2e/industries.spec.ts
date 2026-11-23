@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { expect, test, type Page } from './fixtures';
 import { industryHref } from '../../src/data/industry-pages';
 import { contactRoutes, industries } from '../../src/data/site';
+import { scrollToRest } from './scroll';
 
 /**
  * Home page "Who we work with" (src/components/sections/WhoWeWorkWith.astro), after Why Auralink
@@ -183,9 +184,19 @@ const coloursOf = ({
   icon: number[];
 }) => ({ fill, underline, ink, icon });
 
+/** One fade of a cell, read in the task of the pointer movement that started it. */
+interface DirectoryFade {
+  /** The cell's id. */
+  cell: string;
+  /** Every transition the movement started on the cell. */
+  runs: { prop: string; duration: number; easing: string }[];
+  /** The fill and the icon's colour halfway along the fade's own clock. */
+  mid: string;
+  iconMid: string;
+}
+
 interface DirectoryWindow extends Window {
-  directoryRuns: { prop: string; duration: number; easing: string }[][];
-  directoryMids: { start: string; mid: string; iconStart: string; iconMid: string }[];
+  directoryFades: DirectoryFade[];
   directoryEnds: number[];
 }
 
@@ -669,65 +680,68 @@ test.describe('the hover', () => {
     }) => {
       await page.goto('/');
       test.skip(!(await canHover(page)), 'Touch screens have no hover; nothing fades.');
+      const { rest, active } = await directoryLooks(page);
+      const automotive = cells(page).nth(NAMES.indexOf('Automotive'));
+      // Scrolled and still before the pointer arrives, so the slow frames that follow a scroll
+      // come before the fade rather than during it (scroll.ts).
+      await scrollToRest(automotive);
       await page.evaluate(() => {
-        const runs: { prop: string; duration: number; easing: string }[][] = [];
-        const mids: { start: string; mid: string; iconStart: string; iconMid: string }[] = [];
+        const fades: DirectoryFade[] = [];
         const ends: number[] = [];
-        Object.assign(window, { directoryRuns: runs, directoryMids: mids, directoryEnds: ends });
-        const cellOf = (target: EventTarget | null) =>
-          target instanceof HTMLElement && target.matches('#who-we-work-with li') ? target : null;
-        document.addEventListener(
-          'transitionrun',
-          (event) => {
-            const item = cellOf(event.target);
-            if (!item || event.propertyName !== '--directory-fill') return;
-            const icon = item.querySelector('svg');
-            if (!icon) return;
-            const start = getComputedStyle(item).backgroundColor;
-            const iconStart = getComputedStyle(icon).color;
-            runs.push(
-              item.getAnimations().flatMap((anim) => {
-                if (!(anim instanceof CSSTransition) || !anim.effect) return [];
-                const { duration, easing } = anim.effect.getTiming();
-                return [
-                  {
-                    prop: anim.transitionProperty,
-                    duration: typeof duration === 'number' ? duration : -1,
-                    easing: String(easing),
-                  },
-                ];
-              }),
-            );
-            // Sample once the fade's own clock is past 70ms. A fixed timeout can run before
-            // the first interpolated frame, so the colour still reads as the start.
-            const sampleMid = () => {
-              const transition = item
+        const seen = new WeakSet<Animation>();
+        Object.assign(window, { directoryFades: fades, directoryEnds: ends });
+        /*
+         * Each fade is read in the task of the pointer movement that starts it, never in a later
+         * frame. WebKit starts a transition's clock at the style change but reports it
+         * (`transitionrun`) with the next frame, and on a busy machine that frame comes 100 ms or
+         * more later, when the 240ms fade is far along or over: the colour read on the event was
+         * already mid-fade, and a frame callback asked for there ran in the same frame and read
+         * the same colour (desktop WebKit in CI, 2026-11-19 to 2026-11-22). `getAnimations()`
+         * brings the style up to date, which starts the cell's transitions at once. Each is put
+         * halfway along its own clock, read, and put back, all in this task, so nothing is
+         * painted in between and the fade the visitor sees is untouched.
+         */
+        window.addEventListener(
+          'mousemove',
+          () => {
+            for (const item of document.querySelectorAll<HTMLElement>('#who-we-work-with li')) {
+              const transitions = item
                 .getAnimations()
-                .find(
-                  (anim): anim is CSSTransition =>
-                    anim instanceof CSSTransition && anim.transitionProperty === '--directory-fill',
-                );
-              const now = transition?.currentTime;
-              if (typeof now !== 'number' || now < 70) {
-                requestAnimationFrame(sampleMid);
-                return;
-              }
-              mids.push({
-                start,
-                mid: getComputedStyle(item).backgroundColor,
-                iconStart,
-                iconMid: getComputedStyle(icon).color,
+                .filter((anim): anim is CSSTransition => anim instanceof CSSTransition);
+              const fill = transitions.find(
+                (anim) => anim.transitionProperty === '--directory-fill',
+              );
+              const icon = item.querySelector('svg');
+              if (!fill || !icon || seen.has(fill)) continue;
+              seen.add(fill);
+              const runs = transitions.map((anim) => {
+                const { duration, easing } = anim.effect!.getTiming();
+                return {
+                  prop: anim.transitionProperty,
+                  duration: typeof duration === 'number' ? duration : -1,
+                  easing: String(easing),
+                };
               });
-            };
-            requestAnimationFrame(sampleMid);
+              const resume = transitions.map((anim) => anim.currentTime);
+              transitions.forEach((anim, index) => {
+                anim.currentTime = runs[index].duration / 2;
+              });
+              const mid = getComputedStyle(item).backgroundColor;
+              const iconMid = getComputedStyle(icon).color;
+              transitions.forEach((anim, index) => {
+                anim.currentTime = resume[index];
+              });
+              fades.push({ cell: item.id, runs, mid, iconMid });
+            }
           },
           true,
         );
         document.addEventListener(
           'transitionend',
           (event) => {
-            if (!cellOf(event.target) || event.propertyName !== '--directory-fill') return;
-            ends.push(event.elapsedTime);
+            const target = event.target;
+            if (!(target instanceof HTMLElement) || !target.matches('#who-we-work-with li')) return;
+            if (event.propertyName === '--directory-fill') ends.push(event.elapsedTime);
           },
           true,
         );
@@ -736,23 +750,23 @@ test.describe('the hover', () => {
         page.evaluate(() => {
           const recorded = window as unknown as DirectoryWindow;
           return {
-            mids: recorded.directoryMids.length,
+            fades: recorded.directoryFades.length,
             ends: recorded.directoryEnds.length,
           };
         });
-      const automotive = cells(page).nth(NAMES.indexOf('Automotive'));
       await automotive.hover();
-      await expect.poll(trace, { message: 'the fade in finishes' }).toEqual({ mids: 1, ends: 1 });
+      await expect.poll(trace, { message: 'the fade in finishes' }).toEqual({ fades: 1, ends: 1 });
       await page.mouse.move(0, 0);
-      await expect.poll(trace, { message: 'the fade out finishes' }).toEqual({ mids: 2, ends: 2 });
-      const { runs, mids, ends } = await page.evaluate(() => {
+      await expect.poll(trace, { message: 'the fade out finishes' }).toEqual({ fades: 2, ends: 2 });
+      const { fades, ends } = await page.evaluate(() => {
         const recorded = window as unknown as DirectoryWindow;
-        return {
-          runs: recorded.directoryRuns,
-          mids: recorded.directoryMids,
-          ends: recorded.directoryEnds,
-        };
+        return { fades: recorded.directoryFades, ends: recorded.directoryEnds };
       });
+      const id = await automotive.getAttribute('id');
+      expect(
+        fades.map(({ cell }) => cell),
+        'Automotive fades in, then out, and no other cell fades',
+      ).toEqual([id, id]);
       const fade = [
         { prop: '--directory-fill', duration: 240, easing: 'ease' },
         { prop: '--directory-ink', duration: 240, easing: 'ease' },
@@ -760,18 +774,29 @@ test.describe('the hover', () => {
       ];
       const byName = (list: { prop: string; duration: number; easing: string }[]) =>
         [...list].sort((a, b) => a.prop.localeCompare(b.prop));
-      expect(runs.map(byName), 'entering and leaving each fade the same three properties').toEqual([
-        byName(fade),
-        byName(fade),
-      ]);
+      expect(
+        fades.map(({ runs }) => byName(runs)),
+        'entering and leaving each fade the same three properties',
+      ).toEqual([byName(fade), byName(fade)]);
       expect(ends, 'both directions run for 240ms').toHaveLength(2);
       // Firefox reports 240ms as 0.23999999463558197s. That is still 240ms.
       for (const elapsed of ends) expect(elapsed).toBeCloseTo(0.24, 3);
-      for (const sample of mids) {
-        expect(sample.mid, 'the fill is between its two colours').not.toBe(sample.start);
-        expect(sample.iconMid, 'the icon colour is between its two colours').not.toBe(
-          sample.iconStart,
-        );
+      // Halfway, each colour is neither end, compared as painted bytes, since engines write an
+      // interpolated colour in another notation (`oklab(…)`) than the stylesheet's.
+      const halfway = await paint(
+        page,
+        fades.flatMap(({ mid, iconMid }) => [mid, iconMid]),
+      );
+      for (const [index, direction] of ['in', 'out'].entries()) {
+        const [fill, icon] = halfway.slice(index * 2, index * 2 + 2);
+        for (const end of [rest, active]) {
+          expect(fill, `fading ${direction}, the fill is between its two colours`).not.toEqual(
+            end.fill,
+          );
+          expect(icon, `fading ${direction}, the icon is between its two colours`).not.toEqual(
+            end.icon,
+          );
+        }
       }
     });
 
