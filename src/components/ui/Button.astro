@@ -7,14 +7,16 @@ import type { HTMLAttributes } from 'astro/types';
  * action beside a primary one, is a near-black pill outline on a transparent fill, which fills
  * near-black with a white label under the pointer. `neutral` is a flat near-black pill with a
  * light label, the same radius as the other buttons, for a call to action on the primary yellow,
- * where a yellow button would not stand out. A link by default; without an `href` it is a
- * placeholder for a page that has not shipped. Pass `type` to render a `<button>`.
+ * where a yellow button would not stand out. `inverse` is the secondary for a near-black band: a
+ * white pill outline on a transparent fill, which fills white with the near-black label under the
+ * pointer. A link by default; without an `href` it is a placeholder for a page that has not
+ * shipped. Pass `type` to render a `<button>`.
  */
 interface Props extends Omit<HTMLAttributes<'a'>, 'type'> {
   /** Renders a `<button>` of this type instead of a link. */
   type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'neutral';
+  variant?: 'primary' | 'secondary' | 'neutral' | 'inverse';
   size?: 'md' | 'lg';
   /** Fill the width of the container. */
   block?: boolean;
@@ -54,10 +56,21 @@ const secondary =
  */
 const neutral = 'btn-neutral bg-none shadow-none text-shadow-none active:translate-none';
 
+/**
+ * The secondary mirrored for a near-black band (the home hero, 2026-11-22): daisyUI's outline in
+ * white (`--btn-color`), transparent with a white label and 1px border at rest, and filled white
+ * with the theme's `secondary` near-black as its label (`--btn-fg`) under the pointer. The same
+ * utilities as the secondary's keep that fill and border at exactly white, which daisyUI darkens on
+ * hover, and remove its shadows and its half-pixel shift on press.
+ */
+const inverse =
+  'btn-outline [--btn-color:var(--color-base-100)] [--btn-fg:var(--color-secondary)] shadow-none text-shadow-none hover:border-base-100 hover:bg-base-100 active:translate-none';
+
 const variants = {
   primary: 'btn-primary btn-lit rounded-full',
   secondary: `${secondary} rounded-full`,
   neutral: `${neutral} rounded-full`,
+  inverse: `${inverse} rounded-full`,
 };
 
 const Tag = type ? 'button' : 'a';

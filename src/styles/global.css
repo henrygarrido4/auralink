@@ -89,23 +89,6 @@
    * and the `sizes` of the hero and introduction images are worked out from it: change them with it.
    */
   --container-site: 88rem;
-
-  /*
-   * Pencil underline (home hero): one stroke drawn left to right after a short pause, played once.
-   * The path sets pathLength="1" and stroke-dasharray="1 1.1": offset 1.02 hides it completely
-   * (the gap is longer than the path, so no round cap shows as a stray dot) and 0 shows all of it.
-   * Apply with `motion-safe:`, so reduced motion and no animation support show the finished line.
-   */
-  --animate-pencil-draw: pencil-draw 0.8s cubic-bezier(0.6, 0.05, 0.3, 1) 0.25s both;
-}
-
-@keyframes pencil-draw {
-  from {
-    stroke-dashoffset: 1.02;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
 }
 
 /*
@@ -778,9 +761,9 @@
 
 /*
  * Benefit orbit (home hero, src/components/ui/ServiceOrbit.astro; the owner's choice, 2026-11-18):
- * six benefit chips rest on a ring around the laptop and phone, behind them, each with its label
- * beside it (`data-orbit-name`). This utility is the geometry and the motion. The component's
- * classes are the paint, and they place the labels.
+ * six benefit chips rest on a ring around the logo's mark (the laptop and phone until
+ * 2026-11-22), behind it, each with its label beside it (`data-orbit-name`). This utility is the
+ * geometry and the motion. The component's classes are the paint, and they place the labels.
  *
  * Geometry. The frame is the wrapped content's box grown upward by --orbit-above and downward by
  * --orbit-below, the room its surroundings leave. The disc is the largest circle that fits the
@@ -793,16 +776,16 @@
  * for the arrival. It is registered, so it interpolates and the arms inherit it. The fallbacks
  * keep the chips in their resting places where @property is not supported.
  *
- * Motion. On load the glow fades in, the rings open from the centre outward, and the chips pop in
- * and swing 150 degrees into their resting places, still after 3.3s. Their labels fade in as they
- * stop, so no text travels, and all of it is over after 3.4s. The chips stay put from then on: a
- * name that travelled would slide behind the laptop. Once the outer ring has opened, a light on
- * it, a short arc of the primary colour, fades in and circles, a lap every ten seconds, for as
- * long as the page is open, pointer or not, touch screens included. It is the one thing here that
- * runs past five seconds, and nothing pauses it: the owner's decision of 2026-11-18, an exception
- * to WCAG 2.2.2 like the services strip (docs/quality-checks.md). Only its `rotate` and `opacity`
- * change, so the browser can move it without repainting. Under reduced motion none of this
- * applies: everything rests where it belongs and the light stays off.
+ * Motion. On load the rings open from the centre outward, and the chips pop in and swing 150
+ * degrees into their resting places, still after 3.3s. Their labels fade in as they
+ * stop, so no text travels, and all of it is over after 3.4s. The chips stay put from then on, so
+ * their names never travel either. Once the outer ring has opened, a light on it, a short arc of
+ * the primary colour, fades in and circles, a lap every ten seconds, for as long as the page is
+ * open, pointer or not, touch screens included. It is the one thing here that runs past five
+ * seconds, and nothing pauses it: the owner's decision of 2026-11-18, an exception to WCAG 2.2.2
+ * like the services strip (docs/quality-checks.md). Only its `rotate` and `opacity` change, so the
+ * browser can move it without repainting. Under reduced motion none of this applies: everything
+ * rests where it belongs and the light stays off.
  */
 @utility orbit {
   & [data-orbit-frame] {
@@ -820,18 +803,13 @@
     translate: -50% -50%;
   }
 
-  & [data-orbit-glow],
   & [data-orbit-ring],
   & [data-orbit-light],
   & [data-orbit-track] {
     position: absolute;
   }
 
-  /* The glow fades out just inside the ring. The inner rings are fractions of the disc. */
-  & [data-orbit-glow] {
-    inset: 6%;
-  }
-
+  /* The inner rings are fractions of the disc. */
   & [data-orbit-ring='inner'] {
     inset: 29%;
   }
@@ -921,17 +899,13 @@
   @supports (paint-order: stroke fill) {
     @media not (forced-colors: active) {
       & [data-orbit-name] {
-        -webkit-text-stroke: 4px var(--color-base-200);
+        -webkit-text-stroke: 4px var(--color-neutral);
         paint-order: stroke fill;
       }
     }
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    & [data-orbit-glow] {
-      animation: orbit-fade 1.2s ease-out 0.1s both;
-    }
-
     & [data-orbit-ring] {
       animation: orbit-ring 1s cubic-bezier(0.22, 1, 0.36, 1) both;
     }

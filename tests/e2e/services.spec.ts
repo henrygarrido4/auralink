@@ -10,7 +10,7 @@ import { serviceCardLink } from '../../src/lib/service-cards';
 
 /**
  * Home page services section (src/components/sections/Services.astro): the introduction, ending
- * with the outlined secondary call to view all services, the hero's "About us", at the same large size,
+ * with the outlined secondary call to view all services, at the introduction's button's large size,
  * and one card (a tile) per `serviceCards` entry, laid out after the Hub2B reference: from xl a
  * four-column grid with the introduction in its first two cells, two tiles beside it and four
  * below. The introduction and everything on the cards are left-aligned at every width. Under the
@@ -265,7 +265,8 @@ test('the introduction ends with the outlined call to view all services', async 
   await expect(cta, 'the outlined secondary button').toHaveClass(/\bbtn-secondary\b/);
   await expect(cta).toHaveClass(/\bbtn-outline\b/);
   await expect(region.locator('.aura'), 'no border light').toHaveCount(0);
-  // The same outline as the hero's "About us": transparent, near-black label and border.
+  // The secondary outline: transparent, with a near-black label and 1px border. (The hero's
+  // "About us", once the model here, is its mirror for the near-black band since 2026-11-22.)
   const look = (element: HTMLElement) => {
     const style = getComputedStyle(element);
     return {
@@ -275,8 +276,23 @@ test('the introduction ends with the outlined call to view all services', async 
       borderTopWidth: style.borderTopWidth,
     };
   };
-  const heroOutline = page.getByRole('link', { name: 'About us' });
-  expect(await cta.evaluate(look)).toEqual(await heroOutline.evaluate(look));
+  const secondary = await page.evaluate(() => {
+    const probe = document.createElement('i');
+    document.body.append(probe);
+    const resolve = (value: string) => {
+      probe.style.color = value;
+      return getComputedStyle(probe).color;
+    };
+    const colours = { ink: resolve('var(--color-secondary)'), none: resolve('transparent') };
+    probe.remove();
+    return colours;
+  });
+  expect(await cta.evaluate(look)).toEqual({
+    color: secondary.ink,
+    backgroundColor: secondary.none,
+    borderTopColor: secondary.ink,
+    borderTopWidth: '1px',
+  });
   // The large size, the same as the introduction's outlined button.
   const introductionCta = page.getByRole('link', { name: aboutCta.label, exact: true });
   const buttonSize = (element: HTMLElement) => {

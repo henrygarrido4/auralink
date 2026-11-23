@@ -1,22 +1,25 @@
 ---
-import { Picture } from 'astro:assets';
-import devices from '@/assets/hero/laptop-phone.webp';
+import Mark from '@/assets/aura-hero.svg';
 import Button from '@/components/ui/Button.astro';
 import Eyebrow from '@/components/ui/Eyebrow.astro';
-import PencilUnderline from '@/components/ui/PencilUnderline.astro';
 import ServiceOrbit from '@/components/ui/ServiceOrbit.astro';
 import { contactRoutes, primaryCta } from '@/data/site';
 
 /**
- * Home page hero: positioning copy beside the laptop-and-phone image. The image is rendered from
- * the editable sources in design/hero-mockup/ (see its README). Two things move on load, once
- * each: the pencil underline under "should, too", and the benefit icons, which swing into
- * place on a ring around the devices, where their labels fade in (ServiceOrbit; the owner's
- * choices, 2026-11-18). After that the icons stay put, and a light keeps circling their ring,
- * pointer or not (owner, 2026-11-18). The primary button's aura stays unlit until the pointer or
- * keyboard focus reaches it, then fades and circles like the navbar's. When they leave it fades
- * out and keeps its place, so the next visit continues from there. The buttons themselves change
- * colour at once, without transitions.
+ * Home page hero: positioning copy beside the logo's mark at the centre of the benefit ring, on
+ * the navbar's near-black, so the two read as one masthead. The owner's brief of 2026-11-22: the
+ * yellow mark on the right with the rings, after eylercreative.com, which shows its own mark that
+ * way; a wider copy column; a black band; and "should, too." in the primary yellow in place of
+ * the pencil underline that was drawn under it. The mark is the owner's file
+ * (src/assets/aura-hero.svg), inlined at build time and decorative.
+ *
+ * What moves on load moves once: the rings open and the benefit icons swing into place around
+ * the mark, where their labels fade in (ServiceOrbit; the owner's choices, 2026-11-18). After that
+ * the icons stay put, and a light keeps circling their ring, pointer or not (owner, 2026-11-18).
+ * The mark itself never moves. The primary button's aura stays unlit
+ * until the pointer or keyboard focus reaches it, then fades and circles like the navbar's, in the
+ * same pale light. When they leave it fades out and keeps its place, so the next visit continues
+ * from there. The buttons themselves change colour at once, without transitions.
  *
  * The section clips sideways, at its edges, which are the screen's. While the icons arrive, every
  * engine counts each one's box with its label, turned, as page width: up to 5px past the right
@@ -32,91 +35,93 @@ const { aboutHref } = Astro.props;
 
 /**
  * Hover and focus change colour at once (no transition, no movement). The focus ring is the
- * near-black neutral: daisyUI's own ring takes the button colour, and yellow on this background
- * is 1.4:1.
+ * navbar's: the band's light text colour, which neither button takes, so it reads against both.
  */
 const buttonClass =
-  'transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral';
+  'transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-content';
 ---
 
-<section aria-labelledby="hero-title" class="relative isolate overflow-x-clip bg-base-200">
-  <div class="mx-auto flex max-w-site flex-col gap-12 px-6 pt-12 pb-20 sm:pt-16 sm:pb-24 lg:flex-row lg:items-center lg:px-8 lg:pb-28">
-    {/* Copy takes about 45% of the row and the image 55%; flex-shrink absorbs the gap. */}
-    <div class="min-w-0 lg:basis-9/20">
-      <Eyebrow>Websites for growing businesses</Eyebrow>
+<section
+  aria-labelledby="hero-title"
+  class="relative isolate overflow-x-clip bg-neutral text-neutral-content"
+>
+  <div class="mx-auto flex max-w-site flex-col gap-12 px-6 py-12 sm:py-16 lg:flex-row lg:items-center lg:px-8 lg:pb-10">
+    {/*
+     * Copy takes about 55% of the row and the ring 45%; flex-shrink absorbs the gap. The bottom
+     * padding is less than the top from lg: the strip below starts with a band of this same
+     * near-black (ServiceStrip.astro), so the dark reaches further than the hero's own box.
+     */}
+    <div class="min-w-0 lg:basis-11/20">
+      <Eyebrow tone="dark">Websites for growing businesses</Eyebrow>
       {/*
        * Font size is 10% of the copy column's width, chosen so that a 17-character line ("brings
        * them back.", the earlier headline's longest) stayed on one line in Mukta bold, the heading
        * face (--font-headers). The current longest line, "Your business", is shorter and fits with
-       * room to spare. The column's width is written in viewport
-       * units: 100vw - 3rem when stacked; 45% of (100vw - 4rem), less
-       * its share of the 3rem gap, from lg; fixed from 1408px, the container's width, hence the
-       * 3.645rem cap. The 1.5rem floor only applies below 288px. Change these with the container,
-       * paddings, gap, or basis above.
+       * room to spare. The column's width is written in viewport units: 100vw - 3rem when stacked;
+       * 55% of (100vw - 4rem), less its share of the 3rem gap, from lg; fixed from 1408px, the
+       * container's width, hence the 4.455rem cap. The 1.5rem floor only applies below 288px.
+       * Change these with the container, paddings, gap, or basis above.
        * (Container units would track the column by themselves, but they restyle the copy after
        * layout, which can start transitions on load.)
-       * The bottom padding keeps the lifted underline clear of the paragraph below it.
+       * White, like the logo's wordmark in the navbar; the band's own light text is a shade greyer.
        */}
       <h1
         id="hero-title"
-        class="mt-5 pb-[0.1em] text-[clamp(1.5rem,calc(10vw-4.8px),3.5rem)] leading-[1.05] font-bold tracking-tight text-base-content lg:text-[clamp(2rem,calc(4.5vw-5.04px),3.645rem)]"
+        class="mt-5 text-[clamp(1.5rem,calc(10vw-4.8px),3.5rem)] leading-[1.05] font-bold tracking-tight text-base-100 lg:text-[clamp(2rem,calc(5.5vw-6.16px),4.455rem)]"
       >
         {/* One span per line; the explicit spaces keep the words apart in the heading's text. */}
         <span class="block">Your business</span> <span class="block">works hard.</span>{' '}
-        <span class="block">Your website</span>{' '}
-        <span class="block">
-          <span class="relative">
-            <PencilUnderline />
-            should, too
-          </span>
-          .
-        </span>
+        <span class="block">Your website</span> <span class="block text-primary">should, too.</span>
       </h1>
-      <p class="mt-4 max-w-xl text-lg leading-relaxed text-base-content/80 sm:text-xl">
+      <p class="mt-4 max-w-2xl text-lg leading-relaxed text-neutral-content/80 sm:text-xl">
         We build professional websites that make your business look established, showcase what you
         do best, and make it easier for customers to choose you.
       </p>
       {/*
-       * The primary's aura shines in this text colour: dark, so it shows on the light background.
+       * The primary's aura shines in this text colour, the band's pale light, as the navbar's does.
        * `*:relative` makes the buttons paint in page order. The aura raises the primary above static
        * siblings, and About us must stay above the primary's glow, which reaches under its border.
        */}
-      <div class="mt-10 flex flex-col gap-3 text-base-content *:relative sm:flex-row sm:items-center sm:gap-4">
+      <div class="mt-10 flex flex-col gap-3 text-neutral-content *:relative sm:flex-row sm:items-center sm:gap-4">
         <Button href={contactRoutes.page} size="lg" aura="hover" class={buttonClass}>
           {primaryCta.label}
         </Button>
-        <Button href={aboutHref} size="lg" variant="secondary" class={buttonClass}>
+        <Button href={aboutHref} size="lg" variant="inverse" class={buttonClass}>
           About us
         </Button>
       </div>
     </div>
 
     {/*
-     * Benefit badges circle the devices, each with its label. Their ring may use the room
-     * around the image, less 12px above it (the 3rem gap under the buttons when stacked, the top
-     * padding from lg) and, below it, less 36px of the bottom padding on phones and 20px from
-     * sm. The names of the lowest icons hang into what is left, so change these with that gap
-     * and those paddings. The first icon rests 5 degrees above three o'clock and the rest follow
-     * every 60. Only a narrow window, about -10 to -2 degrees, keeps every icon clear of the
-     * laptop and the phone at every width: the mirror of 2 to 10, the window while the devices
-     * faced right. tests/e2e/hero.spec.ts checks the icons and their labels against the image;
-     * a new image needs both tuned again.
+     * The mark at the centre of the benefit ring, each icon on the ring with its label. The ring
+     * fills a square as wide as its column, so the first icon can rest at three o'clock and the
+     * rest follow every 60 degrees, mirror images either side of the mark's own axis. The ring has
+     * no glow (the owner's request, 2026-11-22): the mark sits on the plain band. It is two thirds
+     * of the ring wide (larger at the owner's request the same day, from half): its wings cross the
+     * middle ring, and on a 320px screen it still keeps 13px clear of the icons at three and nine
+     * o'clock, the nearest. tests/e2e/hero.spec.ts checks the icons and their labels against the
+     * mark, the copy, and the hero's edges at every width.
      */}
     <ServiceOrbit
-      start={-5}
-      class="mx-auto w-full max-w-2xl min-w-0 [--orbit-above:2.25rem] [--orbit-below:2.75rem] sm:[--orbit-below:4.75rem] lg:mx-0 lg:max-w-none lg:basis-11/20 lg:[--orbit-above:3.25rem] lg:[--orbit-below:5.75rem]"
+      start={0}
+      class="mx-auto w-full max-w-xl min-w-0 lg:mx-0 lg:max-w-none lg:basis-9/20"
     >
-      <Picture
-        src={devices}
-        alt="Laptop and phone showing a sample heating and cooling homepage for Sableline Heating & Air"
-        formats={['avif']}
-        fallbackFormat="webp"
-        widths={[480, 640, 800, 1024, 1280, 1600]}
-        sizes="(min-width: 1408px) 713px, (min-width: 1024px) calc(55vw - 62px), (min-width: 720px) 672px, calc(100vw - 48px)"
-        loading="eager"
-        fetchpriority="high"
-        class="h-auto w-full"
-      />
+      <div class="relative aspect-square">
+        {/*
+         * The file is used as supplied. Its artwork spans y 225.8 to 1274.2 of a 1500 square, so
+         * this viewBox only trims the empty band above and below, and the mark centres on its
+         * own edges.
+         */}
+        <Mark
+          data-hero-mark
+          class="absolute top-1/2 left-1/2 h-auto w-2/3 -translate-1/2"
+          viewBox="0 225 1500 1050"
+          width="1500"
+          height="1050"
+          aria-hidden="true"
+          focusable="false"
+        />
+      </div>
     </ServiceOrbit>
   </div>
 

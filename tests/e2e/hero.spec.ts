@@ -1,30 +1,80 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, test, type Locator, type Page } from './fixtures';
 import { contactRoutes, heroBenefits, primaryCta } from '../../src/data/site';
 import { scrollToRest } from './scroll';
 
 /**
- * Home hero (src/components/sections/Hero.astro). Copy and buttons are real HTML, and the device
- * image loads eagerly with its space reserved. Two things move on load, once each. The pencil
- * underline is hidden from assistive technology and already in place under reduced motion. It is
- * drawn under "should, too" after a short pause and stays attached to its phrase at every
- * width. The benefit icons swing into place on a ring around the devices
+ * Home hero (src/components/sections/Hero.astro), on the navbar's near-black since 2026-11-22: the
+ * headline in white with its last line, "should, too.", in the primary yellow, where a pencil
+ * underline used to be drawn. Copy and buttons are real HTML. The logo's mark, the owner's file as
+ * supplied, sits at the centre of the benefit ring, decorative and still. Only the ring moves on
+ * load, once: the benefit icons swing into place around the mark
  * (src/components/ui/ServiceOrbit.astro), where their labels fade in: one chip per hero benefit,
- * the icon decorative and the label that benefit's text, both resting clear of the laptop and the
- * phone, inside the hero and off the copy, at every width. Afterwards the icons stay put. Once their
- * ring has opened a light circles it without end, pointer or not (the owner's decision), and never
- * makes the page scroll sideways.
+ * the icon decorative and the label that benefit's text, both resting clear of the mark, inside
+ * the hero and off the copy, at every width. Afterwards the icons stay put. Once their ring has
+ * opened a light circles it without end, pointer or not (the owner's decision), and never makes
+ * the page scroll sideways.
  * The primary button's aura stays unlit until the pointer reaches it, then fades and circles like
- * the navbar's and resumes where it stopped. It takes no room of its own, and never lights under
- * reduced motion.
+ * the navbar's, in the navbar's light, and resumes where it stopped. It takes no room of its own,
+ * and never lights under reduced motion. About us is the secondary mirrored for the dark band.
  */
 const HEADLINE = 'Your business works hard. Your website should, too.';
 
 const hero = (page: Page) => page.getByRole('region', { name: HEADLINE });
-const underline = (page: Page) => page.getByRole('heading', { level: 1 }).locator('svg');
 const primaryButton = (page: Page) => hero(page).getByText(primaryCta.label, { exact: true });
+const aboutButton = (page: Page) => hero(page).getByRole('link', { name: 'About us' });
 const heroAura = (page: Page) => hero(page).locator('.aura');
-const devices = (page: Page) => hero(page).getByRole('img', { name: /laptop and phone/i });
+const mark = (page: Page) => hero(page).locator('[data-hero-mark]');
 const orbit = (page: Page) => hero(page).locator('[data-orbit-frame]');
+
+/**
+ * CSS colours as the RGBA bytes a 1x1 canvas paints them in. Bytes, not computed strings, because
+ * engines write one colour in different notations. A probe resolves `var()` first, which a canvas
+ * cannot.
+ */
+const paint = (page: Page, values: string[]) =>
+  page.evaluate((colours) => {
+    const probe = document.createElement('i');
+    document.body.append(probe);
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext('2d', { willReadFrequently: true })!;
+    const bytes = colours.map((value) => {
+      probe.style.color = value;
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = getComputedStyle(probe).color;
+      context.fillRect(0, 0, 1, 1);
+      return [...context.getImageData(0, 0, 1, 1).data];
+    });
+    probe.remove();
+    return bytes;
+  }, values);
+
+/** An element's label, background, and border colours, as `paint` gives them. */
+const buttonColours = async (page: Page, button: Locator) => {
+  const { color, backgroundColor, borderTopColor } = await button.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      color: style.color,
+      backgroundColor: style.backgroundColor,
+      borderTopColor: style.borderTopColor,
+    };
+  });
+  const [label, fill, border] = await paint(page, [color, backgroundColor, borderTopColor]);
+  return { label, fill, border };
+};
+
+/** The supplied file's one path, as written. */
+const artwork = () => {
+  const file = readFileSync(join(process.cwd(), 'src/assets/aura-hero.svg'), 'utf8');
+  return {
+    paths: file.match(/<path\b/g)?.length,
+    d: /\sd="([^"]+)"/.exec(file)?.[1],
+    fill: /\sfill="([^"]+)"/.exec(file)?.[1],
+  };
+};
 
 /** The animations that bring the orbit in on load. Its `orbit-light` never ends. */
 const ORBIT_ARRIVAL = ['orbit-arrive', 'orbit-fade', 'orbit-pop', 'orbit-ring'];
@@ -153,17 +203,150 @@ test('shows the headline, the supporting copy, and both buttons', async ({ page 
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
 
-test('loads the device image eagerly with its space reserved', async ({ page }) => {
+test("sits on the navbar's near-black, the headline white with its last line in yellow", async ({
+  page,
+}) => {
   await page.goto('/');
-  const image = hero(page).getByRole('img', { name: /laptop and phone/i });
-  await expect(image).toHaveAttribute('loading', 'eager');
-  await expect(image).toHaveAttribute('fetchpriority', 'high');
-  await expect(image).toHaveAttribute('width', /^\d+$/);
-  await expect(image).toHaveAttribute('height', /^\d+$/);
-  await expect(hero(page).locator('picture source[type="image/avif"]')).toHaveCount(1);
+  const [neutral, white, primary] = await paint(page, [
+    'var(--color-neutral)',
+    'var(--color-base-100)',
+    'var(--color-primary)',
+  ]);
+  const computed = await hero(page).evaluate((section) => {
+    const heading = section.querySelector('h1')!;
+    return {
+      band: getComputedStyle(section).backgroundColor,
+      navbar: getComputedStyle(document.querySelector('header')!).backgroundColor,
+      lines: Array.from(heading.children, (line) => ({
+        text: line.textContent!.trim(),
+        colour: getComputedStyle(line).color,
+      })),
+      // The pencil underline that used to run under "should, too" (removed 2026-11-22).
+      drawings: heading.querySelectorAll('svg').length,
+    };
+  });
+  const [band, navbar] = await paint(page, [computed.band, computed.navbar]);
+  expect(band, "the band is the theme's neutral").toEqual(neutral);
+  expect(navbar, 'the navbar above it is the same colour').toEqual(neutral);
+
+  // Four lines, the first three white, the last the primary yellow, and nothing drawn under them.
+  expect(computed.lines.map((line) => line.text)).toEqual([
+    'Your business',
+    'works hard.',
+    'Your website',
+    'should, too.',
+  ]);
+  const colours = await paint(
+    page,
+    computed.lines.map((line) => line.colour),
+  );
+  expect(colours.slice(0, 3), 'the first three lines are white').toEqual([white, white, white]);
+  expect(colours[3], 'the last line is the primary yellow').toEqual(primary);
+  expect(computed.drawings, 'no underline').toBe(0);
 });
 
-test('one labelled benefit chip circles the devices', async ({ page }) => {
+test("shows the logo's mark, as supplied, large at the centre of the ring with no glow behind it, at every width", async ({
+  page,
+}) => {
+  const file = artwork();
+  expect(file.paths, 'the file is one path').toBe(1);
+  // The rings rest where they belong at once. With motion they open from 80% of their size, and
+  // the mark never moves either way (tested with motion below).
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await expect(mark(page), 'one mark').toHaveCount(1);
+  await expect(mark(page), 'decorative').toHaveAttribute('aria-hidden', 'true');
+  await expect(mark(page)).toHaveAttribute('focusable', 'false');
+
+  // The mark sits on the plain band: nothing in the ring paints a gradient, so no glow lies behind
+  // it (the owner's request, 2026-11-22). The light on the ring is drawn by a pseudo-element.
+  const painted = await orbit(page).evaluate((frame) =>
+    Array.from(frame.querySelectorAll('*'))
+      .filter((element) => getComputedStyle(element).backgroundImage !== 'none')
+      .map((element) => element.outerHTML.slice(0, 80)),
+  );
+  expect(painted, 'no glow in the ring').toEqual([]);
+
+  for (const width of [320, 390, 768, 1024, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    const drawn = await mark(page).evaluate((svg) => {
+      const view = (svg as SVGSVGElement).viewBox.baseVal;
+      const paths = svg.querySelectorAll('path');
+      const ink = paths[0].getBBox();
+      const box = svg.getBoundingClientRect();
+      const ring = (name: string) =>
+        document.querySelector(`[data-orbit-ring="${name}"]`)!.getBoundingClientRect();
+      const disc = document.querySelector('[data-orbit-disc]')!.getBoundingClientRect();
+      return {
+        paths: paths.length,
+        d: paths[0].getAttribute('d'),
+        fill: paths[0].getAttribute('fill'),
+        // How far the artwork is from each edge of the viewBox: none of it cut, and no margin
+        // left, so the mark's box is the mark.
+        margins: [
+          ink.x - view.x,
+          ink.y - view.y,
+          view.x + view.width - (ink.x + ink.width),
+          view.y + view.height - (ink.y + ink.height),
+        ],
+        offset: {
+          x: box.left + box.width / 2 - (disc.left + disc.width / 2),
+          y: box.top + box.height / 2 - (disc.top + disc.height / 2),
+        },
+        share: box.width / disc.width,
+        // The corners of the mark's box are as far from the centre as any of it reaches.
+        reach: Math.hypot(box.width, box.height) / 2,
+        middle: ring('middle').width / 2,
+        outer: ring('outer').width / 2,
+      };
+    });
+    const at = `${width}px:`;
+    expect(drawn.paths, `${at} one path`).toBe(1);
+    expect(drawn.d, `${at} the file's path, unchanged`).toBe(file.d);
+    expect(drawn.fill, `${at} the file's yellow`).toBe(file.fill);
+    for (const margin of drawn.margins) {
+      expect(margin, `${at} the viewBox ends at the artwork`).toBeGreaterThanOrEqual(0);
+      expect(margin, `${at} the viewBox ends at the artwork`).toBeLessThan(1);
+    }
+    expect(Math.abs(drawn.offset.x), `${at} centred across the ring`).toBeLessThan(1);
+    expect(Math.abs(drawn.offset.y), `${at} centred down the ring`).toBeLessThan(1);
+    // Two thirds of the ring wide (the owner asked for it larger, 2026-11-22, from half). The
+    // icons and their labels keep clear of it: tested at every width below.
+    expect(drawn.share, `${at} two thirds of the ring wide`).toBeCloseTo(2 / 3, 2);
+    expect(drawn.reach, `${at} past the middle ring`).toBeGreaterThan(drawn.middle);
+    expect(drawn.reach, `${at} inside the outer ring, where the icons ride`).toBeLessThan(
+      drawn.outer,
+    );
+  }
+
+  await expect(
+    mark(page).locator('xpath=..').locator('a, button, input, img, [tabindex]'),
+    'nothing to focus',
+  ).toHaveCount(0);
+});
+
+test('About us is the secondary mirrored for the dark band: a white outline that fills white', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const about = aboutButton(page);
+  await expect(about, 'the outlined variant').toHaveClass(/\bbtn-outline\b/);
+  const [white, secondary] = await paint(page, ['var(--color-base-100)', 'var(--color-secondary)']);
+
+  const resting = await buttonColours(page, about);
+  expect(resting.label, 'a white label').toEqual(white);
+  expect(resting.border, 'a white border').toEqual(white);
+  expect(resting.fill[3], 'no fill').toBe(0);
+
+  if (!(await hasHover(page))) return;
+  await about.hover();
+  const hovered = await buttonColours(page, about);
+  expect(hovered.fill, 'filled white').toEqual(white);
+  expect(hovered.border, 'the border stays white').toEqual(white);
+  expect(hovered.label, "the secondary's near-black label").toEqual(secondary);
+});
+
+test('one labelled benefit chip circles the mark', async ({ page }) => {
   await page.goto('/');
   const frame = orbit(page);
   // The labels are the text. The icons are decorative, and nothing can be focused.
@@ -173,8 +356,8 @@ test('one labelled benefit chip circles the devices', async ({ page }) => {
     'nothing to focus',
   ).toHaveCount(0);
 
-  // Clockwise from the right, one benefit in each place: the mirror of the order beside the
-  // right-facing devices, since the devices turned to the left.
+  // Clockwise from the right, one benefit in each place: the places they had around the laptop
+  // and phone, which the mark kept.
   // One evaluate on the frame: Firefox crashes on evaluateAll from this named region.
   const order = await frame.evaluate((frame) =>
     Array.from(
@@ -204,10 +387,11 @@ test('one labelled benefit chip circles the devices', async ({ page }) => {
     await expect(chip.locator('[data-orbit-name]'), `${benefit.label}: its label`).toHaveText(
       benefit.label,
     );
-    await expect(
-      chip.locator('[data-orbit-name] span'),
-      `${benefit.label}: at most two lines`,
-    ).toHaveCount(benefit.id === 'more-sales' ? 0 : 1);
+    // Every label is two words of ten letters or more, so each takes two lines, its last word
+    // under the rest.
+    await expect(chip.locator('[data-orbit-name] span'), `${benefit.label}: two lines`).toHaveCount(
+      1,
+    );
     await expect(chip, `${benefit.label}: nothing else`).toHaveText(benefit.label);
   }
 
@@ -236,7 +420,7 @@ test('one labelled benefit chip circles the devices', async ({ page }) => {
   ).toBe(true);
 });
 
-test('the benefit icons and their labels rest clear of the devices and the copy, inside the hero, at every width', async ({
+test('the benefit icons and their labels rest clear of the mark and the copy, inside the hero, at every width', async ({
   page,
 }) => {
   // Reduced motion shows the resting places at once. With motion only transforms and fades differ.
@@ -248,58 +432,24 @@ test('the benefit icons and their labels rest clear of the devices and the copy,
     await page.evaluate(() => document.fonts.ready);
     await expectChipsInPlace(page);
 
-    const measured = await hero(page).evaluate(async (section) => {
-      const image = section.querySelector('img')!;
-      await image.decode();
+    const measured = await hero(page).evaluate((section) => {
       const frame = section.querySelector('[data-orbit-frame]')!;
       const disc = frame.querySelector('[data-orbit-disc]')!.getBoundingClientRect();
+      const mark = section.querySelector('[data-hero-mark]')!.getBoundingClientRect();
       const hero = section.getBoundingClientRect();
-      const shown = image.getBoundingClientRect();
 
-      // The image as the browser drew it, small. Where it is opaque, a device hides the ring.
-      // Its soft shadows are far below this threshold.
-      const canvas = document.createElement('canvas');
-      canvas.width = 400;
-      canvas.height = Math.round((400 * shown.height) / shown.width);
-      const context = canvas.getContext('2d')!;
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
-      const opaqueAt = (x: number, y: number) => {
-        const column = Math.floor(((x - shown.left) / shown.width) * canvas.width);
-        const row = Math.floor(((y - shown.top) / shown.height) * canvas.height);
-        if (column < 0 || row < 0 || column >= canvas.width || row >= canvas.height) return false;
-        return data[(row * canvas.width + column) * 4 + 3] > 200;
-      };
-      /** The share of an evenly spread grid of points, within `reach` of a centre, that is hidden. */
-      const hidden = (centre: { x: number; y: number }, reach: number, round: boolean) => {
-        let points = 0;
-        let covered = 0;
-        for (let i = -4; i <= 4; i += 1) {
-          for (let j = -4; j <= 4; j += 1) {
-            const x = (i / 4) * reach;
-            const y = (j / 4) * reach;
-            if (round && Math.hypot(x, y) > reach) continue;
-            points += 1;
-            if (opaqueAt(centre.x + x, centre.y + y)) covered += 1;
-          }
-        }
-        return covered / points;
-      };
-
-      // The copy, with a little air around it: nothing of the orbit may reach into that.
+      // The copy and the mark, each with a little air around it: no icon or name may reach in.
+      const near = (box: DOMRect, other: DOMRect) =>
+        !(
+          box.right <= other.left - 8 ||
+          box.left >= other.right + 8 ||
+          box.bottom <= other.top - 8 ||
+          box.top >= other.bottom + 8
+        );
       const copy = Array.from(section.querySelector('h1')!.parentElement!.children, (element) =>
         element.getBoundingClientRect(),
       );
-      const touchesCopy = (box: DOMRect) =>
-        copy.some(
-          (text) =>
-            !(
-              box.right <= text.left - 8 ||
-              box.left >= text.right + 8 ||
-              box.bottom <= text.top - 8 ||
-              box.top >= text.bottom + 8
-            ),
-        );
+      const touchesCopy = (box: DOMRect) => copy.some((text) => near(box, text));
       const overlap = (a: DOMRect, b: DOMRect) =>
         !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
       const screen = document.documentElement.clientWidth;
@@ -309,8 +459,6 @@ test('the benefit icons and their labels rest clear of the devices and the copy,
       );
 
       return {
-        // The laptop's keyboard is at the middle of the image: proof that the sampling sees it.
-        devicesSeen: opaqueAt(shown.left + shown.width / 2, shown.top + shown.height / 2),
         // The disc is every place a chip can reach.
         discTouchesCopy: touchesCopy(disc),
         room: {
@@ -321,24 +469,11 @@ test('the benefit icons and their labels rest clear of the devices and the copy,
         },
         chips: chips.map((chip, index) => {
           const box = chip.getBoundingClientRect();
-          const centre = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
-          const icon = chip.querySelector('svg')!.getBoundingClientRect();
           const name = names[index];
-          // The name's box, sampled edge to edge: any opaque point means a device is over it.
-          let nameHidden = 0;
-          for (let i = 0; i <= 12; i += 1) {
-            for (let j = 0; j <= 6; j += 1) {
-              const x = name.left + (i / 12) * name.width;
-              const y = name.top + (j / 6) * name.height;
-              if (opaqueAt(x, y)) nameHidden += 1;
-            }
-          }
           return {
             id: chip.dataset.orbitChip,
-            // Lucide draws inside the middle 20 of its 24 units.
-            iconHidden: hidden(centre, (icon.width / 2) * (20 / 24), false),
-            chipHidden: hidden(centre, box.width / 2, true),
-            nameHidden,
+            chipNearMark: near(box, mark),
+            nameNearMark: near(name, mark),
             nameSize: parseFloat(
               getComputedStyle(chip.querySelector('[data-orbit-name]')!).fontSize,
             ),
@@ -361,7 +496,6 @@ test('the benefit icons and their labels rest clear of the devices and the copy,
       };
     });
 
-    expect(measured.devicesSeen, `${width}px: the image was sampled`).toBe(true);
     expect(measured.discTouchesCopy, `${width}px: the ring keeps off the copy`).toBe(false);
     expect(measured.room.top, `${width}px: below the navbar`).toBeGreaterThanOrEqual(8);
     expect(measured.room.bottom, `${width}px: above the hero's lower edge`).toBeGreaterThanOrEqual(
@@ -371,12 +505,8 @@ test('the benefit icons and their labels rest clear of the devices and the copy,
     expect(measured.room.right, `${width}px: inside the screen`).toBeGreaterThanOrEqual(0);
     for (const chip of measured.chips) {
       const at = `${width}px: the ${chip.id}`;
-      expect(chip.iconHidden, `${at} icon has no device over it`).toBe(0);
-      expect(
-        chip.chipHidden,
-        `${at} chip has at most a fifth tucked behind a device`,
-      ).toBeLessThanOrEqual(0.2);
-      expect(chip.nameHidden, `${at} name has no device over it`).toBe(0);
+      expect(chip.chipNearMark, `${at} chip keeps off the mark`).toBe(false);
+      expect(chip.nameNearMark, `${at} name keeps off the mark`).toBe(false);
       expect(chip.nameSize, `${at} label is large enough to read`).toBeGreaterThanOrEqual(10);
       expect(chip.nameHeight, `${at} label is at most two lines`).toBeLessThanOrEqual(
         chip.nameSize * 1.15 * 2 + 1,
@@ -394,11 +524,10 @@ test('the benefit icons and their labels rest clear of the devices and the copy,
 test.describe('motion allowed', () => {
   test.use({ reducedMotion: 'no-preference' });
 
-  test('the underline draws and the benefit icons swing into place, once each, and only the light on their ring keeps going', async ({
+  test('the benefit icons swing into place once around a still mark, and only the light on their ring keeps going', async ({
     page,
   }) => {
     await page.goto('/');
-    await expect(underline(page)).toHaveAttribute('aria-hidden', 'true');
 
     // Everything in the hero that plays by itself, still playing or already over. What waits for
     // the pointer, the primary's aura, is paused.
@@ -413,24 +542,14 @@ test.describe('motion allowed', () => {
         })),
     );
 
-    const draws = started.filter((animation) => animation.name === 'pencil-draw');
-    expect(draws, 'one underline').toHaveLength(1);
-    const [draw] = draws;
-    expect(Number(draw.delay)).toBeGreaterThanOrEqual(200);
-    expect(Number(draw.delay)).toBeLessThanOrEqual(300);
-    expect(Number(draw.duration)).toBeGreaterThanOrEqual(700);
-    expect(Number(draw.duration)).toBeLessThanOrEqual(900);
-    expect(draw.iterations, 'plays once').toBe(1);
-
     // The light on the ring is the one thing that never ends: the owner's exception to the
     // five-second limit, tested on its own below.
     const endless = started.filter((animation) => animation.end === Infinity);
     expect(endless.map((animation) => animation.name)).toEqual(['orbit-light']);
 
-    // The rest is the orbit arriving: once, and over well inside five seconds (WCAG 2.2.2).
-    const arrival = started.filter(
-      (animation) => animation.name !== 'pencil-draw' && animation.end !== Infinity,
-    );
+    // The rest is the orbit arriving: once, and over well inside five seconds (WCAG 2.2.2). The
+    // copy and the mark never move, and no underline is drawn.
+    const arrival = started.filter((animation) => animation.end !== Infinity);
     expect([...new Set(arrival.map((animation) => animation.name))].sort()).toEqual(ORBIT_ARRIVAL);
     for (const animation of arrival) {
       expect(animation.iterations, `${animation.name} plays once`).toBe(1);
@@ -456,8 +575,17 @@ test.describe('motion allowed', () => {
       expect(fades[0].delay, 'after its chip has arrived').toBeGreaterThanOrEqual(2500);
     }
 
-    // Once drawn, the line stays. Once arrived, every icon rests in its place, upright and solid,
-    // with its name showing.
+    const moving = await hero(page).evaluate(
+      (section) =>
+        section
+          .getAnimations({ subtree: true })
+          .map((animation) => (animation.effect as KeyframeEffect | null)?.target)
+          .filter((target): target is Element => target instanceof Element)
+          .filter((target) => !target.closest('[data-orbit-frame], .aura')).length,
+    );
+    expect(moving, 'nothing outside the ring and the aura moves').toBe(0);
+
+    // Once arrived, every icon rests in its place, upright and solid, with its name showing.
     await hero(page).evaluate(async (section) => {
       const ending = section
         .getAnimations({ subtree: true })
@@ -465,7 +593,6 @@ test.describe('motion allowed', () => {
         .filter((animation) => Number(animation.effect?.getComputedTiming().endTime) < Infinity);
       await Promise.all(ending.map((animation) => animation.finished));
     });
-    await expect(underline(page).locator('path')).toHaveCSS('stroke-dashoffset', '0px');
     await expectChipsInPlace(page);
     for (const part of await orbit(page).locator('[data-orbit-chip], [data-orbit-name]').all()) {
       await expect(part).toHaveCSS('opacity', '1');
@@ -518,12 +645,12 @@ test.describe('motion allowed', () => {
       .toBeGreaterThan(before);
     await expectChipsInPlace(page);
 
-    // A pointer over the devices and away again, or a tap on touch, neither stops nor dims it.
+    // A pointer over the mark and away again, or a tap on touch, neither stops nor dims it.
     if (await hasHover(page)) {
-      await devices(page).hover();
+      await mark(page).hover();
       await page.mouse.move(0, 400);
     } else {
-      await devices(page).tap();
+      await mark(page).tap();
     }
     const after = await orbitLight(page);
     expect(after.playing, 'still circling').toBe(true);
@@ -623,6 +750,11 @@ test.describe('motion allowed', () => {
         .filter((animation) => animation.name === 'aura')
         .map(({ name, timing }) => ({ name, timing }));
     expect(light(hovered)).toEqual(light(navbar));
+    // In the navbar's light too: on the near-black band both take the band's light text colour.
+    const glow = (target: Locator) => target.evaluate((el) => getComputedStyle(el).color);
+    expect(await glow(aura), "the navbar's light").toBe(
+      await glow(page.getByRole('banner').locator('.aura')),
+    );
     const carried = (await auraSpin(aura)).time ?? 0;
 
     // The pointer leaves: the light fades out and the spin stays paused where it is.
@@ -649,21 +781,14 @@ test.describe('motion allowed', () => {
 test.describe('reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
 
-  test('shows the finished underline without animating', async ({ page }) => {
-    await page.goto('/');
-    const path = underline(page).locator('path');
-    expect(await path.evaluate((el) => el.getAnimations().length)).toBe(0);
-    await expect(path).toHaveCSS('stroke-dashoffset', '0px');
-  });
-
   test('the benefit icons and their labels rest in place, and no light comes, even under the pointer', async ({
     page,
   }) => {
     await page.goto('/');
-    if (await hasHover(page)) await devices(page).hover();
+    if (await hasHover(page)) await mark(page).hover();
     expect(
-      await orbit(page).evaluate((frame) => frame.getAnimations({ subtree: true }).length),
-      'no arrival, no fade, and no light',
+      await hero(page).evaluate((section) => section.getAnimations({ subtree: true }).length),
+      'no arrival, no fade, and no light: nothing in the hero animates',
     ).toBe(0);
     await expectChipsInPlace(page);
     for (const part of await orbit(page).locator('[data-orbit-chip], [data-orbit-name]').all()) {
@@ -714,33 +839,23 @@ test("the primary's aura takes no room of its own", async ({ page }) => {
   expect(row.about.x - (row.primary.x + row.primary.width)).toBeCloseTo(row.gap.column, 1);
 });
 
-test('the underline stays attached to its phrase at every width', async ({ page }) => {
-  for (const width of [360, 768, 1024, 1440]) {
+test('the headline keeps its four lines at every width', async ({ page }) => {
+  for (const width of [320, 360, 768, 1024, 1280, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
+    // Measured in Mukta, the heading face, not in the fallback a browser shows until it loads.
     await page.evaluate(() => document.fonts.ready);
-    const geometry = await underline(page).evaluate((svg) => {
-      const phrase = svg.parentElement!.getBoundingClientRect();
-      const line = svg.querySelector('path')!.getBoundingClientRect();
-      const fontSize = parseFloat(getComputedStyle(svg.parentElement!).fontSize);
-      return { phrase, line, fontSize, viewport: document.documentElement.clientWidth };
+    const lines = await hero(page).evaluate((section) => {
+      const heading = section.querySelector('h1')!;
+      const fontSize = parseFloat(getComputedStyle(heading).fontSize);
+      return Array.from(heading.children, (line) => ({
+        text: line.textContent!.trim(),
+        // A line that wrapped would be two line-heights tall.
+        lines: line.getBoundingClientRect().height / (fontSize * 1.05),
+      }));
     });
-    const { phrase, line, fontSize, viewport } = geometry;
-    // Spans the phrase, sits under it (not through the letters), and stays on screen.
-    expect(Math.abs(line.left - phrase.left), `${width}px: starts at the phrase`).toBeLessThan(
-      0.1 * fontSize,
-    );
-    expect(Math.abs(line.right - phrase.right), `${width}px: ends at the phrase`).toBeLessThan(
-      0.1 * fontSize,
-    );
-    // Mukta's line box is deeper than the Latin letters, and the stroke is lifted 0.2em into that
-    // spare descent. Its rising right end is the top of the box, still below the g.
-    expect(line.top, `${width}px: below the letters`).toBeGreaterThan(
-      phrase.bottom - 0.25 * fontSize,
-    );
-    expect(line.bottom, `${width}px: close to the phrase`).toBeLessThan(
-      phrase.bottom + 0.3 * fontSize,
-    );
-    expect(line.right, `${width}px: inside the viewport`).toBeLessThanOrEqual(viewport);
+    for (const line of lines) {
+      expect(line.lines, `${width}px: "${line.text}" on one line`).toBeLessThan(1.5);
+    }
   }
 });

@@ -7,9 +7,10 @@ import { aboutCta, aboutHighlights, basedIn, owner, site } from '../../src/data/
  * keeps the Hub2B
  * treatment the owner preferred (2026-11-20): on a primary frame the photo's own size, offset
  * down and right by the room made for it, with a name card over the photo's lower right corner
- * once `owner.name` is set. Beside it, after the owner's reference (2026-11-20), the copy, the
+ * once `owner.name` is set: the name and the city under it. Beside it, after the owner's reference (2026-11-20), the copy, the
  * six `aboutHighlights` in two columns from sm (each a decorative mark, an h3, and one sentence),
- * and the outlined secondary link to the About page, styled as the hero's "About us": a link
+ * and the outlined secondary link to the About page, the near-black outline the hero's "About us"
+ * had until the hero turned near-black (2026-11-22): a link
  * once `aboutCta.href` is set and a placeholder until then, labelled with where it leads, 32px
  * under the points on phones and 48px from 768px, with an 18px label. It changes colour at once
  * and has no border light. From lg the portrait sits left of the copy; below, the copy comes
@@ -100,7 +101,8 @@ test('the copy ends with the outlined link to more about the studio', async ({ p
   await expect(cta).toHaveClass(/\bbtn-outline\b/);
   await expect(section(page).locator('.aura'), 'no border light').toHaveCount(0);
   await expect(cta).toHaveCSS('transition-property', 'none');
-  // The same outline as the hero's "About us": transparent, near-black label and border.
+  // The secondary outline: transparent, with a near-black label and 1px border. (The hero's
+  // "About us", once the model here, is its mirror for the near-black band since 2026-11-22.)
   const look = (element: HTMLElement) => {
     const style = getComputedStyle(element);
     return {
@@ -110,8 +112,23 @@ test('the copy ends with the outlined link to more about the studio', async ({ p
       borderTopWidth: style.borderTopWidth,
     };
   };
-  const heroOutline = page.getByRole('link', { name: 'About us' });
-  expect(await cta.evaluate(look)).toEqual(await heroOutline.evaluate(look));
+  const secondary = await page.evaluate(() => {
+    const probe = document.createElement('i');
+    document.body.append(probe);
+    const resolve = (value: string) => {
+      probe.style.color = value;
+      return getComputedStyle(probe).color;
+    };
+    const colours = { ink: resolve('var(--color-secondary)'), none: resolve('transparent') };
+    probe.remove();
+    return colours;
+  });
+  expect(await cta.evaluate(look)).toEqual({
+    color: secondary.ink,
+    backgroundColor: secondary.none,
+    borderTopColor: secondary.ink,
+    borderTopWidth: '1px',
+  });
   if (aboutCta.href) {
     await expect(cta).toHaveAttribute('href', aboutCta.href);
     // The label names where it leads (the owner, 2026-11-22), so the link needs no hidden words.
@@ -181,9 +198,33 @@ test('the portrait sits on a primary frame offset down and right, and names the 
   if (owner.name) {
     await expect(card).toHaveCount(1);
     await expect(card).toContainText(owner.name);
-    if (owner.role) await expect(card).toContainText(owner.role);
-    await expect(card.locator('svg'), 'the mark is decorative').toHaveCount(1);
-    await expect(card.locator('[aria-hidden="true"] svg')).toHaveCount(1);
+    // No role line: the owner asked for "Founder" off the card (2026-11-22).
+    await expect(card).not.toContainText(/founder/i);
+    // The city under the name (the owner, 2026-11-22), after a pin: the last line of the card's text.
+    const location = card.locator('[data-owner-location]');
+    await expect(location).toHaveText(basedIn);
+    const lines = await card.evaluate((element) =>
+      Array.from(element.querySelectorAll('p'), (line) => ({
+        text: line.textContent!.trim(),
+        top: line.getBoundingClientRect().top,
+      })),
+    );
+    expect(lines.at(-1)?.text, 'the city comes last').toBe(basedIn);
+    expect(
+      lines.every((line, index) => index === 0 || line.top > lines[index - 1].top),
+      'one line under another',
+    ).toBe(true);
+    // The pin and the mark are decorative: each is hidden from assistive technology. One evaluate
+    // on the card: Firefox crashes on evaluateAll from this named region.
+    await expect(card.locator('svg'), 'the pin and the mark').toHaveCount(2);
+    expect(
+      await card.evaluate((element) =>
+        Array.from(element.querySelectorAll('svg')).every(
+          (svg) => svg.closest('[aria-hidden="true"]') !== null,
+        ),
+      ),
+      'both decorative',
+    ).toBe(true);
     const [photoBox, cardBox] = [(await photo.boundingBox())!, (await card.boundingBox())!];
     expect(cardBox.x, 'inside the photo').toBeGreaterThan(photoBox.x);
     expect(cardBox.x + cardBox.width).toBeLessThanOrEqual(photoBox.x + photoBox.width + 0.5);

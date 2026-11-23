@@ -1,15 +1,25 @@
 ---
 /**
  * The small uppercase label above a section heading, such as "Our services". Shared by the home
- * hero, the introduction, and the services section, so the label looks the same everywhere.
+ * hero, the introduction, and the services section, so the label looks the same everywhere. On a
+ * dark band, such as the home hero's near-black, pass `tone="dark"`: the same muted label in the
+ * band's light text instead of the dark one.
  */
 interface Props {
   class?: string;
+  /** The band the label sits on. */
+  tone?: 'light' | 'dark';
 }
 
-const { class: className } = Astro.props;
+const { class: className, tone = 'light' } = Astro.props;
 ---
 
-<p class:list={['text-sm font-bold tracking-[0.16em] text-base-content/70 uppercase', className]}>
+<p
+  class:list={[
+    'text-sm font-bold tracking-[0.16em] uppercase',
+    tone === 'dark' ? 'text-neutral-content/70' : 'text-base-content/70',
+    className,
+  ]}
+>
   <slot />
 </p>

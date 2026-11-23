@@ -14,15 +14,17 @@ import { aboutCta, aboutHighlights, basedIn, owner, site } from '@/data/site';
  * The copy is laid out after the "What we offer" section the owner gave as the reference (a
  * screenshot, 2026-11-20): from lg it takes the wider column, the eyebrow, the heading, the rule,
  * the owner's paragraph, six points in two columns (`aboutHighlights`, each a mark, a title, and
- * one sentence), and the outlined secondary link to the About page (`aboutCta`), styled as the hero's "About us". The photo keeps the treatment
+ * one sentence), and the outlined secondary link to the About page (`aboutCta`) in near-black. The photo keeps the treatment
  * the owner preferred (2026-11-20), after the "Space for Freelancers and Creative People" section
  * of the Hub2B reference: from lg it sits left on a frame in the primary colour, offset down and
  * to the right; below lg the copy comes first and the photo follows. The reference's price and
  * guarantee have no place here: prices belong only on the pricing page. Nothing moves on its own, and there is no client-side JavaScript.
  *
  * The name card over the photo's lower right corner is the reference's, in this site's colours:
- * the name and the role on white, a hairline, and the owner's mark on a near-black tile. It
- * renders only once `owner.name` is set in src/data/site.ts, as it is since the owner gave the
+ * the name and the city under it (`basedIn`, with a decorative pin; the owner asked for the city
+ * on the card, and for its "Founder" line off, 2026-11-22) on white, a hairline, and the owner's
+ * mark on a near-black tile.
+ * It renders only once `owner.name` is set in src/data/site.ts, as it is since the owner gave the
  * name in this section's copy (2026-11-22).
  *
  * The photo is the portrait the owner supplied on 2026-11-19, recorded in src/assets/CREDITS.md.
@@ -96,7 +98,7 @@ const introduction = owner.name
 
         {/*
          * The reference's spacing and size: 32px under the points on phones and 48px from md, with
-         * an 18px label (lg). The outlined secondary is the hero's "About us": transparent, with a
+         * an 18px label (lg). The outlined secondary is transparent, with a
          * near-black label and 1px border. The label names where it leads (the owner, 2026-11-22),
          * so it needs no hidden words.
          */}
@@ -151,9 +153,14 @@ const introduction = owner.name
                 <p class="font-(family-name:--font-headers) text-lg leading-tight font-bold tracking-tight uppercase">
                   {owner.name}
                 </p>
-                {owner.role && (
-                  <p class="mt-0.5 text-sm leading-snug text-base-content/70">{owner.role}</p>
-                )}
+                {/* Where the studio is based, under the name (the owner, 2026-11-22). */}
+                <p
+                  data-owner-location
+                  class="mt-1 flex items-center gap-1 text-sm leading-snug text-base-content/70"
+                >
+                  <Icon name="map-pin" class="size-3.5 shrink-0" />
+                  {basedIn}
+                </p>
               </div>
               <span class="h-10 w-px shrink-0 bg-base-300" aria-hidden="true"></span>
               <span

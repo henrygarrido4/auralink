@@ -99,15 +99,15 @@ export const contactRoutes = {
 
 /**
  * The person in the home introduction's portrait (src/components/sections/AboutIntro.astro), who
- * speaks in its paragraph and is named on the card over the photo, with `role` as the line under
- * the name. The owner gave the name for that paragraph on 2026-11-22 ("I'm Henry Garrido, founder
- * of Auralink Studio"); the privacy policy (src/data/privacy.ts) spells the legal name Henrry
- * Garrido. The About page still speaks in the first person without a name. Without `name` the
- * card is hidden and the paragraph says "I'm the founder".
+ * speaks in its paragraph and is named on the card over the photo, with the city (`basedIn`) under
+ * the name. The card had a "Founder" line between the two until the owner asked for it off
+ * (2026-11-22). The owner gave the name for that paragraph on 2026-11-22 ("I'm Henry Garrido,
+ * founder of Auralink Studio"); the privacy policy (src/data/privacy.ts) spells the legal name
+ * Henrry Garrido. The About page still speaks in the first person without a name. Without `name`
+ * the card is hidden and the paragraph says "I'm the founder".
  */
-export const owner: { readonly name?: string; readonly role?: string } = {
+export const owner: { readonly name?: string } = {
   name: 'Henry Garrido',
-  role: 'Founder',
 };
 
 /** Service catalogue. Slugs match the `serviceSlug` enum in src/content.config.ts. */
@@ -388,7 +388,7 @@ export const servicesPageCards: readonly ServicesPageCard[] = [
   },
 ];
 
-/** A benefit chip around the devices in the home hero (src/components/ui/ServiceOrbit.astro). */
+/** A benefit chip around the logo's mark in the home hero (src/components/ui/ServiceOrbit.astro). */
 export interface HeroBenefit {
   /** Lowercase and hyphenated, unique among the chips. */
   readonly id: string;
@@ -400,10 +400,11 @@ export interface HeroBenefit {
 }
 
 /**
- * Benefit labels for the chips around the home hero's devices (owner, 2026-11-18). They say what
- * the work is for. They are not measured results: no figures, client names, or notifications
- * belong here. The services strip and the service cards still list the services. Each chip keeps
- * the place of the service it replaced; that order lives in ServiceOrbit, tuned to the devices.
+ * Benefit labels for the chips around the logo's mark in the home hero (owner, 2026-11-18; around
+ * the laptop and phone until 2026-11-22). They say what the work is for. They are not measured
+ * results: no figures, client names, or notifications belong here. The services strip and the
+ * service cards still list the services. Each chip keeps the place of the service it replaced;
+ * that order lives in ServiceOrbit.
  */
 export const heroBenefits: readonly HeroBenefit[] = [
   { id: 'more-sales', label: 'More sales', icon: 'trending-up', accent: true },

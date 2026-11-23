@@ -273,7 +273,9 @@ test.describe('services strip', () => {
 
     // The tilted band shows as a wedge as deep as the section's padding at each edge of the
     // screen: half the width times tan(2.2deg). The section's top continues the hero's
-    // background and its bottom the services band, so no seam shows beside the wedges.
+    // background and its bottom the services band, so no seam shows beside the wedges. Since the
+    // hero turned near-black (2026-11-22), the top is the tilted band's own colour, and the band
+    // seems to pass behind the yellow from the hero.
     await band.evaluate(async (element) => {
       element.scrollIntoView({ block: 'center', behavior: 'instant' });
       // The navbar shrinks as the page scrolls (`navbar-collapse`), and everything below it moves
@@ -301,7 +303,7 @@ test.describe('services strip', () => {
     const neutral = await srgb(page, 'var(--color-neutral)');
     sameColour(topRight, neutral, 'the tilted band above the yellow on the right');
     sameColour(bottomLeft, neutral, 'the tilted band below the yellow on the left');
-    sameColour(topLeft, await srgb(page, 'var(--color-base-200)'), "the hero's background above");
+    sameColour(topLeft, neutral, "the hero's background above");
     sameColour(
       bottomRight,
       await srgb(page, 'color-mix(in oklab, var(--color-base-300) 70%, var(--color-base-100))'),

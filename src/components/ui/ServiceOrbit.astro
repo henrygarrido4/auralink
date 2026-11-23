@@ -4,12 +4,14 @@ import Icon from '@/components/ui/Icon.astro';
 import { heroBenefits } from '@/data/site';
 
 /**
- * Benefit badges on a ring around what this wraps: the laptop and phone in the home hero (the
- * owner's choice of three treatments, then benefit labels in the same places, 2026-11-18). One
- * round chip per benefit, evenly spaced, behind the wrapped content, over a soft glow in the
- * primary colour and two inner rings. Each chip carries its label, like the name under an app's
- * icon. The icon is decorative; the label says what it means. "More sales" and "Repeat customers"
- * are filled with the primary colour. The other four are white.
+ * Benefit badges on a ring around what this wraps: the logo's mark in the home hero, on its
+ * near-black band (the owner's choice of three treatments, then benefit labels, 2026-11-18,
+ * around the laptop and phone the mark replaced on 2026-11-22). One round chip per benefit,
+ * evenly spaced, behind the wrapped content, around two inner rings on the plain band: the soft
+ * primary glow that lay under them was removed at the owner's request (2026-11-22). Each chip
+ * carries its label, like the name under an app's icon. The icon is decorative; the label says
+ * what it means. "More sales" and "Repeat customers" are filled with the primary colour. The other
+ * four are white. The rings and the labels are painted for the dark band.
  *
  * The services strip straight after the hero lists the services. These chips do not repeat it,
  * and they state no figures, client results, or notifications. The labels are ordinary text. The
@@ -36,12 +38,9 @@ interface Props extends HTMLAttributes<'div'> {
 const { start = 0, class: className, ...rest } = Astro.props;
 
 /**
- * The order around the ring, clockwise from the right-hand place. When the devices turned to the
- * left (owner, 2026-11-22), the ring turned with them: each benefit moved to the mirror image of
- * its place beside the right-facing devices (the places the service chips used), so it keeps the
- * room it had there. The two at the bottom take the longer labels, the sides the next, and More
- * sales stays on one line because its chip sits highest. A benefit not listed here follows the
- * others.
+ * The order around the ring, clockwise from the right-hand place: the places the benefits had
+ * around the laptop and phone, which the mark kept (2026-11-22). The two at the bottom take the
+ * longer labels and the sides the next. A benefit not listed here follows the others.
  */
 const order: readonly string[] = [
   'more-bookings',
@@ -56,15 +55,15 @@ const placed = [...heroBenefits].sort((a, b) => rank(a.id) - rank(b.id));
 
 /** Under its chip and centred on it: the place with room on both sides. */
 const below = 'top-full left-1/2 mt-1 -translate-x-1/2 text-center';
-/** Over its chip: under the two top chips are the laptop's lid and the phone. */
+/** Over its chip: the two top chips, whose labels then point away from the centre. */
 const above = 'bottom-full left-1/2 mb-1 -translate-x-1/2 text-center';
 /**
- * Where each place's label sits, in the ring's order, so that none lies behind a device or leaves
- * the screen. The labels at the sides hang outward: at the right starting a fifth of a chip in
- * from its left edge, where the lid ends, and from the left-hand chip's right edge.
+ * Where each place's label sits, in the ring's order, so that every label points away from what
+ * the ring wraps and none leaves the screen. The labels at the sides hang outward, mirror images
+ * of each other: from the right-hand chip's left edge and from the left-hand chip's right edge.
  */
 const namePlaces = [
-  'top-full left-1/5 mt-1 text-left',
+  'top-full left-0 mt-1 text-left',
   below,
   below,
   'top-full right-0 mt-1 text-right',
@@ -74,12 +73,11 @@ const namePlaces = [
 
 /**
  * A label on two lines when it is long: the last word goes under the rest, which keeps the label
- * narrow enough for its place. "More sales" stays on one line. It sits on the highest chip, and a
- * second line there leaves the hero. No label here runs past two words, so none takes a third line.
+ * narrow enough for its place. No label here runs past two words, so none takes a third line.
  */
-const lines = (label: string, singleLine: boolean) => {
+const lines = (label: string) => {
   const lastSpace = label.lastIndexOf(' ');
-  return singleLine || lastSpace < 0 || label.length < 10
+  return lastSpace < 0 || label.length < 10
     ? { head: label, tail: '' }
     : { head: label.slice(0, lastSpace), tail: label.slice(lastSpace + 1) };
 };
@@ -96,18 +94,13 @@ const rings = ['inner', 'middle', 'outer'] as const;
     class="[--orbit-chip:min(2.25rem,10vw)] sm:[--orbit-chip:2.75rem] xl:[--orbit-chip:3.25rem]"
   >
     <div data-orbit-disc>
-      {/* A radial gradient reaches a square's corners, so 70% is the circle's edge. */}
-      <span
-        data-orbit-glow
-        class="rounded-full bg-radial from-primary/60 via-primary/20 via-40% to-transparent to-70%"
-      ></span>
       {rings.map((ring) => (
-        <span data-orbit-ring={ring} class="rounded-full border border-base-content/15"></span>
+        <span data-orbit-ring={ring} class="rounded-full border border-neutral-content/15"></span>
       ))}
       <span data-orbit-light class="rounded-full"></span>
       <div data-orbit-track>
         {placed.map((benefit, place) => {
-          const { head, tail } = lines(benefit.label, benefit.id === 'more-sales');
+          const { head, tail } = lines(benefit.label);
           return (
             <span data-orbit-arm style={`--orbit-index: ${place}`}>
               <span
@@ -128,7 +121,7 @@ const rings = ['inner', 'middle', 'outer'] as const;
                 <span
                   data-orbit-name
                   class:list={[
-                    'absolute w-max text-[min(0.6875rem,3.2vw)] leading-[1.15] font-bold text-base-content sm:text-xs xl:text-[0.8125rem]',
+                    'absolute w-max text-[min(0.6875rem,3.2vw)] leading-[1.15] font-bold text-neutral-content sm:text-xs xl:text-[0.8125rem]',
                     namePlaces[place] ?? below,
                   ]}
                 >
