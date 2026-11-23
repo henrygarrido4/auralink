@@ -1,0 +1,56 @@
+---
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { moreServices } from '@/data/pricing';
+
+/**
+ * The card under the comparison table for services beyond the packages (the owner's copy of
+ * 2026-11-23, src/data/pricing.ts), in place of the email welcome series. It is the site's note
+ * card, white with a hairline edge and a 4px primary left edge, holding the heading and the
+ * sentence, left-aligned, and two actions together: the outline button to the contact page's
+ * "Send a message" tab and the text link to the services hub, in the style of the questions'
+ * "Ask something else". From lg the actions sit on the right of the copy, one above the other;
+ * below lg they follow the copy, side by side where they fit. The section continues the
+ * comparison's white band, so it adds no space above the card: the table's own bottom padding
+ * separates them. Plain HTML.
+ */
+interface Props {
+  id: string;
+}
+
+const { id } = Astro.props;
+const titleId = `${id}-title`;
+---
+
+<section id={id} aria-labelledby={titleId} class="bg-base-100">
+  <div class="mx-auto max-w-site px-6 pb-16 sm:pb-20 lg:px-8 lg:pb-24">
+    <div class="grid gap-6 rounded-md border border-l-4 border-base-300 border-l-primary bg-base-100 p-6 shadow-sm sm:p-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-16">
+      <div class="min-w-0">
+        <h2
+          id={titleId}
+          class="text-2xl leading-tight font-bold tracking-tight text-balance text-base-content sm:text-3xl"
+        >
+          {moreServices.heading}
+        </h2>
+        <p class="mt-3 max-w-2xl text-base leading-relaxed text-pretty text-base-content/80 sm:text-lg">
+          {moreServices.text}
+        </p>
+      </div>
+      <div
+        data-more-services-actions
+        class="flex flex-wrap items-center gap-x-6 gap-y-3 lg:flex-col lg:items-start"
+      >
+        <Button href={moreServices.cta.href} variant="secondary">
+          {moreServices.cta.label}
+        </Button>
+        <a
+          href={moreServices.link.href}
+          class="inline-flex min-h-11 items-center gap-2 rounded-sm font-bold text-base-content underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+        >
+          {moreServices.link.label}
+          <Icon name="arrow-right" class="size-4" />
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

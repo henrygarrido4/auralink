@@ -6,15 +6,20 @@ import SectionHeading from '@/components/ui/SectionHeading.astro';
 import { formatPrice, packagesSection, pricingInquiry, pricingPackages } from '@/data/pricing';
 
 /**
- * The three website packages of the pricing page (src/data/pricing.ts, the owner's brief of
- * 2026-11-20), as equal-height cards on the grey band: Starter and Growth white with the detail
- * pages' hairline edge, Business in the middle on the secondary near-black with a primary "Most
- * popular" badge on its top edge. Each card is the package's name, its one-time price with the
- * note that hosting is separate, who it is for, a checklist of what is included, the estimated
- * delivery, what is not included, and, held to the foot of the card so the three buttons line up,
- * its call to action: the lit primary on the dark card, the near-black outline on the light ones.
- * Every button leads to the inquiry page; nothing is sold here. The note under the cards is the
- * brief's. Plain HTML.
+ * The three website packages of the pricing page (src/data/pricing.ts: the owner's briefs of
+ * 2026-11-20 and 2026-11-23), as equal-height white cards on the grey band. Business, the studio's
+ * pick, keeps the middle place and takes the gold accent: a 2px primary edge (the border and a
+ * 1px ring, so its content lines up with the other cards'), a slightly deeper shadow, the primary
+ * "Studio pick" badge on its top edge, and the lit primary button; the other two keep the detail
+ * pages' hairline edge and the near-black outline button. Each card is the package's name, its
+ * one-time price with "One-time website build" beside it, its opening sentence, a checklist of what
+ * is included, the estimated delivery, what is not included, and its call to action. From lg the
+ * three cards share one row and a subgrid, as the home "Why Auralink" cards do, so each of those
+ * seven parts starts on one line across the three cards however the sentences wrap or the lists
+ * run, and the buttons sit at the foot together. Below lg the cards stack, each as tall as its own
+ * text. Every button leads to the inquiry page; nothing is sold here. Under the cards, one line
+ * says that hosting is separate from every package, where the cards used to repeat it, then the
+ * brief's note on timelines. Plain HTML.
  */
 interface Props {
   id: string;
@@ -32,39 +37,57 @@ const titleId = `${id}-title`;
     intro={packagesSection.intro}
   />
 
-  {/* role="list": Safari drops the list role from lists styled without markers. */}
-  <ul role="list" class="mt-12 grid gap-6 sm:mt-14 lg:grid-cols-3 xl:gap-8">
+  {/*
+   * role="list": Safari drops the list role from lists styled without markers. From lg each card
+   * spans the list's seven rows and takes them as its own (subgrid); the rows have no gap, so the
+   * parts keep the margins they have when the cards stack.
+   */}
+  <ul role="list" class="mt-12 grid gap-6 sm:mt-14 lg:grid-cols-3 lg:gap-y-0 xl:gap-x-8">
     {pricingPackages.map((pkg) => {
-      const dark = !!pkg.featured;
-      const muted = dark ? 'text-secondary-content/75' : 'text-base-content/75';
-      const rule = dark ? 'border-secondary-content/15' : 'border-base-300';
+      const featured = !!pkg.featured;
       return (
         <li
           data-package={pkg.id}
           class:list={[
-            'relative flex min-w-0 flex-col rounded-md p-6 sm:p-8',
-            dark
-              ? 'bg-secondary text-secondary-content shadow-lg'
-              : 'detail-card text-base-content',
+            'relative flex min-w-0 flex-col p-6 text-base-content sm:p-8 lg:row-span-7 lg:grid lg:grid-rows-subgrid',
+            featured
+              ? 'rounded-md border border-primary bg-base-100 shadow-md ring-1 ring-primary'
+              : 'detail-card',
           ]}
         >
-          {dark && (
+          {featured && (
             <p class="absolute -top-3.5 left-6 rounded-full bg-primary px-4 py-1.5 text-xs font-bold tracking-[0.14em] text-primary-content uppercase sm:left-8">
-              Most popular
+              {packagesSection.featuredLabel}
             </p>
           )}
           <h3 class="text-sm font-bold tracking-[0.16em] uppercase">{pkg.name}</h3>
-          <p class="mt-4 flex flex-wrap items-baseline gap-x-2">
-            <span class="font-(family-name:--font-headers) text-5xl leading-none font-bold tracking-tight">
-              {formatPrice(pkg.price)}
-            </span>
-            <span class:list={['text-sm', muted]}>{packagesSection.priceNote}</span>
-          </p>
-          <p class="mt-5 text-base leading-relaxed text-pretty">{pkg.audience}</p>
+          {/*
+           * The label sits beside the price when the card is at least 20rem wide inside (`@xs`),
+           * room for the widest price and the label (285px) with some to spare, and under it
+           * otherwise. The cards in a row are equally wide, so all three switch together; deciding
+           * by each price's own width would not, as Mukta's figures differ in width. The explicit
+           * space keeps the price and the label apart in the text; between flex items it takes no
+           * room.
+           */}
+          <div class="@container mt-4">
+            <p
+              data-price
+              class="flex flex-col gap-2 @xs:flex-row @xs:flex-wrap @xs:items-baseline @xs:gap-x-3"
+            >
+              <span class="font-(family-name:--font-headers) text-5xl leading-none font-bold tracking-tight">
+                {formatPrice(pkg.price)}
+              </span>{' '}
+              <span class="text-sm font-bold text-base-content/75">
+                {packagesSection.priceNote}
+              </span>
+            </p>
+          </div>
+          <p class="mt-5 text-base leading-relaxed text-pretty">{pkg.summary}</p>
 
+          {/* `content-start`: in the subgrid a shorter list keeps its spacing at the top of its row. */}
           <ul
             role="list"
-            class:list={['mt-6 grid gap-3 border-t pt-6 sm:grid-cols-2 lg:grid-cols-1', rule]}
+            class="mt-6 grid content-start gap-3 border-t border-base-300 pt-6 sm:grid-cols-2 lg:grid-cols-1"
           >
             {pkg.features.map((feature) => (
               <li class="flex items-start gap-3 text-base leading-snug">
@@ -87,25 +110,23 @@ const titleId = `${id}-title`;
             </span>
           </p>
 
-          <p class:list={['mt-5 border-t pt-5 text-sm leading-relaxed text-pretty', rule, muted]}>
-            <span class:list={['font-bold', dark ? 'text-secondary-content' : 'text-base-content']}>
-              Not included:
-            </span>{' '}
-            {pkg.excluded}
+          <p class="mt-5 border-t border-base-300 pt-5 text-sm leading-relaxed text-pretty text-base-content/75">
+            <span class="font-bold text-base-content">Not included:</span> {pkg.excluded}
           </p>
 
           {/*
-           * The button sits at the foot of every card, whatever the list above it holds. The lit
-           * primary only on the dark card, where the aura takes the card's white text; a
-           * near-black focus ring on the light cards, where the button's own yellow ring is 1.4:1.
+           * The button sits at the foot of every card, whatever the list above it holds: the lit
+           * primary on the featured card, its light off until the pointer or keyboard focus, and
+           * the near-black outline on the others. Both take a near-black focus ring on the white
+           * card, where the primary's own yellow ring is 1.4:1.
            */}
           <div class="mt-auto pt-8">
-            {dark ? (
+            {featured ? (
               <Button
                 href={pricingInquiry.href}
                 block
                 aura="hover"
-                class="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-secondary-content"
+                class="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
               >
                 {pkg.cta}
               </Button>
@@ -120,8 +141,19 @@ const titleId = `${id}-title`;
     })}
   </ul>
 
-  <p class="mt-8 flex max-w-3xl items-start gap-3 text-sm leading-relaxed text-pretty text-base-content/75">
-    <Icon name="circle-alert" class="mt-0.5 size-4 shrink-0" />
-    <span>{packagesSection.note}</span>
-  </p>
+  <div class="mt-8 grid max-w-3xl gap-3">
+    <p
+      data-hosting-note
+      class="flex items-start gap-3 text-base leading-relaxed text-pretty text-base-content"
+    >
+      <Icon name="monitor-cog" class="mt-1 size-4 shrink-0" />
+      <span>
+        <span class="font-bold">{packagesSection.hosting.lead}</span> {packagesSection.hosting.text}
+      </span>
+    </p>
+    <p class="flex items-start gap-3 text-sm leading-relaxed text-pretty text-base-content/75">
+      <Icon name="circle-alert" class="mt-0.5 size-4 shrink-0" />
+      <span>{packagesSection.note}</span>
+    </p>
+  </div>
 </DetailSection>

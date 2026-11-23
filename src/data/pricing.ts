@@ -1,40 +1,49 @@
+import type { IconName } from '../lib/icons';
 import { checkPageHead, type Engagement, type FaqList, type PageHead } from './detail-pages';
 import { contactRoutes, primaryCta, type NavItem } from './site';
 
 /**
  * The pricing page (/pricing/, src/pages/pricing/index.astro), from the owner's brief of
  * 2026-11-20, which gave the three website packages, their prices, inclusions, exclusions, and
- * estimated delivery ranges, the Website Care plan and its price, the welcome-series bonus, the
- * four steps, the payment terms, the questions, and the closing call to action. Those figures and
- * terms are the owner's; the section headings, introductions, and the answers to the questions are
- * proposed wording written to match them (docs/content-strategy.md, "Pricing page").
+ * estimated delivery ranges, the Website Care plan, the four steps, the payment terms, the
+ * questions, and the closing call to action, as revised by the owner's brief of 2026-11-23: the
+ * hero copy, each card's opening sentence, "Studio pick" for Business, Website Care at $149 a month
+ * directly under the cards with its own copy and its scope in three groups, and the free
+ * three-email welcome series taken out of Business and Growth; the owner's follow-up the same day
+ * put a card for services beyond the packages under the comparison, in place of the welcome series.
+ * Those figures and terms are the owner's; the section headings, introductions, and the answers to
+ * the questions are proposed wording written to match them (docs/content-strategy.md, "Pricing
+ * page").
  *
- * Nothing here is sold on the page itself: every call to action leads to the inquiry page. There
- * is no checkout, no subscription, and no price not shown on the page. Change a figure here and
- * the cards, the comparison table, and the structured data change together.
+ * Nothing here is sold on the page itself: every button leads to the contact page. There is no
+ * checkout, no subscription, and no price not shown on the page. Change a figure here and
+ * the cards, the comparison table, and the structured data change together; the head's description
+ * and the questions quote the prices in words, so change them too (tests/e2e/pricing.spec.ts fails
+ * on a quoted price the page does not show). The public prices are for new clients; this site
+ * holds no customer billing, so an existing client's plan is never changed from here.
  */
 
-/** The document head and the hero. */
+/** The document head and the hero (the brief of 2026-11-23; the yellow words are proposed). */
 export const pricingHead: PageHead = {
-  title: 'A website that fits your business. Pricing that makes sense.',
-  highlight: 'Pricing that makes sense.',
+  title: 'A website that fits your business and your budget.',
+  highlight: 'your budget.',
   description:
-    'From your first website to a more complete online presence, choose a package built around your goals. Clear one-time pricing, thoughtful design, and optional ongoing support.',
+    'Choose a one-time website package based on what your customers need to see and do. After launch, you can manage the site yourself or have us take care of it.',
   metaTitle: 'Website Pricing & Packages',
   metaDescription:
-    'Clear one-time website pricing from Auralink Studio: Starter $1,095, Business $1,895, Growth $2,895, with optional Website Care hosting at $79 a month.',
+    'One-time website packages from Auralink Studio: Starter $1,095, Business $1,895, and Growth $2,895, with optional Website Care at $149 a month.',
 };
 
 /** The hero's eyebrow (the brief's, not the page's name in navigation) and its small note. */
 export const pricingHero = {
-  eyebrow: 'Simple, transparent pricing',
+  eyebrow: 'Website pricing',
   note: 'All packages include a first design preview within two weeks of receiving your deposit, project brief, and required materials.',
 } as const;
 
 /**
  * Where the package and Website Care buttons lead: the contact page, which opens on the booking
- * tab and offers the inquiry form beside it. Their labels name a package, not a call or a
- * message, so they lead to the page itself rather than to one tab (`contactRoutes`).
+ * tab and offers the inquiry form beside it. Their labels name an offer, not a call or a message,
+ * so they lead to the page itself rather than to one tab (`contactRoutes`).
  */
 export const pricingInquiry: Required<NavItem> = {
   label: primaryCta.label,
@@ -51,35 +60,39 @@ export const formatPrice = (amount: number) =>
 
 export type PricingPackageId = 'starter' | 'business' | 'growth';
 
-/** One of the three website packages. Everything in it is the owner's, from the brief. */
+/** One of the three website packages. Everything in it is the owner's, from the briefs. */
 export interface PricingPackage {
   readonly id: PricingPackageId;
   readonly name: string;
   /** The one-time project price in US dollars, separate from hosting. */
   readonly price: number;
-  /** Who the package is for, in one sentence. */
-  readonly audience: string;
+  /** The card's opening sentence: what the website lets the client's customers see and do. */
+  readonly summary: string;
   /** What is included, as the brief lists it. */
   readonly features: readonly string[];
   /** Revision rounds included; also a row of the comparison table. */
   readonly revisionRounds: number;
   /** The estimated delivery range, as written: an estimate, not a promise. */
   readonly delivery: string;
-  /** What the package does not cover, as one sentence fragment after "Not included:". */
+  /**
+   * What the package does not cover, as one sentence fragment after "Not included:". Hosting is
+   * left out here: one line under the cards says it for all three (`packagesSection.hosting`).
+   */
   readonly excluded: string;
   /** The button's label. */
   readonly cta: string;
-  /** The highlighted package: the dark card with the "Most popular" badge. */
+  /** The studio's pick: the card with the gold edge, the "Studio pick" badge, and the primary button. */
   readonly featured?: boolean;
 }
 
-/** The three packages, in display order, with Business highlighted in the middle. */
+/** The three packages, in display order, with Business featured in the middle. */
 export const pricingPackages: readonly [PricingPackage, PricingPackage, PricingPackage] = [
   {
     id: 'starter',
     name: 'Starter',
     price: 1095,
-    audience: 'For new businesses that need a professional website to start attracting inquiries.',
+    summary:
+      'A one-page website that shows customers what you do, where you work, and how to request a quote.',
     features: [
       '1 custom-designed page',
       'Mobile-friendly responsive design',
@@ -94,14 +107,15 @@ export const pricingPackages: readonly [PricingPackage, PricingPackage, PricingP
     revisionRounds: 1,
     delivery: '3–4 weeks',
     excluded:
-      'additional pages, email automation, e-commerce, advanced integrations, ongoing SEO, or hosting.',
+      'additional pages, email automation, e-commerce, advanced integrations, or ongoing SEO.',
     cta: 'Start my website',
   },
   {
     id: 'business',
     name: 'Business',
     price: 1895,
-    audience: 'For growing businesses that want a complete and credible online presence.',
+    summary:
+      'Give customers a closer look at your services, show examples of your work, and make it easy to get in touch.',
     features: [
       'Up to 5 custom-designed pages',
       'Everything in Starter',
@@ -109,12 +123,11 @@ export const pricingPackages: readonly [PricingPackage, PricingPackage, PricingP
       'Testimonials and trust-building content',
       'Enhanced contact and inquiry experience',
       'Basic keyword research and SEO foundations',
-      'Free 3-email welcome series setup',
       '2 revision rounds',
     ],
     revisionRounds: 2,
     delivery: '4–6 weeks',
-    excluded: 'e-commerce, custom software, paid marketing campaigns, ongoing SEO, or hosting.',
+    excluded: 'e-commerce, custom software, paid marketing campaigns, or ongoing SEO.',
     cta: 'Grow my business',
     featured: true,
   },
@@ -122,7 +135,8 @@ export const pricingPackages: readonly [PricingPackage, PricingPackage, PricingP
     id: 'growth',
     name: 'Growth',
     price: 2895,
-    audience: 'For established businesses with multiple services and more ambitious website needs.',
+    summary:
+      'Give each service its own page, showcase completed projects, and track which pages lead to inquiries.',
     features: [
       'Up to 10 custom-designed pages',
       'Everything in Business',
@@ -131,25 +145,33 @@ export const pricingPackages: readonly [PricingPackage, PricingPackage, PricingP
       'Basic competitor research',
       'Conversion-focused page structure and tracking',
       'Project or case-study layouts',
-      'Free 3-email welcome series setup',
       '3 revision rounds',
     ],
     revisionRounds: 3,
     delivery: '6–8 weeks',
-    excluded:
-      'e-commerce, custom applications, ongoing SEO retainers, advertising management, or hosting.',
+    excluded: 'e-commerce, custom applications, ongoing SEO retainers, or advertising management.',
     cta: 'Build my growth site',
   },
 ];
 
-/** The packages section's heading (proposed) and the note under the cards (the owner's). */
+/**
+ * The packages section: the heading and its sentence (proposed), the label beside each price and
+ * the featured card's badge (the brief of 2026-11-23), the one line about hosting under the cards,
+ * which replaces the "Hosting not included" each card repeated (that brief; the wording is
+ * proposed), and the note on timelines under it (the owner's, 2026-11-20).
+ */
 export const packagesSection = {
   eyebrow: 'Three website packages',
   heading: 'Three packages. One clear price each.',
-  intro:
-    'Each price is a one-time fee for the design and build of your website. Hosting is separate and optional.',
-  /** Under each price. */
-  priceNote: 'One-time price. Hosting not included.',
+  intro: 'Each price is a one-time fee for the design and build of your website.',
+  /** Beside each price. */
+  priceNote: 'One-time website build',
+  /** On the featured card's top edge. */
+  featuredLabel: 'Studio pick',
+  hosting: {
+    lead: 'Hosting is separate from every package.',
+    text: 'After launch, choose Auralink Website Care or host your finished website with a compatible provider.',
+  },
   note: 'Delivery timelines are estimates and depend on timely content, feedback, and approvals. The two-week preview is a design milestone, not a promise of a completed website. Complex requirements are quoted separately.',
 } as const;
 
@@ -198,7 +220,6 @@ export const comparisonRows: readonly ComparisonRow[] = [
   { feature: 'Gallery or portfolio', values: [false, true, true] },
   { feature: 'Individual service pages', values: [false, false, true] },
   { feature: 'Conversion planning', values: [false, false, true] },
-  { feature: 'Three-email welcome series', values: [false, true, true] },
   {
     feature: 'Revision rounds',
     values: [
@@ -214,94 +235,70 @@ export const comparisonRows: readonly ComparisonRow[] = [
   { feature: 'Hosting included?', values: ['No', 'No', 'No'] },
 ];
 
-/** One email of the complimentary welcome series. */
-export interface WelcomeEmail {
+/** One group of what Website Care covers: a title, a plain sentence, and a decorative icon. */
+export interface CareGroup {
   readonly title: string;
   readonly text: string;
+  readonly icon: IconName;
 }
 
 /**
- * The complimentary three-email welcome series that comes with Business and Growth. The eyebrow,
- * heading, the three emails' titles, and the scope paragraph are the brief's; the lead sentence
- * and the sentence under each email are proposed.
- */
-export const welcomeSeries = {
-  eyebrow: 'A little extra to help you start',
-  heading: 'Your website is just the beginning.',
-  lead: 'Business and Growth packages include a complimentary three-email welcome series, so the people who sign up on your new website hear from you right away.',
-  emails: [
-    {
-      title: 'Welcome and introduction',
-      text: 'A warm first email that says who you are and what to expect.',
-    },
-    {
-      title: 'Build trust and introduce services',
-      text: 'A closer look at how you work and the services you offer.',
-    },
-    {
-      title: 'Encourage an inquiry or next step',
-      text: 'A clear invitation to get in touch, book, or visit.',
-    },
-  ] as readonly [WelcomeEmail, WelcomeEmail, WelcomeEmail],
-  scope:
-    'This bonus covers one audience, three emails, and basic automation setup on a compatible platform, subject to platform capabilities. Marketing emails go only to properly opted-in subscribers. Email platform fees, list building, additional automations, and ongoing email campaigns are not included.',
-} as const;
-
-/** A short titled statement beside the Website Care card. */
-export interface CareTerm {
-  readonly title: string;
-  readonly text: string;
-}
-
-/**
- * Hosting and Website Care. The heading, the description, the plan's name, price, trial, and its
- * inclusions and limits are the brief's; the terms beside the card put the brief's conditions
- * (a separate one-time website purchase, explicit acceptance, external hosting allowed) into
- * three short statements.
+ * Website Care, directly under the package cards since the owner's brief of 2026-11-23: one
+ * optional plan at $149 a month, the public price for new clients, with the first 30 days after
+ * launch included and continuing only if the client opts in; compatible external hosting stays the
+ * alternative. The eyebrow, heading, description, plan name, price, price note, button, and the
+ * three groups are the brief's; the opt-in sentence, the note on what is not included, and the
+ * note on hosting elsewhere restate the conditions of the brief of 2026-11-20 in fewer words.
  */
 export const websiteCare = {
-  eyebrow: 'Hosting & website care',
-  heading: 'We keep your website running. You keep your business moving.',
+  eyebrow: 'After launch',
+  heading: "We'll take care of your website.",
   intro:
-    'Get dependable hosting, routine maintenance, and a little extra help when you need to make changes.',
+    "When your hours change, you have new photos, or your contact form needs attention, you'll have a developer who already knows your site.",
   plan: {
     name: 'Auralink Website Care',
-    /** US dollars per month. */
-    price: 79,
-    trial: 'First 30 days included after website launch',
-    includes: [
-      'Managed website hosting for eligible supported builds',
-      'SSL certificate',
-      'Backups where supported by the hosting/platform setup',
-      'Basic uptime and contact-form monitoring',
-      'Routine security and platform maintenance where applicable',
-      'Hosting-related technical support',
-      'Up to 30 minutes of small content updates per billing month',
-    ],
-    limits: [
-      'Unused editing time does not roll over',
-      'New pages, redesigns, advanced integrations, and major functionality are quoted separately',
-      'Domain registration, paid platform fees, third-party subscriptions, and ongoing SEO are not included',
-    ],
+    /** US dollars per month, for new clients. */
+    price: 149,
+    priceNote: 'First 30 days included after launch.',
+    optIn:
+      "It's optional: after those 30 days, Website Care continues only if you opt in. Buying a website never starts a subscription on its own.",
+    groups: [
+      {
+        title: 'Hosting and maintenance',
+        text: 'Managed hosting for supported builds, SSL, and routine platform maintenance where applicable.',
+        icon: 'monitor-cog',
+      },
+      {
+        title: 'Monitoring and support',
+        text: 'Uptime and contact-form monitoring, backups where supported, and hosting-related technical support.',
+        icon: 'activity',
+      },
+      {
+        title: 'Small website updates',
+        text: "Up to 30 minutes per billing month for changes like business hours, text, or photos. Unused time doesn't roll over.",
+        icon: 'file-pen-line',
+      },
+    ] as readonly [CareGroup, CareGroup, CareGroup],
+    /** What the plan leaves out, after "Not included." */
+    excluded:
+      'Larger changes, such as new pages, redesigns, advanced integrations, and major functionality, are quoted separately. Domain registration, paid platform fees, and third-party subscriptions are separate costs, and ongoing SEO is a separate service.',
+    /** The alternative to the plan, after "Prefer another host?" */
+    elsewhere:
+      "Your finished website can be handed over for compatible external hosting. That provider's costs, and any setup on their platform, are separate.",
     cta: 'Ask about Website Care',
   },
-  terms: {
-    heading: 'How Website Care works',
-    items: [
-      {
-        title: 'Separate from your website',
-        text: 'Website development is a one-time purchase. Website Care is a separate monthly plan, priced on its own.',
-      },
-      {
-        title: 'Optional, and only when you say yes',
-        text: 'Your first 30 days after launch are included. Continuing beyond that is your choice and must be accepted explicitly; buying a website never starts a subscription on its own.',
-      },
-      {
-        title: 'Host elsewhere if you prefer',
-        text: "Your completed website can be handed over for compatible external hosting. That provider's costs, and any setup on their platform, are separate.",
-      },
-    ] as readonly [CareTerm, CareTerm, CareTerm],
-  },
+} as const;
+
+/**
+ * The card under the comparison table for services beyond the packages, the owner's copy of
+ * 2026-11-23 (in place of the welcome series): the heading and the sentence, the outline button to
+ * the contact page's message tab, as it asks for a message, and the text link to the services hub.
+ */
+export const moreServices = {
+  heading: 'Need something beyond these packages?',
+  text: "We can help you sell online with Shopify, reach local customers through search and ads, or follow up with leads by email. Tell us what you have in mind and we'll put together a separate quote.",
+  cta: { label: 'Ask about a service', href: contactRoutes.sendMessage },
+  link: { label: 'Explore all services', href: '/services/' },
 } as const;
 
 /** The four steps (the brief's titles and sentences) with a proposed introduction. */
@@ -335,8 +332,10 @@ export const paymentNote = {
 } as const;
 
 /**
- * The questions are the brief's; the answers are proposed, written to agree with the packages,
- * the care plan, and the payment terms above, and promising no ranking or outcome.
+ * The questions are the brief's, except the one about services beyond the packages, the owner's of
+ * 2026-11-23 in place of the welcome series' question; the answers are proposed, written to agree
+ * with the packages, the care plan, and the payment terms above, and promising no ranking or
+ * outcome. That answer links to the services hub, as the owner asked.
  */
 export const pricingFaqs: FaqList = {
   heading: 'Questions about pricing and scope',
@@ -350,7 +349,7 @@ export const pricingFaqs: FaqList = {
     {
       question: 'Is hosting included?',
       answer:
-        'No. The package prices cover the website itself. Auralink Website Care, at $79 a month, adds managed hosting for eligible builds, an SSL certificate, backups and monitoring where the setup supports them, routine maintenance, hosting-related support, and up to 30 minutes of small content updates per billing month, with the first 30 days after launch included. It starts only if you choose it.',
+        'No. The package prices cover the website itself. After launch, you can host it with a compatible provider of your choice, or choose Auralink Website Care at $149 a month: managed hosting for supported builds, SSL, routine platform maintenance where applicable, uptime and contact-form monitoring, backups where supported, hosting-related technical support, and up to 30 minutes of small updates per billing month. The first 30 days after launch are included, and the plan continues after that only if you opt in.',
     },
     {
       question: 'Can I host my website somewhere else?',
@@ -375,7 +374,7 @@ export const pricingFaqs: FaqList = {
     {
       question: 'What if I need more pages or features?',
       answer:
-        'Tell us what you have in mind. Extra pages, e-commerce, custom applications, advanced integrations, email automation beyond the welcome series, and ongoing SEO are quoted separately, either as an addition to a package or as a project of their own. If you already know you need more than a package covers, we quote the whole project up front.',
+        'Tell us what you have in mind. Extra pages, e-commerce, custom applications, advanced integrations, email setup and automation, and ongoing SEO are quoted separately, either as an addition to a package or as a project of their own. If you already know you need more than a package covers, we quote the whole project up front.',
     },
     {
       question: 'Do you write all the website content?',
@@ -383,9 +382,10 @@ export const pricingFaqs: FaqList = {
         'Normally the words and photos come from you, because you know your business, services, and customers best. We shape your material into the page structure and tell you what each page needs. Copywriting, stock imagery, and photography can be scoped separately if you would like help with them.',
     },
     {
-      question: 'What does the free three-email welcome series include?',
+      question: 'Can I request a service separately?',
       answer:
-        "With Business and Growth, we set up three automated emails for one audience on a compatible email platform: a welcome and introduction, a message that builds trust and introduces your services, and one that encourages an inquiry or next step. We write and design the emails and set up the basic automation, within what your platform supports. The platform's own fees, list building, further automations, and ongoing campaigns are not included, and the emails go only to subscribers who have properly opted in.",
+        'Yes. Services beyond the packages, such as a Shopify store, local search and ads, or email follow-up for your leads, are quoted separately. Tell us what you have in mind.',
+      link: moreServices.link,
     },
     {
       question: 'Who owns my website?',

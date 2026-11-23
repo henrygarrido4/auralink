@@ -24,6 +24,8 @@ import {
 export interface Faq {
   readonly question: string;
   readonly answer: string;
+  /** A page the answer points to, shown as a link under it (the pricing page's services question). */
+  readonly link?: { readonly label: string; readonly href: string };
 }
 
 /** One of the three problem-and-response rows on an industry page. */

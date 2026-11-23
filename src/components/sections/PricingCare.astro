@@ -2,18 +2,23 @@
 import DetailSection from '@/components/sections/DetailSection.astro';
 import Button from '@/components/ui/Button.astro';
 import Icon from '@/components/ui/Icon.astro';
-import SectionHeading from '@/components/ui/SectionHeading.astro';
-import { pricingInquiry, websiteCare } from '@/data/pricing';
+import { formatPrice, pricingInquiry, websiteCare } from '@/data/pricing';
 
 /**
- * Hosting and Website Care on the pricing page (src/data/pricing.ts, the owner's brief of
- * 2026-11-20): one plan as one card. Its head, on the near-black, carries the plan's name, the
- * monthly price, and the included first 30 days as a primary badge; its white body lists what the
- * plan includes as checks, what to know about its limits with the logo's pixel as the bullet, and
- * ends with the outline button to the inquiry page. Beside the card from lg, three short terms
- * say that the website is a separate one-time purchase, that the plan starts only when accepted
- * explicitly, and that the website can be hosted elsewhere. No subscription is sold or started on
- * this page. Plain HTML.
+ * Website Care on the pricing page, directly under the package cards (the owner's brief of
+ * 2026-11-23, src/data/pricing.ts): one near-black panel on the white page, in the navbar's
+ * `neutral`, with white headings, the band's light text, and the lit primary as its one button.
+ * There are no cards inside it: hairlines and space divide it.
+ *
+ * From lg it is two columns with a hairline between them. On the left, the eyebrow (the section
+ * heading's dash and label, in primary as on the dark bands), the h2, the description, the button,
+ * and under it the alternative of hosting elsewhere; on the right, the plan's name, the monthly
+ * price larger than the package prices, the first 30 days in primary, the opt-in terms in full
+ * size, then, after a hairline, the three groups of what it covers, each a small primary icon, a
+ * title, and a sentence, and what is not included. Below lg the same elements stack in source
+ * order, which is the order the brief asks for on a phone: heading, description, price and terms,
+ * what it covers, then the button. The desktop columns come from grid placement alone, so the
+ * reading order and the focus order never change, and nothing needs a script.
  */
 interface Props {
   id: string;
@@ -21,88 +26,91 @@ interface Props {
 
 const { id } = Astro.props;
 const titleId = `${id}-title`;
-const { plan, terms } = websiteCare;
+const { plan } = websiteCare;
 ---
 
-<DetailSection id={id} labelledBy={titleId} tone="muted">
-  <SectionHeading
-    id={titleId}
-    eyebrow={websiteCare.eyebrow}
-    heading={websiteCare.heading}
-    intro={websiteCare.intro}
-  />
-
-  <div class="mt-12 grid gap-6 sm:mt-14 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-8">
-    <div data-care-plan class="detail-card flex min-w-0 flex-col overflow-clip">
-      <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 bg-neutral px-6 py-7 text-neutral-content sm:px-8">
-        <div class="min-w-0">
-          <h3 class="text-sm font-bold tracking-[0.16em] text-primary uppercase">{plan.name}</h3>
-          <p class="mt-3 flex items-baseline gap-1.5">
-            <span class="font-(family-name:--font-headers) text-5xl leading-none font-bold tracking-tight text-base-100">
-              ${plan.price}
-            </span>
-            <span class="text-base text-neutral-content/80">/month</span>
-          </p>
-        </div>
-        <p class="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-content">
-          {plan.trial}
-        </p>
-      </div>
-
-      <div class="flex grow flex-col p-6 sm:p-8">
-        <p class="text-xs font-bold tracking-[0.16em] text-base-content/70 uppercase">
-          What's included
-        </p>
-        {/* role="list": Safari drops the list role from lists styled without markers. */}
-        <ul role="list" class="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-x-6">
-          {plan.includes.map((item) => (
-            <li class="flex items-start gap-3 text-base leading-snug text-base-content">
-              <span
-                class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-primary text-primary-content"
-                aria-hidden="true"
-              >
-                <Icon name="check" class="size-3" stroke-width="3" />
-              </span>
-              <span class="min-w-0">{item}</span>
-            </li>
-          ))}
-        </ul>
-
-        <p class="mt-8 text-xs font-bold tracking-[0.16em] text-base-content/70 uppercase">
-          Good to know
-        </p>
-        <ul role="list" class="mt-4 grid gap-2.5">
-          {plan.limits.map((item) => (
-            <li class="flex items-start gap-3 text-base leading-snug text-base-content/80">
-              {/* A square stood on its corner, like the pixels of the logo's mark. */}
-              <span class="mt-2 size-1.5 shrink-0 rotate-45 bg-primary" aria-hidden="true"></span>
-              <span class="min-w-0">{item}</span>
-            </li>
-          ))}
-        </ul>
-
-        <div class="mt-auto pt-8">
-          <Button href={pricingInquiry.href} variant="secondary">
-            {plan.cta}
-          </Button>
-        </div>
-      </div>
+<DetailSection id={id} labelledBy={titleId}>
+  {/*
+   * Rows from lg: the copy, the button, and the alternative on the left, the last row taking
+   * whatever height the plan's column needs beyond them.
+   */}
+  <div
+    data-care-panel
+    class="grid rounded-md bg-neutral px-6 py-10 text-neutral-content shadow-lg sm:px-10 sm:py-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-16 lg:px-14 lg:py-16 xl:gap-x-20"
+  >
+    {/* `relative` keeps the copy above the button's glow. */}
+    <div class="relative min-w-0 lg:col-start-1 lg:row-start-1">
+      <p class="flex items-center gap-3 text-sm font-bold tracking-[0.16em] text-primary uppercase">
+        <span class="h-0.5 w-6 shrink-0 bg-primary" aria-hidden="true"></span>
+        {websiteCare.eyebrow}
+      </p>
+      <h2
+        id={titleId}
+        class="mt-5 text-3xl leading-tight font-bold tracking-tight text-balance text-base-100 sm:text-4xl lg:text-5xl"
+      >
+        {websiteCare.heading}
+      </h2>
+      <p class="mt-5 max-w-xl text-lg leading-relaxed text-pretty text-neutral-content/80">
+        {websiteCare.intro}
+      </p>
     </div>
 
-    <div class="detail-card min-w-0 p-6 sm:p-8">
-      <h3 class="text-xl font-bold tracking-tight text-balance text-base-content">
-        {terms.heading}
-      </h3>
-      <ul role="list" class="mt-2 divide-y divide-base-300">
-        {terms.items.map((term) => (
-          <li class="py-5 last:pb-0">
-            <h4 class="text-base leading-snug font-bold text-base-content">{term.title}</h4>
-            <p class="mt-1.5 text-base leading-relaxed text-pretty text-base-content/75">
-              {term.text}
-            </p>
+    <div
+      data-care-plan
+      class="relative mt-10 min-w-0 border-t border-neutral-content/15 pt-10 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:mt-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-16 xl:pl-20"
+    >
+      <h3 class="text-xl leading-snug font-bold tracking-tight text-base-100">{plan.name}</h3>
+      <p data-care-price class="mt-3 flex flex-wrap items-baseline gap-x-2">
+        <span class="font-(family-name:--font-headers) text-6xl leading-none font-bold tracking-tight text-base-100">
+          {formatPrice(plan.price)}
+        </span>
+        <span class="text-lg text-neutral-content/80">/month</span>
+      </p>
+      <p class="mt-5 flex items-start gap-3 text-lg leading-snug font-bold text-primary">
+        <Icon name="calendar-check" class="mt-0.5 size-5 shrink-0" />
+        <span class="min-w-0 text-balance">{plan.priceNote}</span>
+      </p>
+      <p class="mt-2 max-w-xl text-base leading-relaxed text-pretty text-neutral-content/80">
+        {plan.optIn}
+      </p>
+
+      {/* role="list": Safari drops the list role from lists styled without markers. */}
+      <ul role="list" class="mt-8 grid gap-6 border-t border-neutral-content/15 pt-8">
+        {plan.groups.map((group) => (
+          <li class="flex items-start gap-4">
+            <Icon name={group.icon} class="mt-0.5 size-6 shrink-0 text-primary" />
+            <div class="min-w-0">
+              <h4 class="text-lg leading-snug font-bold text-base-100">{group.title}</h4>
+              <p class="mt-1 text-base leading-relaxed text-pretty text-neutral-content/80">
+                {group.text}
+              </p>
+            </div>
           </li>
         ))}
       </ul>
+
+      <p class="mt-8 text-sm leading-relaxed text-pretty text-neutral-content/75">
+        <span class="font-bold text-base-100">Not included.</span> {plan.excluded}
+      </p>
     </div>
+
+    {/*
+     * The lit primary, its light off until the pointer or keyboard focus; the aura takes the
+     * panel's light text colour. The ring is light on the near-black, like the closing banner's.
+     */}
+    <div class="mt-10 lg:col-start-1 lg:row-start-2">
+      <Button
+        href={pricingInquiry.href}
+        size="lg"
+        aura="hover"
+        class="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-content"
+      >
+        {plan.cta}
+      </Button>
+    </div>
+
+    <p class="relative mt-6 max-w-md text-sm leading-relaxed text-pretty text-neutral-content/75 lg:col-start-1 lg:row-start-3">
+      <span class="font-bold text-base-100">Prefer another host?</span> {plan.elsewhere}
+    </p>
   </div>
 </DetailSection>

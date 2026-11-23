@@ -48,7 +48,7 @@ const websites = {
   offers: pricingPackages.map((pkg) => ({
     '@type': 'Offer',
     name: `${pkg.name} website package`,
-    description: pkg.audience,
+    description: pkg.summary,
     price: pkg.price,
     priceCurrency: 'USD',
     url: `${url}#packages`,

@@ -3,22 +3,25 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import DetailFaq from '@/components/sections/DetailFaq.astro';
 import DetailProcess from '@/components/sections/DetailProcess.astro';
 import PageIntro from '@/components/sections/PageIntro.astro';
-import PricingBonus from '@/components/sections/PricingBonus.astro';
 import PricingCare from '@/components/sections/PricingCare.astro';
 import PricingComparison from '@/components/sections/PricingComparison.astro';
 import PricingCta from '@/components/sections/PricingCta.astro';
+import PricingMoreServices from '@/components/sections/PricingMoreServices.astro';
 import PricingPackages from '@/components/sections/PricingPackages.astro';
 import PricingPageSchema from '@/components/seo/PricingPageSchema.astro';
 import { paymentNote, pricingFaqs, pricingHead, pricingHero, pricingProcess } from '@/data/pricing';
 
 /*
  * The pricing page (the owner's brief of 2026-11-20, with https://uprig.net/pricing as the
- * reference for a clear layout, in this site's own words and colours): the shared dark hero with
- * the two-week preview note; the three packages; the comparison table; the complimentary welcome
- * series; hosting and Website Care; the four steps with the payment terms, on the detail pages'
- * dark process band; the questions; and the page's own closing call to action, which replaces the
- * shared contact banner here so the page ends with one invitation. The copy and every figure
- * live in src/data/pricing.ts. Every button leads to the inquiry page: nothing is sold on the page.
+ * reference for a clear layout, in this site's own words and colours, revised by the owner's brief
+ * of 2026-11-23 so a business owner sees which package fits, what aftercare costs, and how to
+ * start): the shared dark hero with the two-week preview note; the three packages; Website Care,
+ * directly under them; the comparison table; a compact card under it for services beyond the
+ * packages, which replaced the email welcome series the same day; the four steps with the payment
+ * terms, on the detail pages' dark process band; the questions; and the page's own closing call to
+ * action, which replaces the shared contact banner here so the page ends with one invitation. The
+ * copy and every figure live in src/data/pricing.ts. Every button leads to the contact page:
+ * nothing is sold on the page.
  */
 ---
 
@@ -38,9 +41,9 @@ import { paymentNote, pricingFaqs, pricingHead, pricingHero, pricingProcess } fr
     note={pricingHero.note}
   />
   <PricingPackages id="packages" />
-  <PricingComparison id="compare" />
-  <PricingBonus id="welcome-series" />
   <PricingCare id="website-care" />
+  <PricingComparison id="compare" />
+  <PricingMoreServices id="more-services" />
   <DetailProcess id="process" engagement={pricingProcess} note={paymentNote} mark="bottom" />
   <DetailFaq id="faq" faqs={pricingFaqs} mark="top" />
   <PricingCta id="get-started" />

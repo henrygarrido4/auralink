@@ -51,7 +51,7 @@ src/
   content.config.ts collection schemas (Zod)
   data/site.ts      verified business facts, service catalogue, service cards, planned routes
   data/detail-pages.ts, data/service-pages/, data/industry-pages/
- data/pricing.ts the pricing page's packages, comparison, welcome series, Website Care, steps, terms, and questions
+ data/pricing.ts the pricing page's packages, Website Care, comparison, services card, steps, terms, and questions
                     typed, proposed copy of the nine service and sixteen industry detail pages
   lib/              utils.ts cn() class merger, icons.ts icon set, service-cards.ts card links
   styles/global.css Tailwind + daisyUI + tokens
