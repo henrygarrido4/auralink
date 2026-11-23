@@ -5,7 +5,6 @@ import {
   services,
   servicesCta,
   servicesPageCards,
-  site,
 } from '../../src/data/site';
 import { serviceCardLink } from '../../src/lib/service-cards';
 
@@ -279,7 +278,7 @@ test('the introduction ends with the outlined call to view all services', async 
   const heroOutline = page.getByRole('link', { name: 'About us' });
   expect(await cta.evaluate(look)).toEqual(await heroOutline.evaluate(look));
   // The large size, the same as the introduction's outlined button.
-  const introductionCta = page.getByText(`${aboutCta.label} about ${site.name}`, { exact: true });
+  const introductionCta = page.getByRole('link', { name: aboutCta.label, exact: true });
   const buttonSize = (element: HTMLElement) => {
     const style = getComputedStyle(element);
     return {

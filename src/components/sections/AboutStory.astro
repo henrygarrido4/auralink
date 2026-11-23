@@ -2,6 +2,7 @@
 import { Picture } from 'astro:assets';
 import portrait from '@/assets/about/portrait-arms-crossed.webp';
 import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { businessLocation, contactDetails } from '@/data/site';
 
 /**
  * The first section of the About page, straight under the dark hero: the founder, beside the
@@ -13,9 +14,19 @@ import SectionHeading from '@/components/ui/SectionHeading.astro';
  *
  * The eyebrow, the heading, and the four paragraphs are the owner's, supplied on 2026-11-20.
  * The copy is first person: the writer is the developer and founder of Auralink Studio. It
- * publishes no personal name, client, result, price, team size, founding date, or location. The
+ * publishes no personal name, client, result, price, team size, or founding date. The
  * photo is the portrait the owner supplied the same day (src/assets/CREDITS.md). The alt text
  * describes the picture and does not name him.
+ *
+ * Under the story, across the container, a smaller block laid out after the "Based in Towson.
+ * Working well past it." block that closes the story on eylercreative.com/about, the owner's
+ * reference for saying where the studio is (2026-11-22): a hairline, a short bold heading, two
+ * paragraphs side by side from md, and a line with the city beside the ways to reach the studio.
+ * The heading, the paragraphs, and that line are the owner's (2026-11-22): the heading invites a
+ * conversation, and the city sits with the contact details. The city is `businessLocation`; the
+ * number, the address, and the free introductory call on Google Meet are the approved contact
+ * details. The reference's service area and reply time are not published facts here, so neither
+ * is said.
  *
  * The picture's treatment is this page's own, after the reference's photo with its accent bar
  * underneath: the photo on a near-black panel set 20px down and to the right, so it stands off the
@@ -30,6 +41,10 @@ interface Props {
 
 const { id } = Astro.props;
 const titleId = `${id}-title`;
+/** The city as the contact line gives it, with the state's postal code: "Houston, TX". */
+const location = `${businessLocation.locality}, ${businessLocation.regionCode}`;
+const contactLink =
+  'inline-flex min-h-11 items-center self-start rounded-sm font-semibold text-base-content underline decoration-primary decoration-2 underline-offset-4 hover:decoration-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral sm:self-auto';
 ---
 
 <section id={id} aria-labelledby={titleId} class="bg-base-100">
@@ -92,6 +107,43 @@ const titleId = `${id}-title`;
         />
         <span class="absolute -bottom-3.5 left-8 h-1.5 w-24 bg-primary" aria-hidden="true"></span>
       </div>
+    </div>
+
+    {/*
+     * The links are near-black on a primary underline, which doubles under the pointer at once,
+     * with no fade; keyboard focus adds the near-black ring. Each is at least 44px tall. From sm
+     * the city, the number, and the address share one line, apart by dots; below sm each takes a
+     * line of its own, so a dot never ends a line.
+     */}
+    <div data-based-in class="mt-16 border-t border-base-300 pt-11 lg:mt-20">
+      <h3 class="text-xl font-bold tracking-tight text-base-content">
+        Let's talk about your website.
+      </h3>
+      <div class="mt-5 grid gap-5 md:grid-cols-2 md:gap-14">
+        <p class="text-base leading-relaxed text-pretty text-base-content/80">
+          Have a project in mind? Tell me a little about your business and what you'd like your
+          website to do.
+        </p>
+        <p class="text-base leading-relaxed text-pretty text-base-content/80">
+          You can call or email me directly. If you'd like to talk through your ideas, we can start
+          with a {contactDetails.booking.kind.toLowerCase()} on {contactDetails.booking.platform}.
+        </p>
+      </div>
+      <address class="mt-6 flex flex-col text-base font-bold text-base-content/80 not-italic sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2">
+        <span>{location}</span>
+        <span class="hidden sm:inline" aria-hidden="true">
+          ·
+        </span>
+        <a href={contactDetails.phone.href} class={contactLink}>
+          {contactDetails.phone.display}
+        </a>
+        <span class="hidden sm:inline" aria-hidden="true">
+          ·
+        </span>
+        <a href={contactDetails.emailHref} class={contactLink}>
+          {contactDetails.email}
+        </a>
+      </address>
     </div>
   </div>
 </section>

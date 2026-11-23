@@ -1,5 +1,14 @@
 import { expect, test, type Page } from './fixtures';
-import { serviceCards, services, servicesCta, whyPillars } from '../../src/data/site';
+import {
+  basedIn,
+  businessLocation,
+  contactDetails,
+  serviceCards,
+  services,
+  servicesCta,
+  site,
+  whyPillars,
+} from '../../src/data/site';
 
 /**
  * About page (src/pages/about/index.astro), laid out after uprig.net/about, the owner's reference
@@ -13,6 +22,13 @@ import { serviceCards, services, servicesCta, whyPillars } from '../../src/data/
  * described; its panel and bar are decorative. From lg the portrait sits right of the copy and
  * the pillar and service cards share a row; below lg everything stacks. Nothing in these sections
  * animates, and the page ships no island.
+ *
+ * Where the studio is based, the city the owner gave on 2026-11-22 (`businessLocation`), is said
+ * as eylercreative.com/about says its own: in the hero's description, then in a smaller block
+ * under the story, after a hairline, with the owner's copy (2026-11-22): a heading that invites a
+ * conversation, two paragraphs side by side from md, and the city beside the number and the
+ * address, on one line from sm and one to a line below. The structured data carries the city and
+ * the approved ways to reach the studio that the page shows.
  */
 const STORY_HEADING = 'Good businesses deserve to look the part online.';
 const STORY_LEAD =
@@ -22,6 +38,8 @@ const STORY_PARAGRAPHS = [
   'I started Auralink Studio to bring that same level of care and attention to businesses of all sizes. I know how much work goes into building something of your own, and I believe your website should reflect that effort.',
   "Whether you're starting from scratch or improving what you've already built, my goal is to understand your business, create something you're proud of, and help you build a stronger presence online.",
 ];
+/** The city as the contact line under the story gives it. */
+const CITY = `${businessLocation.locality}, ${businessLocation.regionCode}`;
 const PRINCIPLES_HEADING = 'Why Auralink Studio?';
 const PRINCIPLES_LEAD =
   'Thoughtful websites. Built for performance. A partner invested in your business.';
@@ -55,7 +73,7 @@ test('opens with the hero, then who, how, and what, before the contact banner', 
   );
   await expect(
     page.getByText(
-      'At Auralink Studio, you work directly with the person designing and building your website. We start by learning what you want more of from your site and what your customers need to know before they choose you.',
+      'At Auralink Studio, based in Houston, Texas, you work directly with the person designing and building your website. We start by learning what you want more of from your site and what your customers need to know before they choose you.',
       { exact: true },
     ),
   ).toBeVisible();
@@ -100,6 +118,101 @@ test('introduces the founder beside the described, lazy portrait', async ({ page
   expect(decor.hidden, 'the panel, the picture, then the bar').toEqual(['true', 'picture', 'true']);
   expect(decor.text, 'no words beside the photo').toBe('');
   expect(decor.controls).toBe(0);
+});
+
+test('invites a conversation under the story, with the city beside the ways to reach the studio', async ({
+  page,
+}) => {
+  await page.goto('/about/');
+  const block = story(page).locator('[data-based-in]');
+  // The owner's copy of 2026-11-22.
+  await expect(block.getByRole('heading', { level: 3 })).toHaveText(
+    "Let's talk about your website.",
+  );
+  const paragraphs = [
+    "Have a project in mind? Tell me a little about your business and what you'd like your website to do.",
+    "You can call or email me directly. If you'd like to talk through your ideas, we can start with a free introductory call on Google Meet.",
+  ].map((text) => block.getByText(text, { exact: true }));
+  for (const paragraph of paragraphs) await expect(paragraph).toBeVisible();
+
+  // The city, then the approved number and address, as links that open a call and an email.
+  const line = block.locator('address');
+  await expect(line.getByText(CITY, { exact: true }), 'the city').toBeVisible();
+  const phone = line.getByRole('link', { name: contactDetails.phone.display, exact: true });
+  const email = line.getByRole('link', { name: contactDetails.email, exact: true });
+  await expect(phone).toHaveAttribute('href', contactDetails.phone.href);
+  await expect(email).toHaveAttribute('href', contactDetails.emailHref);
+  for (const link of [phone, email]) {
+    expect((await link.boundingBox())!.height, 'a 44px target').toBeGreaterThanOrEqual(44);
+  }
+  // One line from sm, with dots between; below sm one item to a line and no dots.
+  const [city, phoneBox, emailBox] = await Promise.all([
+    line.getByText(CITY, { exact: true }).boundingBox(),
+    phone.boundingBox(),
+    email.boundingBox(),
+  ]);
+  if (page.viewportSize()!.width >= 640) {
+    expect(phoneBox!.x, 'the number follows the city').toBeGreaterThan(city!.x + city!.width);
+    expect(emailBox!.x, 'the address follows the number').toBeGreaterThan(
+      phoneBox!.x + phoneBox!.width,
+    );
+  } else {
+    expect(phoneBox!.y, 'the number under the city').toBeGreaterThanOrEqual(city!.y + city!.height);
+    expect(emailBox!.y, 'the address under the number').toBeGreaterThanOrEqual(
+      phoneBox!.y + phoneBox!.height,
+    );
+    await expect(line.locator('[aria-hidden="true"]').first()).toBeHidden();
+  }
+
+  // After a hairline across the container, under both the copy and the portrait.
+  await expect(block).toHaveCSS('border-top-width', '1px');
+  await expect(block).toHaveCSS('border-top-style', 'solid');
+  const [blockBox, copyBox, photoBox] = await Promise.all([
+    block.boundingBox(),
+    story(page).getByText(STORY_PARAGRAPHS.at(-1)!, { exact: true }).boundingBox(),
+    portrait(page).boundingBox(),
+  ]);
+  for (const above of [copyBox!, photoBox!]) {
+    expect(blockBox!.y, 'below the story and the portrait').toBeGreaterThan(above.y + above.height);
+  }
+
+  // The two paragraphs side by side from md, one above the other below it.
+  const [first, second] = await Promise.all(paragraphs.map((paragraph) => paragraph.boundingBox()));
+  if (page.viewportSize()!.width >= 768) {
+    expect(second!.y, 'side by side').toBeCloseTo(first!.y, 0);
+    expect(second!.x).toBeGreaterThan(first!.x + first!.width);
+  } else {
+    expect(second!.y, 'stacked').toBeGreaterThan(first!.y + first!.height);
+  }
+});
+
+test('the structured data carries the city and the ways to reach the studio that the page shows', async ({
+  page,
+}) => {
+  await page.goto('/about/');
+  const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+  const about = blocks
+    .map((block) => JSON.parse(block) as { '@type': string; about?: unknown })
+    .find((block) => block['@type'] === 'AboutPage');
+  expect(about?.about).toEqual({
+    '@type': 'Organization',
+    name: site.name,
+    url: site.url,
+    email: contactDetails.email,
+    telephone: contactDetails.phone.href.replace('tel:', ''),
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: businessLocation.locality,
+      addressRegion: businessLocation.regionCode,
+      addressCountry: businessLocation.countryCode,
+    },
+  });
+  // Nothing is marked up that the page does not show.
+  const main = page.getByRole('main');
+  for (const shown of [contactDetails.email, contactDetails.phone.display, CITY]) {
+    await expect(main.getByText(shown, { exact: true }), shown).toBeVisible();
+  }
+  await expect(main.getByText(`based in ${basedIn},`), 'and in the hero').toBeVisible();
 });
 
 test('shows how the studio works as the three pillars, numbered, with their checklists', async ({

@@ -50,9 +50,10 @@ export interface ContactDetails {
  * (docs/content-strategy.md, "Verified facts"): the address, the phone number, and the Calendly
  * event for the free discovery call, a 20-minute call on Google Meet. The contact page shows all
  * three (src/components/sections/ContactOptions.astro), the inquiry form's failure message offers
- * the address and the number (src/components/sections/ProjectInquiryForm.astro), and the contact
- * page's structured data carries the address and the number. Nothing else states them; change
- * them here and every page follows. The owner's personal addresses are never displayed.
+ * the address and the number (src/components/sections/ProjectInquiryForm.astro), the About page's
+ * location line under the founder's story shows both (src/components/sections/AboutStory.astro),
+ * and the structured data of the contact and About pages carries them. Nothing else states them;
+ * change them here and every page follows. The owner's personal addresses are never displayed.
  */
 export const contactDetails: ContactDetails = {
   email: 'henry@auralinkstudio.com',
@@ -67,10 +68,22 @@ export const contactDetails: ContactDetails = {
 };
 
 /**
- * Where the studio is based: the state and the country, as the owner stated them on 2026-11-22
- * for the privacy policy (src/data/privacy.ts). No street address or service area is published.
+ * Where the studio is based. The owner stated the state and the country on 2026-11-22 for the
+ * privacy policy (src/data/privacy.ts), which keeps that wording, and the city the same day ("I
+ * am based in Houston Texas"), for the About page and the home page introduction
+ * (src/components/sections/AboutIntro.astro). `regionCode` and `countryCode` are the same place
+ * as structured data writes it. No street address or service area is published.
  */
-export const businessLocation = { region: 'Texas', country: 'United States' } as const;
+export const businessLocation = {
+  locality: 'Houston',
+  region: 'Texas',
+  regionCode: 'TX',
+  country: 'United States',
+  countryCode: 'US',
+} as const;
+
+/** The city and the state, as the pages show them. */
+export const basedIn = `${businessLocation.locality}, ${businessLocation.region}`;
 
 /**
  * The contact page and its two tabs (ContactOptions.astro), as links. The page opens on the
@@ -85,13 +98,17 @@ export const contactRoutes = {
 } as const;
 
 /**
- * The person in the home introduction's portrait (src/components/sections/AboutIntro.astro),
- * named on the card over the photo. A personal name is not published yet
- * (docs/content-strategy.md): the About page speaks in the first person as the developer and
- * founder, and this card stays hidden until the owner sets `name`. `role` is the line under
- * the name.
+ * The person in the home introduction's portrait (src/components/sections/AboutIntro.astro), who
+ * speaks in its paragraph and is named on the card over the photo, with `role` as the line under
+ * the name. The owner gave the name for that paragraph on 2026-11-22 ("I'm Henry Garrido, founder
+ * of Auralink Studio"); the privacy policy (src/data/privacy.ts) spells the legal name Henrry
+ * Garrido. The About page still speaks in the first person without a name. Without `name` the
+ * card is hidden and the paragraph says "I'm the founder".
  */
-export const owner: { readonly name?: string; readonly role?: string } = {};
+export const owner: { readonly name?: string; readonly role?: string } = {
+  name: 'Henry Garrido',
+  role: 'Founder',
+};
 
 /** Service catalogue. Slugs match the `serviceSlug` enum in src/content.config.ts. */
 export const services = [
@@ -181,9 +198,10 @@ export const primaryNav: readonly NavItem[] = [
 export const primaryCta: NavItem = { label: 'Book a free call', href: contactRoutes.bookCall };
 
 /**
- * The home introduction's call to action, under its text, links to the built About page.
+ * The home introduction's call to action, under its text, links to the built About page. The
+ * label says where it leads (the owner, 2026-11-22, replacing "Learn more").
  */
-export const aboutCta: NavItem = { label: 'Learn more', href: '/about/' };
+export const aboutCta: NavItem = { label: 'More about the studio', href: '/about/' };
 
 /** One of the six points under the home introduction's paragraph (AboutIntro.astro). */
 export interface AboutHighlight {

@@ -3,18 +3,22 @@ import { site } from '@/data/site';
 
 /**
  * JSON-LD for a hub or utility page: the page's type, name, and URL, the site it belongs to, and
- * the studio as its subject. The contact page also passes `contact`, the studio's address and
- * number from `contactDetails`, which the page shows (the owner's approval, 2026-11-20), so the
- * Organization node carries them too; nothing is marked up that is not visible on the page.
- * `WebPage` is for a page with no more specific type, such as the privacy policy.
+ * the studio as its subject. The contact and About pages also pass `contact`, the studio's address
+ * and number from `contactDetails`, which they show (the owner's approval, 2026-11-20), so the
+ * Organization node carries them too. The About page also passes `location`, the city it names
+ * (`businessLocation`, the owner's, 2026-11-22), as a PostalAddress with no street or postal
+ * code, since none is published. Nothing is marked up that is not visible on the page. `WebPage`
+ * is for a page with no more specific type, such as the privacy policy.
  */
 interface Props {
   type: 'AboutPage' | 'CollectionPage' | 'ContactPage' | 'WebPage';
   name: string;
   /** The studio's visible, approved ways to be reached, for the Organization node. */
   contact?: { email: string; telephone: string };
+  /** Where the studio is based, as the page shows it, for the Organization node. */
+  location?: { locality: string; regionCode: string; countryCode: string };
 }
-const { type, name, contact } = Astro.props;
+const { type, name, contact, location } = Astro.props;
 const schema = {
   '@context': 'https://schema.org',
   '@type': type,
@@ -26,6 +30,14 @@ const schema = {
     name: site.name,
     url: site.url,
     ...(contact && { email: contact.email, telephone: contact.telephone }),
+    ...(location && {
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: location.locality,
+        addressRegion: location.regionCode,
+        addressCountry: location.countryCode,
+      },
+    }),
   },
 };
 ---

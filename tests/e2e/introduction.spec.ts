@@ -1,5 +1,5 @@
 import { expect, test, type Page } from './fixtures';
-import { aboutCta, aboutHighlights, owner, site } from '../../src/data/site';
+import { aboutCta, aboutHighlights, basedIn, owner, site } from '../../src/data/site';
 
 /**
  * Home page introduction (src/components/sections/AboutIntro.astro). It follows the process and
@@ -9,18 +9,17 @@ import { aboutCta, aboutHighlights, owner, site } from '../../src/data/site';
  * down and right by the room made for it, with a name card over the photo's lower right corner
  * once `owner.name` is set. Beside it, after the owner's reference (2026-11-20), the copy, the
  * six `aboutHighlights` in two columns from sm (each a decorative mark, an h3, and one sentence),
- * and the outlined secondary call to learn more, the hero's "About us": a link to the About page
- * once `aboutCta.href` is set and a placeholder until then, named for that page by words only
- * assistive technology reads, 32px under the points on phones and 48px from 768px, with an 18px
- * label. It changes colour at once and has no border light. From lg the portrait sits left of the
- * copy; below, the copy comes first.
+ * and the outlined secondary link to the About page, styled as the hero's "About us": a link
+ * once `aboutCta.href` is set and a placeholder until then, labelled with where it leads, 32px
+ * under the points on phones and 48px from 768px, with an 18px label. It changes colour at once
+ * and has no border light. From lg the portrait sits left of the copy; below, the copy comes
+ * first. Since 2026-11-22 the copy is the owner's, in the first person: the heading, and a
+ * paragraph that gives the owner's name, the studio, and the city.
  */
-const HEADING = 'A digital presence built around your goals.';
-/** The button's whole text: the visible label, then the hidden words naming its destination. */
-const NAME = `${aboutCta.label} about ${site.name}`;
+const HEADING = 'Meet the developer behind your website.';
 
 const section = (page: Page) => page.getByRole('region', { name: HEADING });
-const button = (page: Page) => section(page).getByText(NAME, { exact: true });
+const button = (page: Page) => section(page).getByText(aboutCta.label, { exact: true });
 const points = (page: Page) => section(page).locator('[data-about-points]');
 
 test('follows the process, before the selected work and the closing contact banner', async ({
@@ -31,6 +30,27 @@ test('follows the process, before the selected work and the closing contact bann
     [...document.querySelectorAll('main > section')].map((section) => section.id),
   );
   expect(order.slice(-4)).toEqual(['process', 'about', 'work', 'project-contact']);
+});
+
+test('speaks in the first person: the heading, then who, which studio, and where', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const heading = section(page).getByRole('heading', { level: 2 });
+  await expect(heading.locator(':scope > span')).toHaveText([
+    'Meet the developer',
+    'behind your website.',
+  ]);
+  // The owner's copy of 2026-11-22, with the city the owner gave that day (`businessLocation`),
+  // said here, above the projects.
+  const paragraph = heading.locator('xpath=following-sibling::p[1]');
+  const opening = owner.name
+    ? `I'm ${owner.name}, founder of ${site.name} in ${basedIn}.`
+    : `I'm the founder of ${site.name} in ${basedIn}.`;
+  await expect(paragraph).toHaveText(
+    `${opening} I design and build websites that help customers understand what you offer, see the quality of your work, and take the next step. That might mean booking an appointment, requesting a quote, or picking up the phone.`,
+  );
+  expect(basedIn).toBe('Houston, Texas');
 });
 
 test('makes six points after the paragraph, each a mark, a title, and one sentence', async ({
@@ -72,7 +92,7 @@ test('makes six points after the paragraph, each a mark, a title, and one senten
   expect(new Set(rows).size, `${columns} column(s)`).toBe(aboutHighlights.length / columns);
 });
 
-test('the copy ends with the outlined call to learn more about the studio', async ({ page }) => {
+test('the copy ends with the outlined link to more about the studio', async ({ page }) => {
   await page.goto('/');
   const cta = button(page);
   await expect(cta).toBeVisible();
@@ -94,15 +114,16 @@ test('the copy ends with the outlined call to learn more about the studio', asyn
   expect(await cta.evaluate(look)).toEqual(await heroOutline.evaluate(look));
   if (aboutCta.href) {
     await expect(cta).toHaveAttribute('href', aboutCta.href);
-    await expect(section(page).getByRole('link', { name: NAME, exact: true })).toBeVisible();
+    // The label names where it leads (the owner, 2026-11-22), so the link needs no hidden words.
+    await expect(
+      section(page).getByRole('link', { name: aboutCta.label, exact: true }),
+    ).toBeVisible();
+    await expect(cta.locator('.sr-only'), 'no hidden words').toHaveCount(0);
   } else {
     await expect(cta, 'no destination yet').not.toHaveAttribute('href');
     await expect(section(page).getByRole('link')).toHaveCount(0);
   }
-
-  // Only the label shows: the words after it are for assistive technology and search engines.
-  const hidden = (await cta.getByText(`about ${site.name}`).boundingBox())!;
-  expect(hidden.width * hidden.height, 'the destination is visually hidden').toBeLessThanOrEqual(1);
+  expect(aboutCta.label).toBe('More about the studio');
 });
 
 test('sits under the points and in line with them, spaced and sized as in the reference', async ({

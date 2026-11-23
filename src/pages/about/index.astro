@@ -5,17 +5,24 @@ import AboutStory from '@/components/sections/AboutStory.astro';
 import AboutPrinciples from '@/components/sections/AboutPrinciples.astro';
 import AboutServices from '@/components/sections/AboutServices.astro';
 import PageSchema from '@/components/seo/PageSchema.astro';
-import { site } from '@/data/site';
+import { basedIn, businessLocation, contactDetails, site } from '@/data/site';
 
 /*
  * Laid out after https://uprig.net/about, the owner's reference (2026-11-20), in this site's own
  * system: the dark hero; the founder, beside the owner's portrait; how it works, as the
  * three pillars on the dark band; what it does, as the service catalogue's three groups on the
  * grey band; then the shared contact banner. The logo's mark lies across the edge between the
- * dark band and the grey one, as on the detail pages. The hero's headline is the owner's heading
- * from the home page introduction, where "Learn more" leads here; its yellow words are a proposal.
+ * dark band and the grey one, as on the detail pages. The hero's headline was the owner's heading
+ * for the home page introduction until that section's copy changed on 2026-11-22; that section's
+ * "More about the studio" leads here. Its yellow words are a proposal.
  * The description under it is the owner's, supplied on 2026-11-21, and is this page's own: the
  * services hub still uses site.summary.
+ *
+ * Where the studio is based, the city the owner gave on 2026-11-22, is said as
+ * https://eylercreative.com/about/ (the owner's reference for it) says its own: first in the
+ * hero's description, then beside the contact details in the smaller block under the founder's
+ * story (AboutStory.astro). The structured data carries the city and the ways to reach the
+ * studio that the page shows.
  */
 ---
 
@@ -24,13 +31,21 @@ import { site } from '@/data/site';
   description="Learn about Auralink Studio's approach to connected websites, email marketing, and search visibility for business owners and marketing teams."
 >
   <Fragment slot="head">
-    <PageSchema type="AboutPage" name={`About ${site.name}`} />
+    <PageSchema
+      type="AboutPage"
+      name={`About ${site.name}`}
+      contact={{
+        email: contactDetails.email,
+        telephone: contactDetails.phone.href.replace('tel:', ''),
+      }}
+      location={businessLocation}
+    />
   </Fragment>
   <PageIntro
     eyebrow="About"
     title="A digital presence built around your goals."
     highlight="your goals."
-    description="At Auralink Studio, you work directly with the person designing and building your website. We start by learning what you want more of from your site and what your customers need to know before they choose you."
+    description={`At ${site.name}, based in ${basedIn}, you work directly with the person designing and building your website. We start by learning what you want more of from your site and what your customers need to know before they choose you.`}
   />
   <AboutStory id="story" />
   <AboutPrinciples id="how-we-work" mark="bottom" />
