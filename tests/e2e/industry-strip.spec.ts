@@ -1,25 +1,44 @@
 import { expect, test, type Locator, type Page } from './fixtures';
-import { serviceCards } from '../../src/data/site';
-import { SERVICE_STRIP_SPEED_PX_PER_SECOND } from '../../src/lib/service-strip';
+import { industries } from '../../src/data/site';
+import { INDUSTRY_STRIP_SPEED_PX_PER_SECOND } from '../../src/lib/industry-strip';
 
 /**
- * Home services strip (src/components/sections/ServiceStrip.astro), between the hero and the
- * services: the service-card titles as one line of type, the first word bold and the rest
- * light, with a small eight-point asterisk before each, near-black on a yellow band. Behind the yellow lies a
- * neutral band tilted 2.2 degrees, showing above it on the right and below it on the left, as in
- * the owner's reference (2026-11-18). The titles scroll slowly right to left in one continuous
- * loop that runs off both edges, hold still while the pointer is over the band, and otherwise sit
- * in a static wrapping row: under reduced motion and without JavaScript. There is no pause button
- * (owner, 2026-11-18). The repeated half and the asterisks stay out of the accessibility tree.
- * Nothing in the strip is a link or a control.
+ * Home industry strip (src/components/sections/IndustryStrip.astro), between the hero and the
+ * services: the kinds of business in `industries`, each by its short `stripLabel`, as one line of
+ * type, the first word bold and the rest light, with a small eight-point asterisk before each,
+ * near-black on a yellow band. Behind the yellow lies a neutral band tilted 2.2 degrees, showing
+ * above it on the right and below it on the left, as in the owner's reference (2026-11-18). The
+ * names scroll slowly right to left in one continuous loop that runs off both edges, hold still
+ * while the pointer is over the band, and otherwise sit in compact centred rows: under reduced
+ * motion and without JavaScript, several names to a row, in type no smaller than 20px, inside the
+ * screen. There is no pause button (owner, 2026-11-18). The repeated half and the asterisks stay
+ * out of the accessibility tree. Nothing in the strip is a link or a control.
  */
 const WIDTHS = [360, 390, 768, 1024, 1440, 1920];
+
+/**
+ * The most rows the static row may take at each checked width: the count of the compact layout
+ * of 2026-11-23 (11, 9, 5, 4, 3, 2) plus one, for an engine that sets a name a pixel wider. The
+ * wrap it replaced took 16 rows on a phone, one name to a line.
+ */
+const STATIC_MAX_ROWS: Readonly<Record<number, number>> = {
+  360: 12,
+  390: 10,
+  768: 6,
+  1024: 5,
+  1440: 4,
+  1920: 3,
+};
+
+/** The smallest type the static row may use: one step below the marquee's 24px on phones. */
+const STATIC_MIN_FONT_PX = 20;
 
 /** The tilt of the band behind the yellow one, in degrees. */
 const TILT = 2.2;
 
-const strip = (page: Page) => page.getByRole('region', { name: 'Services', exact: true });
-const trackOf = (page: Page) => strip(page).locator('[data-service-strip-track]');
+const strip = (page: Page) =>
+  page.getByRole('region', { name: 'Industries we work with', exact: true });
+const trackOf = (page: Page) => strip(page).locator('[data-industry-strip-track]');
 
 /** The marquee's play state: running, paused, or missing when it is not applied. */
 const playState = (track: Locator) =>
@@ -27,14 +46,14 @@ const playState = (track: Locator) =>
     (element) =>
       element
         .getAnimations()
-        .find((item) => (item as CSSAnimation).animationName === 'service-strip-scroll')
+        .find((item) => (item as CSSAnimation).animationName === 'industry-strip-scroll')
         ?.playState ?? 'missing',
   );
 
 /** The fade at the row's edges: its mask, or `none`. */
 const edgeFade = (page: Page) =>
   strip(page)
-    .locator('[data-service-strip-viewport]')
+    .locator('[data-industry-strip-viewport]')
     .evaluate((element) => {
       const style = getComputedStyle(element);
       return (
@@ -139,28 +158,57 @@ const itemBoxes = (page: Page) =>
       }),
     );
 
-test.describe('services strip', () => {
+/**
+ * How many rows the static row takes and the size of its type, in one `evaluate` for the same
+ * reason. The items of a row share a vertical centre, so each distinct centre is a row.
+ */
+const staticLayout = (page: Page) =>
+  strip(page)
+    .getByRole('list')
+    .evaluate((list) => {
+      const centres = [...list.querySelectorAll(':scope > li')].map((item) => {
+        const rect = item.getBoundingClientRect();
+        return Math.round(rect.top + rect.height / 2);
+      });
+      const label = list.querySelector('[data-industry-strip-label]');
+      return {
+        rows: new Set(centres).size,
+        items: centres.length,
+        fontSize: label ? Number.parseFloat(getComputedStyle(label).fontSize) : 0,
+      };
+    });
+
+/** The static row is compact: several names to a row, few rows, and type that stays large. */
+const expectCompact = async (page: Page, width: number) => {
+  const { rows, items, fontSize } = await staticLayout(page);
+  expect(rows, `${width}px: names share rows`).toBeLessThan(items);
+  expect(rows, `${width}px: rows`).toBeLessThanOrEqual(STATIC_MAX_ROWS[width]);
+  expect(fontSize, `${width}px: type size`).toBeGreaterThanOrEqual(STATIC_MIN_FONT_PX);
+};
+
+test.describe('industry strip', () => {
   test.use({ reducedMotion: 'no-preference' });
 
-  test('lists each service once, between the hero and the services, with no links', async ({
+  test('lists each industry once, between the hero and the services, with no links', async ({
     page,
   }) => {
     await page.goto('/');
     const band = strip(page);
-    await expect(band.getByRole('listitem')).toHaveCount(serviceCards.length);
+    await expect(band.getByRole('listitem')).toHaveCount(industries.length);
     const snapshot = await band.ariaSnapshot();
-    for (const [index, card] of serviceCards.entries()) {
+    for (const [index, { stripLabel }] of industries.entries()) {
       const item = band.getByRole('listitem').nth(index);
-      await expect(item).toHaveText(card.title);
-      await expect(item.locator('svg[aria-hidden="true"]'), `${card.title} star`).toHaveCount(1);
+      // The short label, never the full name, which the rest of the site keeps.
+      await expect(item).toHaveText(stripLabel);
+      await expect(item.locator('svg[aria-hidden="true"]'), `${stripLabel} star`).toHaveCount(1);
       await expect(item.locator('svg')).toBeVisible();
       // The first word is bold and the rest light, in the heading face's two weights.
-      const lead = item.locator('[data-service-strip-label] > span');
-      await expect(lead).toHaveText(card.title.split(' ')[0]);
+      const lead = item.locator('[data-industry-strip-label] > span');
+      await expect(lead).toHaveText(stripLabel.split(' ')[0]);
       await expect(lead).toHaveCSS('font-weight', '700');
-      await expect(item.locator('[data-service-strip-label]')).toHaveCSS('font-weight', '300');
+      await expect(item.locator('[data-industry-strip-label]')).toHaveCSS('font-weight', '300');
       const hits =
-        snapshot.match(new RegExp(card.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) ?? [];
+        snapshot.match(new RegExp(stripLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) ?? [];
       expect(hits, snapshot).toHaveLength(1);
     }
     await expect(band.getByRole('link')).toHaveCount(0);
@@ -168,11 +216,11 @@ test.describe('services strip', () => {
     expect(
       await band.locator('li').count(),
       'the loop repeats the list in the DOM',
-    ).toBeGreaterThan(serviceCards.length);
+    ).toBeGreaterThan(industries.length);
 
     const order = await page.evaluate(() => {
       const hero = document.querySelector('[aria-labelledby="hero-title"]');
-      const band = document.querySelector('[data-service-strip]');
+      const band = document.querySelector('[data-industry-strip]');
       const services = document.getElementById('services');
       if (!hero || !band || !services) return 'missing';
       const afterHero = hero.compareDocumentPosition(band) & Node.DOCUMENT_POSITION_FOLLOWING;
@@ -187,24 +235,24 @@ test.describe('services strip', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
     const band = strip(page);
-    const track = band.locator('[data-service-strip-track]');
+    const track = band.locator('[data-industry-strip-track]');
     const measured = await track.evaluate((element) => {
-      const root = element.closest('[data-service-strip]');
-      const viewport = root?.querySelector('[data-service-strip-viewport]');
+      const root = element.closest('[data-industry-strip]');
+      const viewport = root?.querySelector('[data-industry-strip-viewport]');
       const half = root?.querySelector<HTMLElement>(
-        '[data-service-strip-half]:not([data-service-strip-clone])',
+        '[data-industry-strip-half]:not([data-industry-strip-clone])',
       );
-      const clone = root?.querySelector<HTMLElement>('[data-service-strip-clone]');
+      const clone = root?.querySelector<HTMLElement>('[data-industry-strip-clone]');
       if (!root || !viewport || !half || !clone) return null;
       // elementFromPoint only answers for points on screen.
       viewport.scrollIntoView({ block: 'center', behavior: 'instant' });
       const animation = element
         .getAnimations()
-        .find((item) => (item as CSSAnimation).animationName === 'service-strip-scroll');
+        .find((item) => (item as CSSAnimation).animationName === 'industry-strip-scroll');
       const duration = animation?.effect?.getComputedTiming().duration;
       const box = (node: Element) => node.getBoundingClientRect();
-      const halfLabels = [...half.querySelectorAll('[data-service-strip-label]')];
-      const cloneLabels = [...clone.querySelectorAll('[data-service-strip-label]')];
+      const halfLabels = [...half.querySelectorAll('[data-industry-strip-label]')];
+      const cloneLabels = [...clone.querySelectorAll('[data-industry-strip-label]')];
       const gap = (from: Element, to: Element) => box(to).left - box(from).right;
       const viewportBox = box(viewport);
       const misses: number[] = [];
@@ -246,8 +294,8 @@ test.describe('services strip', () => {
     expect(measured.bandHeight).toBeLessThanOrEqual(120);
     expect(await edgeFade(page), 'the names run off both edges, with no fade').toBe('none');
     const speed = measured.halfWidth / (measured.duration / 1000);
-    expect(speed).toBeGreaterThan(SERVICE_STRIP_SPEED_PX_PER_SECOND * 0.9);
-    expect(speed).toBeLessThan(SERVICE_STRIP_SPEED_PX_PER_SECOND * 1.1);
+    expect(speed).toBeGreaterThan(INDUSTRY_STRIP_SPEED_PX_PER_SECOND * 0.9);
+    expect(speed).toBeLessThan(INDUSTRY_STRIP_SPEED_PX_PER_SECOND * 1.1);
 
     // 400ms at 30px a second is 12px.
     expect(await travel(track, 400), 'the names move left').toBeLessThan(-6);
@@ -259,9 +307,9 @@ test.describe('services strip', () => {
   }) => {
     await page.goto('/');
     const band = strip(page);
-    const colours = await band.locator('[data-service-strip-viewport]').evaluate((element) => ({
+    const colours = await band.locator('[data-industry-strip-viewport]').evaluate((element) => ({
       band: getComputedStyle(element).backgroundColor,
-      label: getComputedStyle(element.querySelector('[data-service-strip-label]')!).color,
+      label: getComputedStyle(element.querySelector('[data-industry-strip-label]')!).color,
       star: getComputedStyle(element.querySelector('li svg')!).color,
     }));
     const primary = await srgb(page, 'var(--color-primary)');
@@ -321,7 +369,7 @@ test.describe('services strip', () => {
       expect(Math.max(...tops) - Math.min(...tops), `${width}px stays one line`).toBeLessThan(2);
       expect(await pageOverflow(page), `${width}px page overflow`).toBeLessThanOrEqual(1);
       const fontSize = await band
-        .locator('[data-service-strip-label]')
+        .locator('[data-industry-strip-label]')
         .first()
         .evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize));
       expect(fontSize, `${width}px type`).toBeGreaterThanOrEqual(20);
@@ -367,15 +415,17 @@ test.describe('services strip', () => {
   });
 });
 
-test.describe('services strip, reduced motion', () => {
+test.describe('industry strip, reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
 
-  test('shows every service in a static wrap and does not scroll', async ({ page }) => {
+  test('shows every industry in compact rows inside the screen and does not scroll', async ({
+    page,
+  }) => {
     for (const width of WIDTHS) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/');
       const band = strip(page);
-      await expect(band.getByRole('listitem')).toHaveCount(serviceCards.length);
+      await expect(band.getByRole('listitem')).toHaveCount(industries.length);
       await expect(band.getByRole('button')).toHaveCount(0);
       await expect(band).not.toHaveAttribute('data-running', '');
       const running = await band.evaluate(
@@ -393,6 +443,7 @@ test.describe('services strip, reduced motion', () => {
         expect(box.left).toBeGreaterThanOrEqual(-1);
         expect(box.right).toBeLessThanOrEqual(viewportWidth + 1);
       }
+      await expectCompact(page, width);
     }
 
     await page.setViewportSize({ width: 360, height: 800 });
@@ -401,16 +452,16 @@ test.describe('services strip, reduced motion', () => {
   });
 });
 
-test.describe('services strip, without JavaScript', () => {
+test.describe('industry strip, without JavaScript', () => {
   test.use({ javaScriptEnabled: false, reducedMotion: 'no-preference' });
 
-  test('keeps every service readable in a static wrap', async ({ page }) => {
+  test('keeps every industry readable in compact rows', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     await page.goto('/');
     const band = strip(page);
-    await expect(band.getByRole('listitem')).toHaveCount(serviceCards.length);
-    for (const card of serviceCards) {
-      await expect(band.getByRole('listitem').filter({ hasText: card.title })).toBeVisible();
+    await expect(band.getByRole('listitem')).toHaveCount(industries.length);
+    for (const { stripLabel } of industries) {
+      await expect(band.getByRole('listitem').filter({ hasText: stripLabel })).toBeVisible();
     }
     await expect(band.getByRole('button')).toHaveCount(0);
     const running = await band.evaluate(
@@ -418,7 +469,7 @@ test.describe('services strip, without JavaScript', () => {
     );
     expect(running).toBe(0);
     expect(await edgeFade(page), 'no fade on a static row').toBe('none');
-    await expect(band.locator('[data-service-strip-clone]')).toBeHidden();
+    await expect(band.locator('[data-industry-strip-clone]')).toBeHidden();
 
     const boxes = await itemBoxes(page);
     expect(
@@ -429,5 +480,6 @@ test.describe('services strip, without JavaScript', () => {
       expect(box.right).toBeLessThanOrEqual(391);
     }
     expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
+    await expectCompact(page, 390);
   });
 });

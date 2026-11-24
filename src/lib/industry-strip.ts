@@ -1,10 +1,10 @@
 /**
- * Runs the home services strip (src/components/sections/ServiceStrip.astro).
+ * Runs the home industry strip (src/components/sections/IndustryStrip.astro).
  *
- * The scrolling itself is the `service-strip` utility in src/styles/global.css: a transform from
+ * The scrolling itself is the `industry-strip` utility in src/styles/global.css: a transform from
  * 0 to -50% of a track made of two equal halves. This measures that track, repeats a set of names
  * until one half is at least as wide as the viewport (so a wide screen never shows an empty gap),
- * and sets --service-strip-duration so the motion stays at SERVICE_STRIP_SPEED_PX_PER_SECOND
+ * and sets --industry-strip-duration so the motion stays at INDUSTRY_STRIP_SPEED_PX_PER_SECOND
  * whatever the width. Pausing under the pointer is the stylesheet's, not this script's.
  *
  * Nothing here runs the motion. Without this script, or when the visitor prefers reduced motion,
@@ -12,10 +12,11 @@
  */
 
 /**
- * How fast the names travel. Slow enough to read every label as it drifts past (owner,
- * 2026-11-18: slower than the first 60).
+ * How fast the names travel. Slow enough to read every label as it drifts past: 30 at the
+ * owner's request on 2026-11-18 (slower than the first 60), and 60 again since the owner's
+ * `b0b4853` the next day.
  */
-export const SERVICE_STRIP_SPEED_PX_PER_SECOND = 60;
+export const INDUSTRY_STRIP_SPEED_PX_PER_SECOND = 60;
 
 /** Enough repeats to fill a very wide screen from the shortest realistic set. */
 const MAX_COPIES = 8;
@@ -23,20 +24,20 @@ const MAX_COPIES = 8;
 const started = new WeakSet<HTMLElement>();
 
 /** Prepares one strip. Safe to call again: a prepared root is left as it is. */
-export function startServiceStrip(root: HTMLElement): void {
+export function startIndustryStrip(root: HTMLElement): void {
   if (started.has(root)) return;
 
-  const viewport = root.querySelector<HTMLElement>('[data-service-strip-viewport]');
+  const viewport = root.querySelector<HTMLElement>('[data-industry-strip-viewport]');
   const half = root.querySelector<HTMLElement>(
-    '[data-service-strip-half]:not([data-service-strip-clone])',
+    '[data-industry-strip-half]:not([data-industry-strip-clone])',
   );
-  const list = half?.querySelector<HTMLElement>(':scope > [data-service-strip-list]');
+  const list = half?.querySelector<HTMLElement>(':scope > [data-industry-strip-list]');
   if (!viewport || !half || !list) return;
 
   started.add(root);
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const pads = () => [...root.querySelectorAll<HTMLElement>('[data-service-strip-pad]')];
+  const pads = () => [...root.querySelectorAll<HTMLElement>('[data-industry-strip-pad]')];
   let signature = '';
 
   const rest = () => {
@@ -79,8 +80,8 @@ export function startServiceStrip(root: HTMLElement): void {
 
     const distance = listWidth * copies;
     root.style.setProperty(
-      '--service-strip-duration',
-      `${distance / SERVICE_STRIP_SPEED_PX_PER_SECOND}s`,
+      '--industry-strip-duration',
+      `${distance / INDUSTRY_STRIP_SPEED_PX_PER_SECOND}s`,
     );
     root.dataset.running = '';
     signature = next;

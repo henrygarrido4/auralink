@@ -658,81 +658,122 @@
 }
 
 /*
- * Home services strip (src/components/sections/ServiceStrip.astro). The only continuous text
- * motion on the site, and only here: the service names travel right to left along a yellow band,
- * with the names from `serviceCards`. src/lib/service-strip.ts sets --service-strip-duration from
- * the measured width so the speed stays constant, and repeats a set until the row fills the
- * viewport. The names hold still while the pointer is over the band (owner, 2026-11-18: pause on
- * hover, no button). `:hover` is not limited to hovering pointers, so on a touch screen a tap on
- * the band holds them too, until the next tap elsewhere. The names run off both edges of the
- * screen, as in the reference (owner, 2026-11-18), with no fade.
+ * Home industry strip (src/components/sections/IndustryStrip.astro). The only continuous text
+ * motion on the site, and only here: the names travel right to left along a yellow band, the
+ * kinds of business in `industries` by their short `stripLabel`. src/lib/industry-strip.ts sets
+ * --industry-strip-duration from the measured width so the speed stays constant, and repeats a
+ * set until the row fills the viewport. The names hold still while the pointer is over the band
+ * (owner, 2026-11-18: pause on hover, no button). `:hover` is not limited to hovering pointers,
+ * so on a touch screen a tap on the band holds them too, until the next tap elsewhere. The names
+ * run off both edges of the screen, as in the reference (owner, 2026-11-18), with no fade.
  *
  * The tilt, after that reference: behind the yellow band (the viewport) lies a second band of the
- * same height, `[data-service-strip-tilt]`, rising 2.2 degrees to the right and crossing the
+ * same height, `[data-industry-strip-tilt]`, rising 2.2 degrees to the right and crossing the
  * yellow at the middle of the screen. So its ends show as wedges, above the yellow on the right
- * and below it on the left, each --service-strip-rise deep at the screen's edge: half the width
+ * and below it on the left, each --industry-strip-rise deep at the screen's edge: half the width
  * times tan(2.2deg). The section's padding makes room for them, and the tilted band is cut from
  * the section's own box, so nothing reaches past the screen's edges or into the sections around.
  *
- * Without that script, and under reduced motion, the names wrap in a centred row and nothing
- * moves. The tilted band stays, since it does not move. The no-preference rules below are what
- * the script turns into a marquee; a <noscript> block in the component repeats the static row so
- * a browser with scripts off does not keep the clipped line. The global reduced-motion reset still
- * forces any animation to its end, so this marquee is not applied in that query at all.
+ * Without that script, and under reduced motion, the names wrap in centred rows and nothing
+ * moves: a compact row, several names to a line with an asterisk between them, in type a step
+ * smaller than the marquee's below xl, so 16 names stay a short block (2026-11-23). The tilted
+ * band stays, since it does not move. The no-preference rules below are what the script turns
+ * into a marquee; a <noscript> block in the component repeats the static row so a browser with
+ * scripts off does not keep the clipped line. The global reduced-motion reset still forces any
+ * animation to its end, so this marquee is not applied in that query at all. A name too wide for
+ * the screen, as with enlarged text, breaks onto a second line in the static row; the marquee
+ * keeps each name on one.
  */
-@utility service-strip {
+@utility industry-strip {
   /* 50vw times tan(2.2deg): 28px deep at 1440px, 7px at 360px. */
-  --service-strip-rise: 1.92vw;
+  --industry-strip-rise: 1.92vw;
   position: relative;
-  padding-block: var(--service-strip-rise);
+  padding-block: var(--industry-strip-rise);
 
-  & [data-service-strip-tilt] {
+  & [data-industry-strip-tilt] {
     position: absolute;
     inset: 0;
     clip-path: polygon(
-      0 calc(2 * var(--service-strip-rise)),
+      0 calc(2 * var(--industry-strip-rise)),
       100% 0,
-      100% calc(100% - 2 * var(--service-strip-rise)),
+      100% calc(100% - 2 * var(--industry-strip-rise)),
       0 100%
     );
   }
 
   /* Positioned, so the yellow paints over the tilted band. */
-  & [data-service-strip-viewport] {
+  & [data-industry-strip-viewport] {
     position: relative;
   }
 
-  & [data-service-strip-clone],
-  & [data-service-strip-pad] {
+  & [data-industry-strip-clone],
+  & [data-industry-strip-pad] {
     display: none;
   }
 
-  & [data-service-strip-list] {
+  & [data-industry-strip-list] {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    row-gap: calc(var(--spacing) * 5);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
+  /*
+   * The static row's sizes. In the base rules they would also beat the items' own classes, which
+   * are the marquee's sizes, so they apply only where the row is static: here under reduced
+   * motion, and without scripts in the component's <noscript> block, which repeats them. One type
+   * size per width, 20px on phones, 24px from sm, and the marquee's 30px from xl, with the gaps
+   * and the asterisk in em so they follow it. The gutter keeps a full row off the screen's edges.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    & [data-industry-strip-list] {
+      padding-inline: calc(var(--spacing) * 4);
+      font-size: var(--text-xl);
+      row-gap: 0.6em;
+    }
+
+    & [data-industry-strip-list] > li {
+      gap: 0.6em;
+      padding-inline: 0.3em;
+      font-size: inherit;
+    }
+
+    & [data-industry-strip-list] > li > svg {
+      width: 1em;
+      height: 1em;
+    }
+
+    @media (width >= 40rem) {
+      & [data-industry-strip-list] {
+        font-size: var(--text-2xl);
+      }
+    }
+
+    @media (width >= 80rem) {
+      & [data-industry-strip-list] {
+        font-size: var(--text-3xl);
+      }
+    }
+  }
+
   @media (prefers-reduced-motion: no-preference) {
-    & [data-service-strip-viewport] {
+    & [data-industry-strip-viewport] {
       overflow-x: clip;
     }
 
-    & [data-service-strip-track],
-    & [data-service-strip-half],
-    & [data-service-strip-pad] {
+    & [data-industry-strip-track],
+    & [data-industry-strip-half],
+    & [data-industry-strip-pad] {
       display: flex;
       flex: none;
       align-items: center;
       width: max-content;
     }
 
-    & [data-service-strip-list] {
+    & [data-industry-strip-list] {
       flex: none;
       flex-wrap: nowrap;
       justify-content: flex-start;
@@ -740,20 +781,24 @@
       row-gap: 0;
     }
 
-    &[data-running] [data-service-strip-track] {
-      animation-name: service-strip-scroll;
-      animation-duration: var(--service-strip-duration, 32s);
+    & [data-industry-strip-list] > li {
+      white-space: nowrap;
+    }
+
+    &[data-running] [data-industry-strip-track] {
+      animation-name: industry-strip-scroll;
+      animation-duration: var(--industry-strip-duration, 32s);
       animation-timing-function: linear;
       animation-iteration-count: infinite;
     }
 
-    &[data-running]:hover [data-service-strip-track] {
+    &[data-running]:hover [data-industry-strip-track] {
       animation-play-state: paused;
     }
   }
 }
 
-@keyframes service-strip-scroll {
+@keyframes industry-strip-scroll {
   to {
     transform: translateX(-50%);
   }
@@ -783,7 +828,7 @@
  * the primary colour, fades in and circles, a lap every ten seconds, for as long as the page is
  * open, pointer or not, touch screens included. It is the one thing here that runs past five
  * seconds, and nothing pauses it: the owner's decision of 2026-11-18, an exception to WCAG 2.2.2
- * like the services strip (docs/quality-checks.md). Only its `rotate` and `opacity` change, so the
+ * like the industry strip (docs/quality-checks.md). Only its `rotate` and `opacity` change, so the
  * browser can move it without repainting. Under reduced motion none of this applies: everything
  * rests where it belongs and the light stays off.
  */

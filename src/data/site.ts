@@ -350,7 +350,7 @@ export type ServicesPageCardId = 'local-seo' | 'meta-google-ads' | 'gohighlevel'
 
 /**
  * Cards for the services page (owner, 2026-11-19). They are not catalogue services, so they stay
- * off the home page, the services strip, and the inquiry form. Since 2026-11-20 each has its own
+ * off the home page and the inquiry form. Since 2026-11-20 each has its own
  * page (src/data/service-pages/, at its `href`, which the card and the footer link to), like the
  * six home cards. The sentences describe the work and wait for the owner to confirm the wording.
  */
@@ -402,8 +402,8 @@ export interface HeroBenefit {
 /**
  * Benefit labels for the chips around the logo's mark in the home hero (owner, 2026-11-18; around
  * the laptop and phone until 2026-11-22). They say what the work is for. They are not measured
- * results: no figures, client names, or notifications belong here. The services strip and the
- * service cards still list the services. Each chip keeps the place of the service it replaced;
+ * results: no figures, client names, or notifications belong here. The service cards still list
+ * the services. Each chip keeps the place of the service it replaced;
  * that order lives in ServiceOrbit.
  */
 export const heroBenefits: readonly HeroBenefit[] = [
@@ -484,6 +484,11 @@ export const whyPillars: readonly WhyPillar[] = [
 /** A kind of business in the home page's "Who we work with" directory. */
 export interface Industry {
   readonly name: string;
+  /**
+   * The owner's short form of `name` (2026-11-23), shown only in the strip under the home hero
+   * (src/components/sections/IndustryStrip.astro). Every other place shows `name`.
+   */
+  readonly stripLabel: string;
   /** Decorative, beside the name; the name carries the meaning. */
   readonly icon: IconName;
 }
@@ -494,24 +499,35 @@ export interface Industry {
  * rows (owner, 2026-11-19), each with its icon. They are businesses Auralink Studio can help, not a
  * client list: no client names, logos, results, or claims of past work belong here. Each name
  * links to its industry page (src/data/industry-pages/, matched by name) once that page exists.
+ * The strip under the home hero (src/components/sections/IndustryStrip.astro) shows them in the
+ * same order, by their `stripLabel`, in place of the service-card titles it showed until the
+ * owner asked for the industries there (2026-11-23).
  */
 export const industries: readonly Industry[] = [
-  { name: 'Construction & Home Services', icon: 'hard-hat' },
-  { name: 'Healthcare & Medical', icon: 'activity' },
-  { name: 'Dental', icon: 'tooth' },
-  { name: 'Veterinary & Pet Care', icon: 'paw-print' },
-  { name: 'Med Spas, Salons & Wellness', icon: 'leaf' },
-  { name: 'Automotive', icon: 'car' },
-  { name: 'Food & Hospitality', icon: 'utensils' },
-  { name: 'Real Estate & Property Management', icon: 'house' },
-  { name: 'Retail & Consumer Brands', icon: 'shopping-bag' },
-  { name: 'Manufacturing & Industrial', icon: 'factory' },
-  { name: 'Arts, Culture & Entertainment', icon: 'palette' },
-  { name: 'Education & Community Organizations', icon: 'graduation-cap' },
-  { name: 'Nonprofits & Associations', icon: 'heart-handshake' },
-  { name: 'Lawyers & Law Firms', icon: 'scale' },
-  { name: 'Financial & Professional Services', icon: 'briefcase' },
-  { name: 'Technology & SaaS', icon: 'code' },
+  { name: 'Construction & Home Services', stripLabel: 'Home Services', icon: 'hard-hat' },
+  { name: 'Healthcare & Medical', stripLabel: 'Healthcare', icon: 'activity' },
+  { name: 'Dental', stripLabel: 'Dental', icon: 'tooth' },
+  { name: 'Veterinary & Pet Care', stripLabel: 'Pet Care', icon: 'paw-print' },
+  { name: 'Med Spas, Salons & Wellness', stripLabel: 'Beauty & Wellness', icon: 'leaf' },
+  { name: 'Automotive', stripLabel: 'Automotive', icon: 'car' },
+  { name: 'Food & Hospitality', stripLabel: 'Food & Hospitality', icon: 'utensils' },
+  { name: 'Real Estate & Property Management', stripLabel: 'Real Estate', icon: 'house' },
+  { name: 'Retail & Consumer Brands', stripLabel: 'Retail', icon: 'shopping-bag' },
+  { name: 'Manufacturing & Industrial', stripLabel: 'Manufacturing', icon: 'factory' },
+  { name: 'Arts, Culture & Entertainment', stripLabel: 'Arts & Entertainment', icon: 'palette' },
+  {
+    name: 'Education & Community Organizations',
+    stripLabel: 'Education',
+    icon: 'graduation-cap',
+  },
+  { name: 'Nonprofits & Associations', stripLabel: 'Nonprofits', icon: 'heart-handshake' },
+  { name: 'Lawyers & Law Firms', stripLabel: 'Legal Services', icon: 'scale' },
+  {
+    name: 'Financial & Professional Services',
+    stripLabel: 'Financial Services',
+    icon: 'briefcase',
+  },
+  { name: 'Technology & SaaS', stripLabel: 'Technology & SaaS', icon: 'code' },
 ];
 
 /**

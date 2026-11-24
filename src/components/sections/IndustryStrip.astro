@@ -1,0 +1,181 @@
+---
+import { industries } from '@/data/site';
+
+/**
+ * Home page industry strip, directly below the hero and above the services. Its look follows
+ * the band under the hero of the reference the owner sent on 2026-11-18: a full-width band in the
+ * primary yellow with the names in near-black, over a second band in the navbar's neutral, tilted
+ * so that it shows above the yellow on the right and below it on the left. The names run off both
+ * edges of the screen. The section's upper half carries on the hero's background and its lower
+ * half the services band, so the change between them hides behind the yellow. Since the hero
+ * turned near-black (2026-11-22), the wedge above the yellow is the hero's own colour, so the
+ * dark band seems to pass behind the yellow and come out below it on the left. The names are the
+ * kinds of business in `industries` (src/data/site.ts), in the order of the home page's Who we
+ * work with directory, each by its `stripLabel`: the owner's short form of the name, used only
+ * here ("Home Services" for Construction & Home Services). They replaced the service-card titles
+ * at the owner's request (2026-11-23). They are set as a line of type in the heading face: the
+ * first word bold, the rest light, with the reference's eight-point asterisk between one name and
+ * the next (owner, 2026-11-18). Lucide has no mark of that shape (its asterisk is six strokes), so
+ * the divider is drawn here. High Scale Media's repeating services line is the idea only: these
+ * are the kinds of business the studio works with, not clients, partners, or certifications, and
+ * they are labels rather than links.
+ *
+ * The tilt and the motion are the `industry-strip` utility (src/styles/global.css): two equal
+ * halves travel by half the track, so the loop and its spacing meet. src/lib/industry-strip.ts
+ * sets the speed and repeats a set until the band fills the screen. The names hold still while
+ * the pointer is over the band and move on when it leaves; there is no pause button (owner,
+ * 2026-11-18). Under reduced motion, and without scripts through the noscript block, nothing
+ * moves: every name shows in compact centred rows, several to a line, with the asterisks between
+ * them. The repeated half and every asterisk are hidden from assistive technology.
+ */
+const halves = [{ clone: false }, { clone: true }] as const;
+
+/**
+ * "Home Services" becomes a bold "Home" and a light " Services", "Beauty & Wellness" a bold
+ * "Beauty" and a light " & Wellness"; "Dental" is all bold.
+ */
+const split = (label: string) => {
+  const space = label.indexOf(' ');
+  return space < 0
+    ? { lead: label, rest: '' }
+    : { lead: label.slice(0, space), rest: label.slice(space) };
+};
+---
+
+<section
+  data-industry-strip
+  aria-labelledby="industry-strip-title"
+  class="industry-strip bg-linear-to-b from-neutral from-50% to-base-300/70 to-50%"
+>
+  <h2 id="industry-strip-title" class="sr-only">
+    Industries we work with
+  </h2>
+  {/* The tilted band behind the yellow one. The utility cuts its shape. */}
+  <div data-industry-strip-tilt class="bg-neutral"></div>
+  <div data-industry-strip-viewport class="bg-primary py-5 text-primary-content sm:py-7">
+    <div data-industry-strip-track>
+      {halves.map(({ clone }) => (
+        <div
+          data-industry-strip-half
+          {...(clone ? { 'data-industry-strip-clone': true, 'aria-hidden': 'true' } : {})}
+          class:list={[clone && 'select-none']}
+        >
+          <ul data-industry-strip-list {...(clone ? { 'aria-hidden': 'true' } : { role: 'list' })}>
+            {industries.map((industry) => {
+              const { lead, rest } = split(industry.stripLabel);
+              return (
+                /*
+                 * Asterisk, gap, name, inside equal side padding that adds up to the same gap.
+                 * So an asterisk sits midway between two names, the join between the two halves
+                 * matches the spacing inside a half, and a wrapped row stays centred. These
+                 * classes are the marquee's sizes, which keeps each name on one line. The static
+                 * row overrides them with its own, in the same proportions (the `industry-strip`
+                 * utility and the noscript block below), and lets a name break only when larger
+                 * text makes it wider than the screen.
+                 */
+                <li class="flex items-center gap-12 px-6 font-(family-name:--font-headers) text-2xl leading-none font-light tracking-tight sm:gap-20 sm:px-10 sm:text-3xl">
+                  {/*
+                   * Eight-point asterisk from the reference band: a cross and the same cross
+                   * turned 45 degrees, with round ends. Drawn here rather than taken from Lucide.
+                   */}
+                  <svg
+                    class="size-6 shrink-0 sm:size-7"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <rect x="7.05" y="1.35" width="1.9" height="13.3" rx="0.95"></rect>
+                    <rect x="1.35" y="7.05" width="13.3" height="1.9" rx="0.95"></rect>
+                    <rect
+                      x="7.05"
+                      y="1.35"
+                      width="1.9"
+                      height="13.3"
+                      rx="0.95"
+                      transform="rotate(45 8 8)"
+                    ></rect>
+                    <rect
+                      x="1.35"
+                      y="7.05"
+                      width="13.3"
+                      height="1.9"
+                      rx="0.95"
+                      transform="rotate(45 8 8)"
+                    ></rect>
+                  </svg>
+                  <span data-industry-strip-label>
+                    <span class="font-bold">{lead}</span>
+                    {rest}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <div data-industry-strip-pad aria-hidden="true" class="select-none"></div>
+        </div>
+      ))}
+    </div>
+  </div>
+  {/*
+    Scripts off: the no-preference rules would leave a single clipped line. These repeat the
+    utility's static row, its layout and its sizes, and win as unlayered rules. is:inline keeps
+    Astro from bundling them into the stylesheet, where they would stop the marquee for everyone.
+  */}
+  <noscript>
+    <style is:inline>
+      .industry-strip [data-industry-strip-list] {
+        flex-wrap: wrap;
+        justify-content: center;
+        width: auto;
+        padding-inline: calc(var(--spacing) * 4);
+        font-size: var(--text-xl);
+        row-gap: 0.6em;
+      }
+      .industry-strip [data-industry-strip-list] > li {
+        gap: 0.6em;
+        padding-inline: 0.3em;
+        font-size: inherit;
+        white-space: normal;
+      }
+      .industry-strip [data-industry-strip-list] > li > svg {
+        width: 1em;
+        height: 1em;
+      }
+      @media (width >= 40rem) {
+        .industry-strip [data-industry-strip-list] {
+          font-size: var(--text-2xl);
+        }
+      }
+      @media (width >= 80rem) {
+        .industry-strip [data-industry-strip-list] {
+          font-size: var(--text-3xl);
+        }
+      }
+      .industry-strip [data-industry-strip-half] {
+        display: block;
+        width: auto;
+      }
+      .industry-strip [data-industry-strip-clone],
+      .industry-strip [data-industry-strip-pad] {
+        display: none;
+      }
+      .industry-strip [data-industry-strip-viewport] {
+        overflow: visible;
+      }
+      .industry-strip [data-industry-strip-track] {
+        display: block;
+        width: auto;
+        animation: none;
+      }
+    </style>
+  </noscript>
+</section>
+
+<script>
+  import { startIndustryStrip } from '@/lib/industry-strip';
+
+  for (const strip of document.querySelectorAll<HTMLElement>('[data-industry-strip]')) {
+    startIndustryStrip(strip);
+  }
+</script>
