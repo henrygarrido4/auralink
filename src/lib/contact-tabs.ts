@@ -18,7 +18,11 @@
  * that tab (each id is the tab's own, so the browser also scrolls to the bar); choosing a tab
  * writes its fragment with `pushState`, so Back and Forward move between tabs, and a link on the
  * page to either fragment (the confirmation's "Book a free call") chooses it as well. With no
- * fragment, or one that names no tab, the first tab is chosen. A `contact-tabs:change` event
+ * fragment, or one that names no tab, the first tab is chosen. A fragment's name is its part
+ * before any `&` or `?`, since Facebook adds its click id after the fragment
+ * (`#book-call&fbclid=…`); the component's inline script mends such a link, and Instagram's
+ * percent-encoded one, before this module runs (the owner's decision, 2026-11-24), and reads the
+ * name the same way, so `hashchange` and `popstate` agree with it. A `contact-tabs:change` event
  * bubbles from the container each time a tab is chosen, with the tab's id in `detail`, which is
  * how the scheduler knows its panel is on show (src/lib/booking-embed.ts).
  *
@@ -33,6 +37,15 @@ export interface ContactTabsChange {
 
 const KEYS = new Set(['ArrowLeft', 'ArrowRight', 'Home', 'End']);
 
+/** `decodeURIComponent`, or an empty string, which names no tab, for a malformed `%` sequence. */
+function decode(text: string): string {
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return '';
+  }
+}
+
 function enhance(root: HTMLElement): void {
   const list = root.querySelector<HTMLElement>('[data-contact-tablist]');
   const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-contact-tab]'));
@@ -43,9 +56,13 @@ function enhance(root: HTMLElement): void {
   const panelFor = (id: string) => panels.find((panel) => panel.dataset.contactPanel === id);
   if (ids.some((id, index) => !id || tabs[index]!.id !== id || !panelFor(id))) return;
 
-  /** The tab the URL's fragment names, else the first. */
+  /**
+   * The tab the URL's fragment names, else the first. The name is the fragment's part before any
+   * `&` or `?`. The inline script in ContactOptions.astro reads it the same way and cannot import
+   * this module: the two must match.
+   */
   const fromHash = () => {
-    const id = decodeURIComponent(location.hash.slice(1));
+    const id = decode(location.hash.slice(1).split(/[&?]/)[0]);
     return ids.includes(id) ? id : ids[0]!;
   };
 
@@ -105,7 +122,8 @@ function enhance(root: HTMLElement): void {
   const first = fromHash();
   select(first);
   // The page opened on a tab's fragment, but the bar was hidden while the browser looked for its
-  // target, so it may not have scrolled there: bring the bar into view, at once, where the
+  // target, or the address came changed by an app and named nothing until the inline script
+  // mended it, so it may not have scrolled there: bring the bar into view, at once, where the
   // browser would have (the tab's scroll margin keeps the card's edge and the navbar clear).
   if (location.hash === `#${first}`) {
     requestAnimationFrame(() =>

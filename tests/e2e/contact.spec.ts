@@ -310,6 +310,156 @@ test('the fragment chooses the tab: direct links, a click, Back, and Forward, wi
   await expect(bookPanel(page)).toBeHidden();
 });
 
+/**
+ * Links that Facebook and Instagram change on the way in (the owner's decision, 2026-11-24).
+ * Facebook adds its click id after the fragment, with "&", or with "?" when the link has no query.
+ * Instagram's bio link sends the "#" percent-encoded, so the tab's name ends the last UTM value and
+ * there is no fragment. The card's inline script mends the address in place, before the page's
+ * other scripts run (ContactOptions.astro), and the page then opens as `/contact/#book-call` does.
+ */
+const changedLinks = [
+  {
+    name: 'a click id after the fragment, with an ampersand',
+    from: '/contact/?utm_source=facebook&utm_medium=organic_social#book-call&fbclid=TEST123',
+    to: '/contact/?utm_source=facebook&utm_medium=organic_social&fbclid=TEST123#book-call',
+    tab: bookTab,
+    panel: bookPanel,
+  },
+  {
+    name: 'a click id after the fragment, with a question mark',
+    from: '/contact/?utm_source=facebook&utm_medium=organic_social#book-call?fbclid=TEST123',
+    to: '/contact/?utm_source=facebook&utm_medium=organic_social&fbclid=TEST123#book-call',
+    tab: bookTab,
+    panel: bookPanel,
+  },
+  {
+    name: 'a click id after the fragment of a link with no query',
+    from: '/contact/#book-call?fbclid=TEST123',
+    to: '/contact/?fbclid=TEST123#book-call',
+    tab: bookTab,
+    panel: bookPanel,
+  },
+  {
+    // What URLSearchParams would re-spell (spring+sale, a%7Eb) and a repeated key stay as written.
+    name: 'a click id after the fragment, the other parameters exactly as written',
+    from: '/contact/?utm_campaign=spring%20sale&utm_term=a~b&utm_term=c#book-call&fbclid=TEST123',
+    to: '/contact/?utm_campaign=spring%20sale&utm_term=a~b&utm_term=c&fbclid=TEST123#book-call',
+    tab: bookTab,
+    panel: bookPanel,
+  },
+  {
+    name: "a click id after the message tab's fragment",
+    from: '/contact/?utm_source=facebook&utm_medium=organic_social#send-message&fbclid=TEST123',
+    to: '/contact/?utm_source=facebook&utm_medium=organic_social&fbclid=TEST123#send-message',
+    tab: messageTab,
+    panel: messagePanel,
+  },
+  {
+    name: 'the bio link with its hash percent-encoded',
+    from: '/contact/?utm_source=instagram&utm_medium=organic_social&utm_campaign=social_profiles&utm_content=bio_link%23book-call',
+    to: '/contact/?utm_source=instagram&utm_medium=organic_social&utm_campaign=social_profiles&utm_content=bio_link#book-call',
+    tab: bookTab,
+    panel: bookPanel,
+  },
+  {
+    name: 'the bio link with its hash percent-encoded, then a click id',
+    from: '/contact/?utm_source=instagram&utm_medium=organic_social&utm_campaign=social_profiles&utm_content=bio_link%23book-call&fbclid=TEST123',
+    to: '/contact/?utm_source=instagram&utm_medium=organic_social&utm_campaign=social_profiles&utm_content=bio_link&fbclid=TEST123#book-call',
+    tab: bookTab,
+    panel: bookPanel,
+  },
+];
+
+/**
+ * Links whose recovered name is no tab's id, a malformed `%` sequence among them (it names
+ * nothing, rather than throwing and stopping the script): they are left as they came.
+ */
+const foreignLinks = [
+  { name: 'a fragment naming no tab', from: '/contact/?utm_source=facebook#pricing&fbclid=x' },
+  { name: 'an encoded hash naming no tab', from: '/contact/?utm_content=foo%23bar' },
+  { name: 'a malformed percent sequence', from: '/contact/#%E0&fbclid=x' },
+];
+
+/**
+ * Records, from an init script, which runs before any of the page's own scripts, the session
+ * history's length at that moment and the address when DOMContentLoaded fires, ahead of the
+ * moments Tag Manager's container script is added at (an interaction, or three seconds after
+ * `load`). The function returned reads both, with the history's length by then.
+ */
+async function watchArrival(page: Page) {
+  await page.addInitScript(() => {
+    const arrival = { length: history.length, ready: '' };
+    (window as unknown as { __arrival: typeof arrival }).__arrival = arrival;
+    document.addEventListener(
+      'DOMContentLoaded',
+      () => {
+        arrival.ready = location.href;
+      },
+      { once: true },
+    );
+  });
+  return () =>
+    page.evaluate(() => {
+      const { length, ready } = (
+        window as unknown as { __arrival: { length: number; ready: string } }
+      ).__arrival;
+      return { before: length, after: history.length, ready };
+    });
+}
+
+for (const { name, from, to, tab, panel } of changedLinks) {
+  test(`a link an app has changed is mended in place and opens its tab in view: ${name}`, async ({
+    page,
+  }) => {
+    const watched = watchConsole(page);
+    const arrival = await watchArrival(page);
+    await page.goto(from);
+    await expect(page).toHaveURL(to);
+    await expect(tab(page)).toHaveAttribute('aria-selected', 'true');
+    await expect(panel(page)).toBeVisible();
+    // The bar starts below the fold at every project's size, so only the scroll to the chosen
+    // tab, as for a plain fragment, brings all of it into view.
+    await expect(tablist(page)).toBeInViewport({ ratio: 1 });
+    const { before, after, ready } = await arrival();
+    expect(ready, 'mended before DOMContentLoaded').toBe(new URL(to, page.url()).href);
+    expect(after, 'no history entry added').toBe(before);
+    expect(watched.errors, 'no console or page errors').toEqual([]);
+  });
+}
+
+for (const { name, from } of foreignLinks) {
+  test(`a link naming no tab is left as it came, on the first tab, at the top: ${name}`, async ({
+    page,
+  }) => {
+    const watched = watchConsole(page);
+    const arrival = await watchArrival(page);
+    await page.goto(from);
+    await expect(page.locator('[data-contact-tabs]')).toHaveAttribute('data-contact-tabs', 'ready');
+    await expect(page).toHaveURL(from);
+    await expect(bookTab(page)).toHaveAttribute('aria-selected', 'true');
+    await expect(bookPanel(page)).toBeVisible();
+    expect(await scrollYAtRest(page), 'nothing scrolled').toBe(0);
+    const { before, after, ready } = await arrival();
+    expect(ready, 'unchanged at DOMContentLoaded').toBe(new URL(from, page.url()).href);
+    expect(after, 'no history entry added').toBe(before);
+    expect(watched.errors, 'no console or page errors').toEqual([]);
+  });
+}
+
+test('a fragment the page moves to with a click id after it still chooses its tab', async ({
+  page,
+}) => {
+  // Only the arrival is mended; later, `hashchange` reads the name as the inline script does.
+  await page.goto('/contact/');
+  await expect(page.locator('[data-contact-tabs]')).toHaveAttribute('data-contact-tabs', 'ready');
+  await page.evaluate(() => {
+    location.hash = 'send-message&fbclid=TEST123';
+  });
+  await expect(messageTab(page)).toHaveAttribute('aria-selected', 'true');
+  await expect(form(page)).toBeVisible();
+  await expect(bookPanel(page)).toBeHidden();
+});
+
 test('switching tabs keeps what was typed, a message shown, and the one scheduler', async ({
   page,
 }) => {

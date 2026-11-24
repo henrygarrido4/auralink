@@ -24,7 +24,8 @@ import type { IconName } from '@/lib/icons';
  * sections, each under its own heading, the scheduler's panel offering its link to Calendly and
  * the form validated and posted by the browser. The small inline script under the card applies
  * the first choice while the HTML is still parsing, so the page never paints both panels and
- * then hides one.
+ * then hides one. Before that it mends a link that Facebook or Instagram changed on the way in,
+ * so such a link opens its tab like a plain fragment (the owner's decision, 2026-11-24).
  *
  * The form is in the built HTML exactly as before, so Netlify still detects it: it is never
  * rendered by a script or moved by one.
@@ -96,7 +97,20 @@ const panel =
 </div>
 
 {/*
- * Applies the first choice as soon as the card is parsed: the bar shows, the panel the URL's
+ * First mends a link that Facebook or Instagram changed on the way in (the owner's decision,
+ * 2026-11-24). Facebook adds its click id after the fragment, with "&", or with "?" when the link
+ * had no query: `#book-call&fbclid=…` keeps `#book-call` and the rest moves to the end of the
+ * query. Instagram's bio link percent-encodes the "#", so there is no fragment and a query value
+ * ends in `%23book-call`: that ending leaves the value (`utm_content=bio_link`), any parameters
+ * after it stay, and `#book-call` becomes the fragment. Only a tab's id counts as a name; any
+ * other link is left as it came. The query is edited as text, so every other parameter keeps its
+ * spelling and its place, and `replaceState` rewrites the address in place: no reload, no new
+ * history entry, the entry's state kept. This runs while the card is parsed, and Tag Manager's
+ * container script is added only at the first interaction or three seconds after `load`
+ * (BaseLayout.astro), so in practice its tags read the mended address. The page then opens on
+ * the tab and scrolls to it as for a plain fragment (src/lib/contact-tabs.ts).
+ *
+ * Then applies the first choice as soon as the card is parsed: the bar shows, the panel the URL's
  * fragment does not name is hidden, and the scheduler's container takes the room it will need
  * (`idle`; without a script it keeps the smaller room its placeholder needs), all before the
  * browser paints the section. Kept to what the eye would catch; src/lib/contact-tabs.ts and
@@ -107,7 +121,46 @@ const panel =
     const root = document.querySelector('[data-contact-tabs]');
     if (!root) return;
     const ids = Array.from(root.querySelectorAll('[data-contact-tab]'), (tab) => tab.id);
-    const hash = decodeURIComponent(location.hash.slice(1));
+    // A malformed % sequence names no tab, instead of throwing and stopping the script.
+    const decode = (text) => {
+      try {
+        return decodeURIComponent(text);
+      } catch {
+        return '';
+      }
+    };
+    // A fragment's name is its part before any "&" or "?". `fromHash` in src/lib/contact-tabs.ts
+    // reads it the same way and this script cannot import it: the two must match.
+    const nameIn = (fragment) => decode(fragment.split(/[&?]/)[0]);
+
+    const fragment = location.hash.slice(1);
+    let query = location.search.slice(1);
+    let mended = '';
+    const cut = fragment.search(/[&?]/);
+    if (cut >= 0 && ids.includes(nameIn(fragment))) {
+      mended = nameIn(fragment);
+      // A "#" in the moved text would end the query, so it goes encoded.
+      const moved = fragment.slice(cut + 1).replace(/#/g, '%23');
+      if (moved) query = query ? `${query}&${moved}` : moved;
+    } else if (!fragment) {
+      const pairs = query.split('&');
+      for (const [index, pair] of pairs.entries()) {
+        // The value up to its last "%23", and the name after it.
+        const match = /^([^=]*=.*)%23(.*)$/.exec(pair);
+        if (match && ids.includes(decode(match[2]))) {
+          mended = decode(match[2]);
+          pairs[index] = match[1];
+          query = pairs.join('&');
+          break;
+        }
+      }
+    }
+    if (mended) {
+      const search = query ? `?${query}` : '';
+      history.replaceState(history.state, '', `${location.pathname}${search}#${mended}`);
+    }
+
+    const hash = nameIn(location.hash.slice(1));
     const chosen = ids.includes(hash) ? hash : ids[0];
     const list = root.querySelector('[data-contact-tablist]');
     if (list) list.hidden = false;
