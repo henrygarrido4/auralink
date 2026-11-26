@@ -6,6 +6,7 @@ import {
   ownSiteCta,
   ownSiteStatus,
   projectStatus,
+  servicesHeadingOf,
   statusOf,
   workPage,
   workProjects,
@@ -19,7 +20,7 @@ import { scrollToRest } from './scroll';
  * 2026-11-22), after the introduction and before the contact banner, with the shared eyebrow, the
  * near-black heading, the primary rule, the sentence, the near-black "View all projects" text
  * link to the work page, and one frosted white card per project (WorkCard.astro): the site's
- * homepage in a browser window, how it is built and that it is a live website, the name, and the
+ * homepage in a browser window, how it is built and that it is a concept, the name, and the
  * service tiles' white arrow box, the whole card one link to the project's section on the work
  * page. Three across from lg, two by two with the introduction in the first cell from sm, stacked
  * below. Under the pointer the screenshot grows a little and the arrow box fills primary, as it
@@ -107,7 +108,7 @@ test('the home page shows three project cards after the introduction, on the whi
     const link = card.getByRole('link');
     await expect(link).toHaveCount(1);
     await expect(link).toHaveAttribute('href', `/work/#${project.id}`);
-    // Named by its visible text, in order: how it is built, that it is a live website, and the
+    // Named by its visible text, in order: how it is built, that it is a concept, and the
     // name; the arrow is the action, and the browser bar is decorative and adds nothing.
     await expect(link).toHaveAccessibleName(`${project.platform} ${projectStatus} ${project.name}`);
     await expect(card.getByRole('heading', { level: 3 })).toHaveText(project.name);
@@ -323,10 +324,11 @@ test('each project tells the challenge, the solution, and the services, and ends
       for (const text of [project.description, project.challenge]) {
         await expect(section.getByText(text, { exact: true })).toBeVisible();
       }
+      // A concept's services are what we would manage; only our own website says what we manage.
       await expect(section.getByRole('heading', { level: 3 })).toHaveText([
         'The challenge',
         'The solution',
-        'What we manage',
+        servicesHeadingOf(project),
       ]);
       // The solution is a paragraph, or a list of choices: each a bold title and a colon, then the
       // rest of the sentence, after a decorative check mark.
@@ -378,8 +380,8 @@ test('each project tells the challenge, the solution, and the services, and ends
       expect(shape.reserved).toBeCloseTo(4 / 3, 2);
       expect(shape.shown).toBeCloseTo(4 / 3, 2);
 
-      // The outlined secondary button, with no transitions and no border light. On a client's
-      // project it opens the site in a new tab, named with the project and the new tab. Every
+      // The outlined secondary button, with no transitions and no border light. On a concept it
+      // opens the site in a new tab, named with the project and the new tab. Every
       // listed site opens without a password, so no note describes the button. The studio's own
       // website, which the visitor is already on, ends instead with the entry's last line and the
       // button inviting a call, in this tab.
@@ -414,7 +416,7 @@ test("the studio's own website comes last, on the work page only, and says it is
   const own = workProjects.filter((project) => project.ownSite);
   expect(own, 'one own website').toHaveLength(1);
   const [studio] = own;
-  expect(workProjects.at(-1), 'after the client projects').toBe(studio);
+  expect(workProjects.at(-1), 'after the concepts').toBe(studio);
   expect(featuredWork, 'not a home card').not.toContain(studio);
   expect(studio.description, 'the lead says so first').toMatch(/^This isn't a client project\./);
 
@@ -422,7 +424,7 @@ test("the studio's own website comes last, on the work page only, and says it is
   await expect(cards(page)).toHaveCount(featuredWork.length);
   await expect(cards(page).getByRole('heading', { name: studio.name })).toHaveCount(0);
 
-  // On the work page its label is its own, and no client project wears that label.
+  // On the work page its label is its own, and no concept wears that label.
   await page.goto('/work/');
   const section = projectSection(page, studio);
   await expect(section.getByText(ownSiteStatus, { exact: true })).toBeVisible();

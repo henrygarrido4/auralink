@@ -4,7 +4,7 @@ import BrowserFrame from '@/components/ui/BrowserFrame.astro';
 import Button from '@/components/ui/Button.astro';
 import Icon from '@/components/ui/Icon.astro';
 import { serviceCardById } from '@/data/detail-pages';
-import { ownSiteCta, statusOf, type WorkProject } from '@/data/work';
+import { ownSiteCta, servicesHeadingOf, statusOf, type WorkProject } from '@/data/work';
 
 /**
  * One project on the work page (the owner's brief, 2026-11-21, after the work page of uprig.net
@@ -17,11 +17,13 @@ import { ownSiteCta, statusOf, type WorkProject } from '@/data/work';
  * scrolls past, so the website stays in view while its story is read; nothing animates.
  *
  * The copy follows the reference's order: the project's number (decorative, like the detail
- * pages' numbers: near-black with a primary full stop), how it is built and that it is a live
- * website (every project is, the owner confirmed on 2026-11-21), the name as the section's h2,
- * the kind of business and where it is, a lead paragraph, then three blocks under h3 headings that
- * every project shares: the challenge, the solution (a paragraph, or the choices as a list with
- * the check marks of the invitation below), and what we manage, each service a link to its page.
+ * pages' numbers: near-black with a primary full stop), how it is built and its status (a
+ * concept, since none of the three businesses is a client, the owner said on 2026-11-26, or our
+ * own website), the name as the section's h2, the kind of business and where it is, a lead
+ * paragraph, then three blocks under h3 headings that every project shares: the challenge, the
+ * solution (a paragraph, or the choices as a list with the check marks of the invitation below),
+ * and the services, each a link to its page, under "What we'd manage" on a concept and "What we
+ * manage" on our own website (`servicesHeadingOf`).
  * No client result, figure, or testimonial is stated anywhere (the owner has none to publish).
  * The outlined secondary button opens the site in a new tab; visually hidden words complete its
  * name with the project and the new tab. The studio's own website (`ownSite`, 2026-11-26) is
@@ -161,7 +163,7 @@ const block =
       <div class="mt-8 border-t border-base-300 pt-8">
         <h3 class={block}>
           <span class="h-0.5 w-6 shrink-0 bg-primary" aria-hidden="true"></span>
-          What we manage
+          {servicesHeadingOf(project)}
         </h3>
         {/*
          * One pill per service, linking to its page; the icon is the service card's. Hover fills
