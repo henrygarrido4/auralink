@@ -14,23 +14,23 @@ import { ownSiteCta, servicesHeadingOf, statusOf, type WorkProject } from '@/dat
  * a small row, the picture large and the captions small, the story in short columns), in this
  * site's own system. Each project is two parts on the white band.
  *
- * The showcase panel: a large rounded panel, the home process band's charcoal with its fine lines
- * on even projects (`process-lines bg-neutral/90`, so every dark surface on the site is the same
- * one) and the home selected work's white with the yellow aura (`work-aura`) inside a hairline on
- * odd ones, so no two neighbours look alike. From lg the copy takes five columns and the site's
- * own homepage in a browser window (BrowserFrame.astro) seven, centred beside it and lifted by a
- * deep shadow, on the right of even projects and the left of odd ones; below lg the headline
- * comes first, then the window, then the lead and the button, which is the order of the markup
- * (the grid places the three blocks from lg). Across the panel's foot, behind a hairline, the
- * three things a visitor can see on the site, each with a Lucide icon on a tile. The copy is the
- * project's number (decorative; `primary` on the dark panel, near-black with a `primary` full stop
- * on the light one, as the detail pages' numbers), how it is built and its status (a concept,
- * since none of the three businesses is a client, the owner said on 2026-11-26, or our own
- * website), the name as the section's h2, the kind of business and where it is, the lead
- * paragraph, and the button: the outlined secondary on the light panel and its white mirror
- * (`inverse`) on the dark one, which opens the site in a new tab; visually hidden words complete
- * its name with the project and the new tab. The studio's own website (`ownSite`, 2026-11-26)
- * ends instead with a line and the same button inviting a call, in the same tab.
+ * The showcase panel: a large rounded panel in the home process band's charcoal with its fine
+ * lines (`process-lines bg-neutral/90`, so every dark surface on the site is the same one), on
+ * every project (the owner, 2026-11-26, in place of the white aura panel that odd projects had
+ * for the first hours of the redesign). From lg the copy takes five columns and the site's own
+ * homepage in a browser window (BrowserFrame.astro) seven, centred beside it and lifted by a deep
+ * shadow, on the right of even projects and the left of odd ones, so the page still alternates;
+ * below lg the headline comes first, then the window, then the lead and the button, which is the
+ * order of the markup (the grid places the three blocks from lg). Across the panel's foot, behind
+ * a hairline, the three things a visitor can see on the site, each with a Lucide icon on a
+ * frosted tile. The copy is the project's number (decorative, in `primary`, as the dark bands'
+ * numbers), how it is built and its status (a concept, since none of the three businesses is a
+ * client, the owner said on 2026-11-26, or our own website), the name as the section's h2, the
+ * kind of business and where it is, the lead paragraph, and the button: the secondary's white
+ * mirror (`inverse`, with the navbar's light focus ring), which opens the site in a new tab;
+ * visually hidden words complete its name with the project and the new tab. The studio's own
+ * website (`ownSite`, 2026-11-26) ends instead with a line and the same button inviting a call,
+ * in the same tab.
  *
  * The story: three columns under the panel from lg, each opened by a hairline and an h3 that every
  * project shares: the challenge, the solution (a paragraph, or the choices as a list with the
@@ -40,7 +40,7 @@ import { ownSiteCta, servicesHeadingOf, statusOf, type WorkProject } from '@/dat
  */
 interface Props {
   project: WorkProject;
-  /** Its place among the projects, counted from 0; sets the number, the panel, and the side. */
+  /** Its place among the projects, counted from 0; sets the number and the window's side. */
   index: number;
 }
 
@@ -48,28 +48,19 @@ const { project, index } = Astro.props;
 const id = project.id;
 const titleId = `${id}-title`;
 const number = String(index + 1).padStart(2, '0');
-/** Even projects take the dark panel with the window at the right; odd ones the light, mirrored. */
-const dark = index % 2 === 0;
-const flipped = !dark;
+/** Even projects put the window at the right of the copy; odd ones mirror that. */
+const flipped = index % 2 === 1;
 const services = project.services.map((card) => serviceCardById(card));
 
 const label = 'flex items-center gap-3 text-sm font-bold tracking-[0.16em] uppercase';
 const dash = 'h-0.5 w-6 shrink-0 bg-primary';
 const copy = flipped ? 'lg:col-start-8' : 'lg:col-start-1';
-const focus = dark
-  ? 'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-content'
-  : 'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral';
 ---
 
 <DetailSection id={id} labelledBy={titleId}>
   <div
-    data-work-panel={dark ? 'dark' : 'light'}
-    class:list={[
-      'rounded-2xl p-6 sm:p-8 lg:p-12',
-      dark
-        ? 'process-lines bg-neutral/90 text-neutral-content'
-        : 'work-aura border border-base-300 text-base-content',
-    ]}
+    data-work-panel
+    class="process-lines rounded-2xl bg-neutral/90 p-6 text-neutral-content sm:p-8 lg:p-12"
   >
     {/*
      * From lg the copy's two blocks sit in the middle rows of four, between two rows that share
@@ -80,48 +71,25 @@ const focus = dark
       <div class:list={['min-w-0 lg:col-span-5 lg:row-start-2', copy]}>
         {/* Decorative: the index above and the name below already place the project. */}
         <p
-          class:list={[
-            'font-(family-name:--font-headers) text-5xl leading-none font-bold tracking-tight sm:text-6xl',
-            dark ? 'text-primary' : 'text-base-content',
-          ]}
+          class="font-(family-name:--font-headers) text-5xl leading-none font-bold tracking-tight text-primary sm:text-6xl"
           aria-hidden="true"
         >
-          {number}
-          <span class="text-primary">.</span>
+          {number}.
         </p>
-        <p
-          class:list={[
-            'mt-6 flex-wrap gap-y-2',
-            label,
-            dark ? 'text-neutral-content/80' : 'text-base-content/70',
-          ]}
-        >
+        <p class:list={['mt-6 flex-wrap gap-y-2 text-neutral-content/80', label]}>
           <span class={dash} aria-hidden="true"></span>
           <span>{project.platform}</span>
-          <span
-            class:list={[
-              'rounded-full border px-2.5 py-0.5 text-xs tracking-[0.12em]',
-              dark ? 'border-neutral-content/30' : 'border-base-300 bg-base-100',
-            ]}
-          >
+          <span class="rounded-full border border-neutral-content/30 px-2.5 py-0.5 text-xs tracking-[0.12em]">
             {statusOf(project)}
           </span>
         </p>
         <h2
           id={titleId}
-          class:list={[
-            'mt-4 text-3xl leading-tight font-bold tracking-tight text-balance sm:text-4xl xl:text-5xl',
-            dark ? 'text-base-100' : 'text-base-content',
-          ]}
+          class="mt-4 text-3xl leading-tight font-bold tracking-tight text-balance text-base-100 sm:text-4xl xl:text-5xl"
         >
           {project.name}
         </h2>
-        <p
-          class:list={[
-            'mt-3 text-base font-bold',
-            dark ? 'text-neutral-content/70' : 'text-base-content/70',
-          ]}
-        >
+        <p class="mt-3 text-base font-bold text-neutral-content/70">
           {project.location ? `${project.industry} · ${project.location}` : project.industry}
         </p>
       </div>
@@ -141,26 +109,18 @@ const focus = dark
           project={project}
           crop="full"
           sizes="(min-width: 1408px) 700px, (min-width: 1024px) calc((100vw - 208px) * 7 / 12), (min-width: 640px) calc(100vw - 112px), calc(100vw - 96px)"
-          class:list={[
-            'rounded-lg border shadow-2xl',
-            dark ? 'border-base-100/15' : 'border-base-300',
-          ]}
+          class="rounded-lg border border-base-100/15 shadow-2xl"
         />
       </div>
 
       <div class:list={['min-w-0 lg:col-span-5 lg:row-start-3 lg:mt-6', copy]}>
-        <p
-          class:list={[
-            'max-w-2xl text-lg leading-relaxed text-pretty',
-            dark ? 'text-neutral-content/85' : 'text-base-content/80',
-          ]}
-        >
+        <p class="max-w-2xl text-lg leading-relaxed text-pretty text-neutral-content/85">
           {project.description}
         </p>
         {/*
-         * The outlined button (the owner, 2026-11-21, in place of the lit primary): a pill outline
-         * that fills under the pointer, at once, with a ring on keyboard focus; near-black on the
-         * light panel, white on the dark one, where the ring is the navbar's light one.
+         * The outlined button (the owner, 2026-11-21, in place of the lit primary), in white for
+         * the dark panel: a pill outline that fills white under the pointer, at once, with the
+         * navbar's light ring on keyboard focus.
          */}
         <div class="mt-8">
           {project.ownSite ? (
@@ -169,8 +129,8 @@ const focus = dark
               <Button
                 href={ownSiteCta.href}
                 size="lg"
-                variant={dark ? 'inverse' : 'secondary'}
-                class:list={['mt-5 transition-none', focus]}
+                variant="inverse"
+                class="mt-5 transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-content"
               >
                 {ownSiteCta.label}
                 <Icon name="arrow-right" class="size-5" />
@@ -182,8 +142,8 @@ const focus = dark
               target="_blank"
               rel="noopener"
               size="lg"
-              variant={dark ? 'inverse' : 'secondary'}
-              class:list={['transition-none', focus]}
+              variant="inverse"
+              class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-content"
             >
               {project.link.label}
               <span class="sr-only">, {project.name}, opens in a new tab</span>
@@ -197,18 +157,12 @@ const focus = dark
     {/* role="list": Safari drops the list role from lists styled without markers. */}
     <ul
       role="list"
-      class:list={[
-        'mt-10 grid gap-6 border-t pt-8 sm:grid-cols-3 lg:mt-12',
-        dark ? 'border-base-100/15' : 'border-base-content/10',
-      ]}
+      class="mt-10 grid gap-6 border-t border-base-100/15 pt-8 sm:grid-cols-3 lg:mt-12"
     >
       {project.features.map((feature) => (
         <li class="flex min-w-0 items-start gap-3">
           <span
-            class:list={[
-              'grid size-10 shrink-0 place-items-center rounded-md text-primary',
-              dark ? 'bg-base-100/10' : 'bg-neutral',
-            ]}
+            class="grid size-10 shrink-0 place-items-center rounded-md bg-base-100/10 text-primary"
             aria-hidden="true"
           >
             <Icon name={feature.icon} class="size-5" stroke-width="1.75" />

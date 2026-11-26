@@ -29,12 +29,11 @@ import { scrollToRest } from './scroll';
  * The work page (src/pages/work/index.astro; the layout since the redesign of 2026-11-26): the
  * shared hero, how to read the projects with an index of thumbnail cards (WorkOverview.astro,
  * each a link to its section with a decorative crop of the site in a browser window), one
- * section per project (WorkProject.astro): a showcase panel, charcoal on even projects and white
- * under the yellow aura on odd ones, holding the number, the platform and status, the name as the
- * h2, the kind of business, the screenshot in a browser window (right of the copy on even
- * projects and left on odd ones from lg; between the headline and the lead below), the lead, the
- * outlined button to the site in a new tab (white on the dark panel, near-black on the light),
- * and the three features across its foot; then the story under the panel, "The challenge", "The
+ * section per project (WorkProject.astro): a charcoal showcase panel holding the number, the
+ * platform and status, the name as the h2, the kind of business, the screenshot in a browser
+ * window (right of the copy on even projects and left on odd ones from lg; between the headline
+ * and the lead below), the lead, the white outlined button to the site in a new tab, and the
+ * three features across its foot; then the story under the panel, "The challenge", "The
  * solution", and the services as links to their pages; then the invitation and the contact
  * banner. The studio's own website (2026-11-26) comes last, on the work page only: labelled "Our
  * own website", its solution a list of choices, and its button an invitation to a call in the
@@ -395,26 +394,20 @@ test('each project tells the challenge, the solution, and the services, and ends
       expect(shape.reserved).toBeCloseTo(4 / 3, 2);
       expect(shape.shown).toBeCloseTo(4 / 3, 2);
 
-      // The outlined button, with no transitions and no border light: the near-black secondary on
-      // the light panel (odd projects) and its white mirror on the dark one (even projects), so
-      // the panel's own tone sets the button. On a concept it opens the site in a new tab, named
-      // with the project and the new tab. Every listed site opens without a password, so no note
-      // describes the button. The studio's own website, which the visitor is already on, ends
-      // instead with the entry's last line and the button inviting a call, in this tab.
+      // The outlined button, with no transitions and no border light: the secondary's white
+      // mirror for the charcoal panel (the owner, 2026-11-26), transparent at rest with a white
+      // label. On a concept it opens the site in a new tab, named with the project and the new
+      // tab. Every listed site opens without a password, so no note describes the button. The
+      // studio's own website, which the visitor is already on, ends instead with the entry's
+      // last line and the button inviting a call, in this tab.
       await expect(section.locator('.aura')).toHaveCount(0);
       await expect(section.getByText(/password/i)).toHaveCount(0);
-      const onDarkPanel = position % 2 === 0;
       const outlined = async (button: Locator) => {
         await expect(button).toHaveClass(/\bbtn-outline\b/);
-        if (onDarkPanel) await expect(button).not.toHaveClass(/\bbtn-secondary\b/);
-        else await expect(button).toHaveClass(/\bbtn-secondary\b/);
+        await expect(button).not.toHaveClass(/\bbtn-secondary\b/);
         await expect(button).toHaveCSS('transition-property', 'none');
-        // Transparent at rest; the label white on the dark panel and near-black on the light.
         await expect(button).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-        await expect(button).toHaveCSS(
-          'color',
-          await resolve(page, onDarkPanel ? 'var(--color-base-100)' : 'var(--color-secondary)'),
-        );
+        await expect(button).toHaveCSS('color', await resolve(page, 'var(--color-base-100)'));
       };
       if (project.ownSite) {
         await expect(section.getByText(ownSiteCta.lead, { exact: true })).toBeVisible();
@@ -461,7 +454,7 @@ test("the studio's own website comes last, on the work page only, and says it is
   }
 });
 
-test('each project is a showcase panel, charcoal and white in turn, with the screenshot beside the copy from lg, swapping sides, and between the headline and the lead below', async ({
+test('each project is a charcoal showcase panel with the screenshot beside the copy from lg, swapping sides, and between the headline and the lead below', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -479,29 +472,16 @@ test('each project is a showcase panel, charcoal and white in turn, with the scr
     await expect(panel.getByText(project.description, { exact: true })).toBeVisible();
     await expect(panel.getByRole('heading', { level: 3 })).toHaveCount(0);
     await expect(section.getByRole('heading', { level: 3 })).toHaveCount(3);
+    // Every panel is the home process band's charcoal with its fine lines (the owner, 2026-11-26,
+    // in place of a white aura panel on odd projects), with the headline in white.
     const paint = await panel.evaluate((el) => {
       const style = getComputedStyle(el);
       return { image: style.backgroundImage, fill: style.backgroundColor };
     });
-    if (position % 2 === 0) {
-      // The home process band's charcoal with its fine lines, the headline in white.
-      await expect(panel).toHaveAttribute('data-work-panel', 'dark');
-      expect(paint.image, `${project.name}: the dark panel's lines`).toMatch(/url\(.*lines/);
-      expect(paint.image, `${project.name}: no glow on the dark panel`).not.toContain(
-        'radial-gradient(',
-      );
-      expect(paint.fill, `${project.name}: not white`).not.toBe(white);
-      await expect(heading).toHaveCSS('color', white);
-    } else {
-      // White under the home selected work's three yellow glows, the headline near-black.
-      await expect(panel).toHaveAttribute('data-work-panel', 'light');
-      expect(paint.image.match(/radial-gradient\(/g)?.length, `${project.name}: three glows`).toBe(
-        3,
-      );
-      expect(paint.image, `${project.name}: no image file`).not.toContain('url(');
-      expect(paint.fill, `${project.name}: white`).toBe(white);
-      await expect(heading).toHaveCSS('color', await resolve(page, 'var(--color-base-content)'));
-    }
+    expect(paint.image, `${project.name}: the panel's lines`).toMatch(/url\(.*lines/);
+    expect(paint.image, `${project.name}: no glow`).not.toContain('radial-gradient(');
+    expect(paint.fill, `${project.name}: not white`).not.toBe(white);
+    await expect(heading).toHaveCSS('color', white);
     // The screenshot is right of the copy on even projects and left on odd ones, and nothing in
     // the section sticks.
     const screenshot = await box(section.getByRole('img'));
