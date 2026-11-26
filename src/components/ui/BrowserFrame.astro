@@ -10,14 +10,15 @@ import { projectScreenshots } from '@/lib/project-screenshots';
  * technology; the screenshot carries the alt text, and the card or section around the frame holds
  * the real link to the site.
  *
- * `crop="card"` shows the top of the page at 16:10 for the home cards (`object-position: top`, so
- * the site's header and headline stay in view); `crop="full"` shows the whole 4:3 capture on the
- * work page. The image's own 1920x1440 reserves its box either way, so loading cannot move the
- * layout. The caller sets the frame's edge, corners, and shadow, and passes `sizes` for the
- * width the screenshot renders at, and `imageClass` for the image itself (the home cards zoom it a
- * little under the pointer). Inside a link whose text already names and describes the project
- * (the home cards), pass `decorative` so the screenshot has empty alt text and the link's name
- * stays its visible text; the work page keeps the description.
+ * `crop="card"` shows the top of the page at 16:10 for the home cards and the work page's index
+ * (`object-position: top`, so the site's header and headline stay in view); `crop="full"` shows
+ * the whole 4:3 capture in the work page's project panels. The image's own 1920x1440 reserves its
+ * box either way, so loading cannot move the layout. The caller sets the frame's edge, corners,
+ * and shadow, and passes `sizes` for the width the screenshot renders at, and `imageClass` for
+ * the image itself (the home cards and the index zoom it a little under the pointer). Inside a
+ * link whose text already names and describes the project (the home cards, the index), pass
+ * `decorative` so the screenshot has empty alt text and the link's name stays its visible text;
+ * the project panels keep the description.
  */
 interface Props {
   project: WorkProject;

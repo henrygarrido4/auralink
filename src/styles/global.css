@@ -580,7 +580,10 @@
  * band and fades to nothing well inside its ellipse, so the band meets the white introduction
  * above and the closing banner's photo below on plain white, with no edge. Yellow on white is far
  * lighter than on the dark, so the mixes are stronger here; the near-black text over the
- * brightest point still measures above 15:1. No image file, no request, and nothing moves.
+ * brightest point still measures above 15:1. No image file, no request, and nothing moves. Since
+ * the work page's redesign (2026-11-26) the light project panels there wear it too
+ * (src/components/sections/WorkProject.astro), inside a hairline and rounded corners, where the
+ * glows fall behind the copy and the screenshot; the dark panels are the process band's.
  */
 @utility work-aura {
   background-color: var(--color-base-100);

@@ -26,16 +26,20 @@ import { scrollToRest } from './scroll';
  * below. Under the pointer the screenshot grows a little and the arrow box fills primary, as it
  * does on keyboard focus, and nothing transitions on load.
  *
- * The work page (src/pages/work/index.astro): the shared hero, how to read the projects with an
- * index of them (WorkOverview.astro), one section per project (WorkProject.astro) with the
- * screenshot beside the copy from lg (swapping sides from one project to the next, sticky while
- * the copy scrolls) and above it below, the number, the platform and status, the name as the h2,
- * the kind of business, the lead, "The challenge", "The solution", and the services as links to
- * their pages, then the outlined secondary button to the site in a new tab; then the invitation
- * and the contact banner. The studio's own website (2026-11-26) comes last, on the work page
- * only: labelled "Our own website", its solution a list of choices, and its button an invitation
- * to a call in the same tab. The JSON-LD lists the projects. No
- * script or island ships, so the page is complete without JavaScript.
+ * The work page (src/pages/work/index.astro; the layout since the redesign of 2026-11-26): the
+ * shared hero, how to read the projects with an index of thumbnail cards (WorkOverview.astro,
+ * each a link to its section with a decorative crop of the site in a browser window), one
+ * section per project (WorkProject.astro): a showcase panel, charcoal on even projects and white
+ * under the yellow aura on odd ones, holding the number, the platform and status, the name as the
+ * h2, the kind of business, the screenshot in a browser window (right of the copy on even
+ * projects and left on odd ones from lg; between the headline and the lead below), the lead, the
+ * outlined button to the site in a new tab (white on the dark panel, near-black on the light),
+ * and the three features across its foot; then the story under the panel, "The challenge", "The
+ * solution", and the services as links to their pages; then the invitation and the contact
+ * banner. The studio's own website (2026-11-26) comes last, on the work page only: labelled "Our
+ * own website", its solution a list of choices, and its button an invitation to a call in the
+ * same tab. The JSON-LD lists the projects. No script or island ships, so the page is complete
+ * without JavaScript.
  */
 const HOME_HEADING = 'Websites for local businesses.';
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -285,7 +289,18 @@ test('the overview explains the three parts and indexes the projects, each a lin
     await expect(link).toHaveAttribute('href', `#${project.id}`);
     await expect(link).toContainText(project.name);
     await expect(link).toContainText(`${project.platform} · ${project.industry}`);
+    // The thumbnail (the redesign of 2026-11-26): the top of the site in a browser window whose
+    // bar is decorative, lazy, with empty alt text, since the card's text names the project and
+    // the project's section carries the description.
+    const thumbnail = link.locator('img');
+    await expect(thumbnail).toHaveCount(1);
+    await expect(thumbnail).toHaveAttribute('alt', '');
+    await expect(thumbnail).toHaveAttribute('loading', 'lazy');
+    await expect(link.locator('[aria-hidden="true"]').first()).toContainText(
+      new URL(project.link.href).hostname,
+    );
   }
+  await expect(index.getByRole('img')).toHaveCount(0);
   // The index works: the second link lands the second project's section under the sticky navbar
   // (`scroll-padding-top` is the bar's 5rem; once scrolled the bar is 4rem, and Chromium's scroll
   // anchoring may keep the content where it was, so the top settles between 4rem and 5rem). On a
@@ -380,28 +395,38 @@ test('each project tells the challenge, the solution, and the services, and ends
       expect(shape.reserved).toBeCloseTo(4 / 3, 2);
       expect(shape.shown).toBeCloseTo(4 / 3, 2);
 
-      // The outlined secondary button, with no transitions and no border light. On a concept it
-      // opens the site in a new tab, named with the project and the new tab. Every
-      // listed site opens without a password, so no note describes the button. The studio's own
-      // website, which the visitor is already on, ends instead with the entry's last line and the
-      // button inviting a call, in this tab.
+      // The outlined button, with no transitions and no border light: the near-black secondary on
+      // the light panel (odd projects) and its white mirror on the dark one (even projects), so
+      // the panel's own tone sets the button. On a concept it opens the site in a new tab, named
+      // with the project and the new tab. Every listed site opens without a password, so no note
+      // describes the button. The studio's own website, which the visitor is already on, ends
+      // instead with the entry's last line and the button inviting a call, in this tab.
       await expect(section.locator('.aura')).toHaveCount(0);
       await expect(section.getByText(/password/i)).toHaveCount(0);
+      const onDarkPanel = position % 2 === 0;
+      const outlined = async (button: Locator) => {
+        await expect(button).toHaveClass(/\bbtn-outline\b/);
+        if (onDarkPanel) await expect(button).not.toHaveClass(/\bbtn-secondary\b/);
+        else await expect(button).toHaveClass(/\bbtn-secondary\b/);
+        await expect(button).toHaveCSS('transition-property', 'none');
+        // Transparent at rest; the label white on the dark panel and near-black on the light.
+        await expect(button).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+        await expect(button).toHaveCSS(
+          'color',
+          await resolve(page, onDarkPanel ? 'var(--color-base-100)' : 'var(--color-secondary)'),
+        );
+      };
       if (project.ownSite) {
         await expect(section.getByText(ownSiteCta.lead, { exact: true })).toBeVisible();
         const call = section.getByRole('link', { name: ownSiteCta.label, exact: true });
-        await expect(call).toHaveClass(/\bbtn-outline\b/);
-        await expect(call).toHaveClass(/\bbtn-secondary\b/);
-        await expect(call).toHaveCSS('transition-property', 'none');
+        await outlined(call);
         await expect(call).toHaveAttribute('href', ownSiteCta.href);
         await expect(call).not.toHaveAttribute('target');
         await expect(section.locator('a[target="_blank"]')).toHaveCount(0);
         return;
       }
       const site = section.getByRole('link', { name: siteLinkName(project) });
-      await expect(site).toHaveClass(/\bbtn-outline\b/);
-      await expect(site).toHaveClass(/\bbtn-secondary\b/);
-      await expect(site).toHaveCSS('transition-property', 'none');
+      await outlined(site);
       await expect(site).toHaveAttribute('href', project.link.href);
       await expect(site).toHaveAttribute('target', '_blank');
       await expect(site).toHaveAttribute('rel', /\bnoopener\b/);
@@ -436,54 +461,80 @@ test("the studio's own website comes last, on the work page only, and says it is
   }
 });
 
-test('the screenshot sits beside the copy from lg, swapping sides, sticks while the copy scrolls, and comes first below', async ({
+test('each project is a showcase panel, charcoal and white in turn, with the screenshot beside the copy from lg, swapping sides, and between the headline and the lead below', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/work/');
+  const white = await resolve(page, 'var(--color-base-100)');
   for (const [position, project] of workProjects.entries()) {
     const section = projectSection(page, project);
-    const screenshot = await box(section.getByRole('img'));
-    const heading = await box(section.getByRole('heading', { level: 2 }));
+    const heading = section.getByRole('heading', { level: 2 });
+    // The panel holds the headline, the screenshot, the lead, and the features; the story
+    // (the three h3s) sits under it on the white band.
+    const panel = section.locator('[data-work-panel]');
+    await expect(panel).toHaveCount(1);
+    await expect(panel.getByRole('heading', { level: 2 })).toHaveCount(1);
+    await expect(panel.getByRole('img')).toHaveCount(1);
+    await expect(panel.getByText(project.description, { exact: true })).toBeVisible();
+    await expect(panel.getByRole('heading', { level: 3 })).toHaveCount(0);
+    await expect(section.getByRole('heading', { level: 3 })).toHaveCount(3);
+    const paint = await panel.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { image: style.backgroundImage, fill: style.backgroundColor };
+    });
     if (position % 2 === 0) {
-      expect(screenshot.x + screenshot.width, `${project.name}: screenshot left`).toBeLessThan(
-        heading.x,
+      // The home process band's charcoal with its fine lines, the headline in white.
+      await expect(panel).toHaveAttribute('data-work-panel', 'dark');
+      expect(paint.image, `${project.name}: the dark panel's lines`).toMatch(/url\(.*lines/);
+      expect(paint.image, `${project.name}: no glow on the dark panel`).not.toContain(
+        'radial-gradient(',
+      );
+      expect(paint.fill, `${project.name}: not white`).not.toBe(white);
+      await expect(heading).toHaveCSS('color', white);
+    } else {
+      // White under the home selected work's three yellow glows, the headline near-black.
+      await expect(panel).toHaveAttribute('data-work-panel', 'light');
+      expect(paint.image.match(/radial-gradient\(/g)?.length, `${project.name}: three glows`).toBe(
+        3,
+      );
+      expect(paint.image, `${project.name}: no image file`).not.toContain('url(');
+      expect(paint.fill, `${project.name}: white`).toBe(white);
+      await expect(heading).toHaveCSS('color', await resolve(page, 'var(--color-base-content)'));
+    }
+    // The screenshot is right of the copy on even projects and left on odd ones, and nothing in
+    // the section sticks.
+    const screenshot = await box(section.getByRole('img'));
+    const headline = await box(heading);
+    if (position % 2 === 0) {
+      expect(screenshot.x, `${project.name}: screenshot right`).toBeGreaterThan(
+        headline.x + headline.width,
       );
     } else {
-      expect(screenshot.x, `${project.name}: screenshot right`).toBeGreaterThan(
-        heading.x + heading.width,
+      expect(screenshot.x + screenshot.width, `${project.name}: screenshot left`).toBeLessThan(
+        headline.x,
       );
     }
-    // The screenshot's column sticks 7rem under the top, clear of the navbar, as the copy scrolls.
-    const column = section
-      .getByRole('img')
-      .locator('xpath=ancestor::*[contains(@class, "sticky")]');
-    await expect(column).toHaveCSS('position', 'sticky');
-    await expect(column).toHaveCSS('top', '112px');
+    expect(
+      await section.evaluate((el) =>
+        [...el.querySelectorAll('*')].some((node) => getComputedStyle(node).position === 'sticky'),
+      ),
+      `${project.name}: nothing sticky`,
+    ).toBe(false);
   }
-  // Scrolled 200px into the first project, its screenshot has stopped 7rem under the top while the
-  // copy went on: the column's own place is above that line, and the copy still reaches below it.
-  const first = projectSection(page, workProjects[0]);
-  await page.evaluate((id) => {
-    const section = document.getElementById(id)!;
-    window.scrollTo({
-      top: section.getBoundingClientRect().top + scrollY + 200,
-      behavior: 'instant',
-    });
-  }, workProjects[0].id);
-  await page.evaluate(
-    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-  );
-  const stuck = await box(first.locator('[class*="sticky"]').first());
-  expect(stuck.y, 'stuck 7rem under the top').toBeCloseTo(112, 0);
 
+  // Below lg the panel is one column: the headline, then the screenshot, then the lead.
   await page.setViewportSize({ width: 768, height: 1024 });
   for (const project of workProjects) {
     const section = projectSection(page, project);
     const screenshot = await box(section.getByRole('img'));
     const heading = await box(section.getByRole('heading', { level: 2 }));
-    expect(screenshot.y + screenshot.height, `${project.name}: screenshot first`).toBeLessThan(
-      heading.y,
+    const lead = await box(section.getByText(project.description, { exact: true }));
+    expect(heading.y + heading.height, `${project.name}: headline first`).toBeLessThan(
+      screenshot.y,
+    );
+    expect(screenshot.y + screenshot.height, `${project.name}: then the screenshot`).toBeLessThan(
+      lead.y,
     );
   }
 });
