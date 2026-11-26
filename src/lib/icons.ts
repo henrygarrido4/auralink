@@ -42,6 +42,7 @@ import Search from '../assets/icons/search.svg';
 import ShoppingBag from '../assets/icons/shopping-bag.svg';
 import SlidersHorizontal from '../assets/icons/sliders-horizontal.svg';
 import Sparkles from '../assets/icons/sparkles.svg';
+import Tag from '../assets/icons/tag.svg';
 import Target from '../assets/icons/target.svg';
 import Tooth from '../assets/icons/tooth.svg';
 import TrendingUp from '../assets/icons/trending-up.svg';
@@ -107,6 +108,7 @@ export const icons = {
   'shopping-bag': ShoppingBag,
   'sliders-horizontal': SlidersHorizontal,
   sparkles: Sparkles,
+  tag: Tag,
   target: Target,
   tooth: Tooth,
   'trending-up': TrendingUp,

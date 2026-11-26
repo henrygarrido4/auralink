@@ -1,7 +1,16 @@
 import type { IconName } from '../lib/icons';
 import type { ProjectId } from '../lib/project-screenshots';
 import type { Invitation } from './detail-pages';
-import type { ServiceCardId, ServicesPageCardId } from './site';
+import { industryPages } from './industry-pages';
+import { servicePages } from './service-pages';
+import {
+  basedIn,
+  contactRoutes,
+  primaryCta,
+  site,
+  type ServiceCardId,
+  type ServicesPageCardId,
+} from './site';
 
 /**
  * The projects shown on the work page (src/pages/work/index.astro) and, as three cards, on the
@@ -9,18 +18,29 @@ import type { ServiceCardId, ServicesPageCardId } from './site';
  * owner on 2026-11-18 and 2026-11-21 (Freight Solutions), and described from what each site showed
  * when it was inspected on 2026-11-21; docs/content-strategy.md records what was checked and what
  * still waits for the owner's confirmation. The one0one Shopify recreation of 2026-11-18 was
- * removed at the owner's request on 2026-11-21.
+ * removed at the owner's request on 2026-11-21. The studio's own website follows the three on the
+ * work page, and only there, at the owner's request of 2026-11-26.
  *
  * The copy is written for a business owner, after the "results" page of Eyler Creative that the
  * owner gave as the reference (2026-11-21), in three parts per project: the challenge, the
- * solution, and what we manage. It states no measured result, figure, ranking, or testimonial:
- * the owner has none to publish, and the page says so by showing the work instead. Every
- * feature named is one a visitor can see on the project's own site.
+ * solution, and what we manage. It states no result, ranking, or testimonial for a client: the
+ * owner has none to publish, and the page says so by showing the work instead. The one measured
+ * figure is the studio's own: its website's speed score, from Lighthouse on 2026-11-26
+ * (docs/content-strategy.md). Every feature named is one a visitor can see on the project's own
+ * site.
  */
 
 /** Something a visitor can see on the project's site, as checked there. */
 export interface ProjectFeature {
   readonly icon: IconName;
+  readonly text: string;
+}
+
+/** One choice behind a website, listed under "The solution": what was done, then why it matters. */
+export interface ProjectChoice {
+  /** A few words, set in bold before a colon. */
+  readonly title: string;
+  /** The rest of the sentence, after the colon. */
   readonly text: string;
 }
 
@@ -35,12 +55,22 @@ export interface WorkProject {
   readonly industry: string;
   /** Where the business is, as its site states it. */
   readonly location?: string;
+  /**
+   * The studio's own website, not a client's (the owner, 2026-11-26): its label reads
+   * `ownSiteStatus`, the home page's cards leave it out, and it ends with `ownSiteCta` rather
+   * than a button to the site, which the visitor is already on. `link` still gives its address,
+   * for the browser frame and the structured data.
+   */
+  readonly ownSite?: true;
   /** The lead paragraph on the work page: what the business is and who the website serves. */
   readonly description: string;
   /** What the business needed the website to do, and for whom. */
   readonly challenge: string;
-  /** How the design and build answer it, feature by feature. */
-  readonly solution: string;
+  /**
+   * How the design and build answer it, feature by feature: a paragraph, or a list of the choices
+   * behind the site.
+   */
+  readonly solution: string | readonly ProjectChoice[];
   /** The services the studio manages for the business, each a link to its page. */
   readonly services: readonly (ServiceCardId | ServicesPageCardId)[];
   /** Three things a visitor can see on the site, shown under the screenshot. */
@@ -62,6 +92,11 @@ export interface WorkProject {
  * confirmed on 2026-11-21 (The Villas @ Foxbrick had been labelled a demo build until then, from
  * its address); each opens without a password. A site that asked for one would need a note under
  * its button and the owner's decision to publish the password.
+ *
+ * Then the studio's own website, 04 on the work page only (the owner, 2026-11-26): the portfolio
+ * entry written that day from this repository's facts and approved by the owner, set in the page's
+ * three parts. Its lead and its five choices are that entry in the page's "we" rather than its
+ * "I"; the challenge, the features, and the services are proposals.
  */
 export const workProjects: readonly WorkProject[] = [
   {
@@ -136,32 +171,95 @@ export const workProjects: readonly WorkProject[] = [
     screenshotAlt:
       'Homepage of Freight Solutions LLC: the red and white headline To Every Direction over a night-time photo of pipe stacked on a flatbed trailer, with a View Services button',
   },
+  {
+    id: 'auralink-studio',
+    name: site.name,
+    platform: 'Custom static website',
+    industry: 'Web design and marketing studio',
+    location: basedIn,
+    ownSite: true,
+    description:
+      "This isn't a client project. It's our own website, custom-built to turn visitors into booked calls.",
+    challenge:
+      'Business owners judge a web studio by its own website before they ever get in touch. Ours had to load fast on a phone, answer the questions buyers ask, show what a website costs, make booking a call easy, and tell us which visits turn into leads.',
+    solution: [
+      {
+        title: 'Fast pages',
+        text: "the site scores 100/100 on Google's speed test, so visitors don't leave before they reach out.",
+      },
+      {
+        title: 'Booking built in',
+        text: "visitors book a free call or send a message right on the site, so they act while they're interested.",
+      },
+      {
+        title: 'Prices up front',
+        text: 'every package shows its price, so the people who book already know it fits their budget.',
+      },
+      {
+        title: 'Every lead counted',
+        text: 'each booked call and message is tracked in Google Analytics and Meta, so ad money goes where leads come from.',
+      },
+      {
+        title: 'Built to be found',
+        text: `pages for ${servicePages.length} services and ${industryPages.length} industries answer real questions, so Google and AI tools like ChatGPT can send buyers our way.`,
+      },
+    ],
+    services: ['custom-websites', 'seo', 'aeo-geo'],
+    features: [
+      { icon: 'calendar-check', text: 'A free 20-minute call booked right on the contact page' },
+      { icon: 'tag', text: 'Prices for every package on the pricing page' },
+      {
+        icon: 'layout-grid',
+        text: `A page for each of ${servicePages.length} services and ${industryPages.length} industries`,
+      },
+    ],
+    link: { href: `${site.url}/`, label: 'View website' },
+    screenshotAlt:
+      "Homepage of Auralink Studio: the white and yellow headline Your business works hard. Your website should, too. on black, beside the studio's yellow mark in a ring of benefit badges, with a Book a free call button",
+  },
 ];
 
 /**
- * The home page's cards, in order: every project, and exactly three of them, since the section's
- * grid is built for three (FeaturedWork.astro). A fourth project needs that grid rethought, or a
- * `featured` flag here.
+ * The home page's cards, in order: every client project, and exactly three of them, since the
+ * section's grid is built for three (FeaturedWork.astro). The studio's own website stays on the
+ * work page. Another client project needs that grid rethought, or a `featured` flag here.
  */
-export const featuredWork = workProjects;
+export const featuredWork = workProjects.filter((project) => !project.ownSite);
 if (featuredWork.length !== 3) {
   throw new Error('The home page shows exactly three projects (the owner, 2026-11-21).');
 }
 
-/** The small label beside each project's platform: every project is the business's live website. */
+/** The small label beside each client project's platform: each is the business's live website. */
 export const projectStatus = 'Live website';
+
+/** The same label on the studio's own website, so it never reads as a client's. */
+export const ownSiteStatus = 'Our own website';
+
+/** The label a project shows beside its platform. */
+export const statusOf = (project: WorkProject) => (project.ownSite ? ownSiteStatus : projectStatus);
+
+/**
+ * How the studio's own website ends on the work page, where the others have a button to their
+ * site: the closing line of the entry the owner approved (2026-11-26), then the navbar's "Book a
+ * free call", to the contact page, which opens on the booking tab.
+ */
+export const ownSiteCta = {
+  lead: 'Want a site that works this hard for you?',
+  label: primaryCta.label,
+  href: contactRoutes.page,
+} as const;
 
 /** The work page's own copy: the hero, the overview, and the closing invitation. */
 export const workPage = {
   metaTitle: 'Our Work',
   metaDescription:
-    'Website projects by Auralink Studio: an apartment community, a barbershop, and a trucking company, each with its challenge and solution.',
+    'Website projects by Auralink Studio: an apartment community, a barbershop, a trucking company, and our own site, each with its challenge and solution.',
   title: 'Real businesses. Websites built to be chosen.',
   highlight: 'built to be chosen.',
   description:
-    'Three live websites for local businesses: an apartment community on WordPress, and a barbershop and a trucking company on custom static websites. Each is shown the same way: the challenge, how the website answers it, and what we manage.',
+    'Three live websites for local businesses: an apartment community on WordPress, and a barbershop and a trucking company on custom static websites. The fourth is our own. Each is shown the same way: the challenge, how the website answers it, and what we manage.',
   overview: {
-    eyebrow: 'Three projects',
+    eyebrow: 'Four projects',
     heading: 'How to read these projects.',
     intro:
       'Each one is a working website you can open. Rather than headline numbers, we show the thinking behind every build: the problem the business brought, how the website answers it, and what we take care of.',

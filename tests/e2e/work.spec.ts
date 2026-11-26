@@ -3,7 +3,10 @@ import { serviceCardById } from '../../src/data/detail-pages';
 import { workCta } from '../../src/data/site';
 import {
   featuredWork,
+  ownSiteCta,
+  ownSiteStatus,
   projectStatus,
+  statusOf,
   workPage,
   workProjects,
   type WorkProject,
@@ -28,7 +31,9 @@ import { scrollToRest } from './scroll';
  * the copy scrolls) and above it below, the number, the platform and status, the name as the h2,
  * the kind of business, the lead, "The challenge", "The solution", and the services as links to
  * their pages, then the outlined secondary button to the site in a new tab; then the invitation
- * and the contact banner. The JSON-LD lists the projects. No
+ * and the contact banner. The studio's own website (2026-11-26) comes last, on the work page
+ * only: labelled "Our own website", its solution a list of choices, and its button an invitation
+ * to a call in the same tab. The JSON-LD lists the projects. No
  * script or island ships, so the page is complete without JavaScript.
  */
 const HOME_HEADING = 'Websites for local businesses.';
@@ -296,7 +301,7 @@ test('the overview explains the three parts and indexes the projects, each a lin
   expect(top, 'not under the navbar').toBeGreaterThanOrEqual(navbar.y + navbar.height - 1);
 });
 
-test('each project tells the challenge, the solution, and the services, and links to the site', async ({
+test('each project tells the challenge, the solution, and the services, and ends with its button', async ({
   page,
 }) => {
   await page.goto('/work/');
@@ -310,12 +315,12 @@ test('each project tells the challenge, the solution, and the services, and link
       });
       await expect(number).toHaveAttribute('aria-hidden', 'true');
       await expect(section.getByText(project.platform, { exact: true })).toBeVisible();
-      await expect(section.getByText(projectStatus, { exact: true })).toBeVisible();
+      await expect(section.getByText(statusOf(project), { exact: true })).toBeVisible();
       const where = project.location
         ? `${project.industry} · ${project.location}`
         : project.industry;
       await expect(section.getByText(where, { exact: true })).toBeVisible();
-      for (const text of [project.description, project.challenge, project.solution]) {
+      for (const text of [project.description, project.challenge]) {
         await expect(section.getByText(text, { exact: true })).toBeVisible();
       }
       await expect(section.getByRole('heading', { level: 3 })).toHaveText([
@@ -323,6 +328,26 @@ test('each project tells the challenge, the solution, and the services, and link
         'The solution',
         'What we manage',
       ]);
+      // The solution is a paragraph, or a list of choices: each a bold title and a colon, then the
+      // rest of the sentence, after a decorative check mark.
+      if (typeof project.solution === 'string') {
+        await expect(section.getByText(project.solution, { exact: true })).toBeVisible();
+      } else {
+        const choices = section
+          .getByRole('heading', { name: 'The solution', level: 3 })
+          .locator('xpath=..')
+          .getByRole('list')
+          .getByRole('listitem');
+        await expect(choices).toHaveText(
+          project.solution.map((choice) => `${choice.title}: ${choice.text}`),
+        );
+        await expect(choices.locator('strong')).toHaveText(
+          project.solution.map((choice) => `${choice.title}:`),
+        );
+        for (const mark of await choices.locator('svg').all()) {
+          await expect(mark).toHaveAttribute('aria-hidden', 'true');
+        }
+      }
 
       // One link per service, to its own page, named by the card's title.
       for (const id of project.services) {
@@ -353,20 +378,59 @@ test('each project tells the challenge, the solution, and the services, and link
       expect(shape.reserved).toBeCloseTo(4 / 3, 2);
       expect(shape.shown).toBeCloseTo(4 / 3, 2);
 
-      // The outlined secondary button opens the site in a new tab, named with the project and the
-      // new tab, with no transitions. Every listed site opens without a password, so no note
-      // describes the button.
+      // The outlined secondary button, with no transitions and no border light. On a client's
+      // project it opens the site in a new tab, named with the project and the new tab. Every
+      // listed site opens without a password, so no note describes the button. The studio's own
+      // website, which the visitor is already on, ends instead with the entry's last line and the
+      // button inviting a call, in this tab.
+      await expect(section.locator('.aura')).toHaveCount(0);
+      await expect(section.getByText(/password/i)).toHaveCount(0);
+      if (project.ownSite) {
+        await expect(section.getByText(ownSiteCta.lead, { exact: true })).toBeVisible();
+        const call = section.getByRole('link', { name: ownSiteCta.label, exact: true });
+        await expect(call).toHaveClass(/\bbtn-outline\b/);
+        await expect(call).toHaveClass(/\bbtn-secondary\b/);
+        await expect(call).toHaveCSS('transition-property', 'none');
+        await expect(call).toHaveAttribute('href', ownSiteCta.href);
+        await expect(call).not.toHaveAttribute('target');
+        await expect(section.locator('a[target="_blank"]')).toHaveCount(0);
+        return;
+      }
       const site = section.getByRole('link', { name: siteLinkName(project) });
       await expect(site).toHaveClass(/\bbtn-outline\b/);
       await expect(site).toHaveClass(/\bbtn-secondary\b/);
       await expect(site).toHaveCSS('transition-property', 'none');
-      await expect(section.locator('.aura')).toHaveCount(0);
       await expect(site).toHaveAttribute('href', project.link.href);
       await expect(site).toHaveAttribute('target', '_blank');
       await expect(site).toHaveAttribute('rel', /\bnoopener\b/);
-      await expect(section.getByText(/password/i)).toHaveCount(0);
       await expect(site).not.toHaveAttribute('aria-describedby');
     });
+  }
+});
+
+test("the studio's own website comes last, on the work page only, and says it is not a client's", async ({
+  page,
+}) => {
+  const own = workProjects.filter((project) => project.ownSite);
+  expect(own, 'one own website').toHaveLength(1);
+  const [studio] = own;
+  expect(workProjects.at(-1), 'after the client projects').toBe(studio);
+  expect(featuredWork, 'not a home card').not.toContain(studio);
+  expect(studio.description, 'the lead says so first').toMatch(/^This isn't a client project\./);
+
+  await page.goto('/');
+  await expect(cards(page)).toHaveCount(featuredWork.length);
+  await expect(cards(page).getByRole('heading', { name: studio.name })).toHaveCount(0);
+
+  // On the work page its label is its own, and no client project wears that label.
+  await page.goto('/work/');
+  const section = projectSection(page, studio);
+  await expect(section.getByText(ownSiteStatus, { exact: true })).toBeVisible();
+  await expect(section.getByText(projectStatus, { exact: true })).toHaveCount(0);
+  for (const project of featuredWork) {
+    await expect(
+      projectSection(page, project).getByText(ownSiteStatus, { exact: true }),
+    ).toHaveCount(0);
   }
 });
 
@@ -445,16 +509,16 @@ test('the JSON-LD describes the page, the trail, and one item per project', asyn
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
-  test('the work page is complete and every project links to its site', async ({ page }) => {
+  test('the work page is complete and every project ends with its link', async ({ page }) => {
     await page.goto('/work/');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(workPage.title);
     for (const project of workProjects) {
       const section = projectSection(page, project);
       await expect(section.getByRole('heading', { level: 2 })).toBeVisible();
-      await expect(section.getByRole('link', { name: siteLinkName(project) })).toHaveAttribute(
-        'href',
-        project.link.href,
-      );
+      const [link, href] = project.ownSite
+        ? [section.getByRole('link', { name: ownSiteCta.label, exact: true }), ownSiteCta.href]
+        : [section.getByRole('link', { name: siteLinkName(project) }), project.link.href];
+      await expect(link).toHaveAttribute('href', href);
     }
   });
 });

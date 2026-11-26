@@ -4,7 +4,7 @@ import BrowserFrame from '@/components/ui/BrowserFrame.astro';
 import Button from '@/components/ui/Button.astro';
 import Icon from '@/components/ui/Icon.astro';
 import { serviceCardById } from '@/data/detail-pages';
-import { projectStatus, type WorkProject } from '@/data/work';
+import { ownSiteCta, statusOf, type WorkProject } from '@/data/work';
 
 /**
  * One project on the work page (the owner's brief, 2026-11-21, after the work page of uprig.net
@@ -20,10 +20,13 @@ import { projectStatus, type WorkProject } from '@/data/work';
  * pages' numbers: near-black with a primary full stop), how it is built and that it is a live
  * website (every project is, the owner confirmed on 2026-11-21), the name as the section's h2,
  * the kind of business and where it is, a lead paragraph, then three blocks under h3 headings that
- * every project shares: the challenge, the solution, and what we manage, each service a link to
- * its page. No result, figure, or testimonial is stated anywhere (the owner has none to publish).
+ * every project shares: the challenge, the solution (a paragraph, or the choices as a list with
+ * the check marks of the invitation below), and what we manage, each service a link to its page.
+ * No client result, figure, or testimonial is stated anywhere (the owner has none to publish).
  * The outlined secondary button opens the site in a new tab; visually hidden words complete its
- * name with the project and the new tab.
+ * name with the project and the new tab. The studio's own website (`ownSite`, 2026-11-26) is
+ * labelled as such and ends instead with a line and the same button inviting a call, in the same
+ * tab, since the visitor is already on its site.
  */
 interface Props {
   project: WorkProject;
@@ -103,7 +106,7 @@ const block =
         <span class="h-0.5 w-6 shrink-0 bg-primary" aria-hidden="true"></span>
         <span>{project.platform}</span>
         <span class="rounded-full border border-base-300 bg-base-100 px-2.5 py-0.5 text-xs tracking-[0.12em]">
-          {projectStatus}
+          {statusOf(project)}
         </span>
       </p>
       <h2
@@ -133,9 +136,27 @@ const block =
           <span class="h-0.5 w-6 shrink-0 bg-primary" aria-hidden="true"></span>
           The solution
         </h3>
-        <p class="mt-4 max-w-2xl text-base leading-relaxed text-pretty text-base-content">
-          {project.solution}
-        </p>
+        {typeof project.solution === 'string' ? (
+          <p class="mt-4 max-w-2xl text-base leading-relaxed text-pretty text-base-content">
+            {project.solution}
+          </p>
+        ) : (
+          <ul role="list" class="mt-4 grid max-w-2xl gap-3.5">
+            {project.solution.map((choice) => (
+              <li class="flex items-start gap-3 text-base leading-relaxed text-base-content">
+                <span
+                  class="mt-1 grid size-5 shrink-0 place-items-center rounded-full bg-primary text-primary-content"
+                  aria-hidden="true"
+                >
+                  <Icon name="check" class="size-3" stroke-width="3" />
+                </span>
+                <span class="min-w-0 text-pretty">
+                  <strong class="font-bold">{choice.title}:</strong> {choice.text}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <div class="mt-8 border-t border-base-300 pt-8">
         <h3 class={block}>
@@ -167,18 +188,35 @@ const block =
        * near-black ring on keyboard focus, as the home introduction's "Learn more".
        */}
       <div class="mt-10">
-        <Button
-          href={project.link.href}
-          target="_blank"
-          rel="noopener"
-          size="lg"
-          variant="secondary"
-          class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
-        >
-          {project.link.label}
-          <span class="sr-only">, {project.name}, opens in a new tab</span>
-          <Icon name="arrow-up-right" class="size-5" />
-        </Button>
+        {project.ownSite ? (
+          <>
+            <p class="text-lg leading-snug font-bold text-pretty text-base-content">
+              {ownSiteCta.lead}
+            </p>
+            <Button
+              href={ownSiteCta.href}
+              size="lg"
+              variant="secondary"
+              class="mt-5 transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+            >
+              {ownSiteCta.label}
+              <Icon name="arrow-right" class="size-5" />
+            </Button>
+          </>
+        ) : (
+          <Button
+            href={project.link.href}
+            target="_blank"
+            rel="noopener"
+            size="lg"
+            variant="secondary"
+            class="transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral"
+          >
+            {project.link.label}
+            <span class="sr-only">, {project.name}, opens in a new tab</span>
+            <Icon name="arrow-up-right" class="size-5" />
+          </Button>
+        )}
       </div>
     </div>
   </div>
