@@ -16,6 +16,15 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Netlify's own address for the site served the same pages as auralinkstudio.com, so every path on
+# that one host moves to the same path on the real domain (2026-11-26). It comes before the other
+# redirects because Netlify applies the first rule that matches.
+[[redirects]]
+  from = "https://auralinkstudio.netlify.app/*"
+  to = "https://auralinkstudio.com/:splat"
+  status = 301
+  force = true
+
 # The form's thank-you page was retired on 2026-11-19 (the form confirms in place). Anything that
 # still points there, such as a cached copy of the old form, lands on the contact page instead.
 [[redirects]]

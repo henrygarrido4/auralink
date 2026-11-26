@@ -1,31 +1,10 @@
 ---
 import { Font } from 'astro:assets';
 import '../styles/global.css';
-import faviconSvg from '../../public/favicon.svg?raw';
 import Navbar from '../components/sections/Navbar.astro';
 import ContactBanner from '../components/sections/ContactBanner.astro';
 import SiteFooter from '../components/sections/SiteFooter.astro';
 import { site } from '../data/site';
-
-/**
- * The SVG favicon, written into the head as a data URL instead of linked (2026-11-22). Chrome
- * asks for the icon as soon as the page has loaded, which on these pages is before the hero has
- * been shown, and Lighthouse's simulation then counts that request toward First and Largest
- * Contentful Paint: about 75 ms of the home page's LCP under mobile throttling, on top of the
- * round trip the request costs a visitor. Inlined, there is no request; the page carries 1.5 KB
- * more compressed. The file itself stays in public/ for anything that asks for it by path, and
- * the ICO beside it still serves browsers without SVG icons. Read at build time from the file
- * design/favicon/render.mjs writes, so redrawing the icon changes both. Quotes become single so
- * the URL can sit in a double-quoted attribute; the rest is what a URL cannot carry as it is.
- */
-const faviconDataUrl = `data:image/svg+xml,${faviconSvg
-  .trim()
-  .replace(/"/g, "'")
-  .replace(/%/g, '%25')
-  .replace(/#/g, '%23')
-  .replace(/</g, '%3C')
-  .replace(/>/g, '%3E')
-  .replace(/\s+/g, ' ')}`;
 
 interface Props {
   /** Page title without the site name. Use the site name itself only on the home page. */
@@ -115,7 +94,11 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : und
     <meta property="og:locale" content={site.locale} />
     {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
     <meta name="twitter:card" content={ogImageUrl ? 'summary_large_image' : 'summary'} />
-    <link rel="icon" type="image/svg+xml" href={faviconDataUrl} />
+    {/*
+      Linked by path, not written in as a data URL as it was from 2026-11-22, so Google can crawl
+      the icon at its own address (the owner's request, 2026-11-26).
+    */}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <meta name="generator" content={Astro.generator} />
