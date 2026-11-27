@@ -57,6 +57,14 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : und
       (src/lib/lead-tracking.ts), wait in the array and are read when the container loads. Tags,
       the Meta pixel's base code included, are configured in the container, not here
       (docs/architecture.md, "Analytics").
+
+      Microsoft Clarity, project zk1wb4b735 (the owner's decision, 2026-11-26), rides on the same
+      loader, not on a container tag. Its queue stub, `window.clarity`, is the one line of
+      Microsoft's snippet that has to run early: it is set on every host, so a call made before the
+      tag loads, the lead signal among them (src/lib/lead-tracking.ts), waits in `clarity.q`. The
+      tag itself (`async`, from www.clarity.ms) is appended right after the container, and only on
+      the production hostname, with or without `www`, so local dev, Deploy Previews, Playwright, and
+      the Lighthouse audit send no sessions.
     */}
     <script is:inline>
       window.dataLayer = window.dataLayer || [];
@@ -64,6 +72,11 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : und
         dataLayer.push(arguments);
       }
       gtag('js', new Date());
+      window.clarity =
+        window.clarity ||
+        function () {
+          (window.clarity.q = window.clarity.q || []).push(arguments);
+        };
       (() => {
         const wake = ['mousemove', 'pointerdown', 'keydown', 'touchstart', 'scroll'];
         let loaded = false;
@@ -75,6 +88,12 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : und
           script.async = true;
           script.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-PVBR2FJZ';
           document.head.appendChild(script);
+          if (['auralinkstudio.com', 'www.auralinkstudio.com'].includes(location.hostname)) {
+            const clarity = document.createElement('script');
+            clarity.async = true;
+            clarity.src = 'https://www.clarity.ms/tag/zk1wb4b735';
+            document.head.appendChild(clarity);
+          }
         };
         wake.forEach((type) =>
           window.addEventListener(type, loadTagManager, { once: true, passive: true }),

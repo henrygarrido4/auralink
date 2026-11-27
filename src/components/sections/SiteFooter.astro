@@ -2,6 +2,7 @@
 import Logo from '@/assets/aura.svg';
 import FooterMap from '@/components/ui/FooterMap.astro';
 import { footerCompany, footerIndustries, footerLegal, footerServices } from '@/data/footer';
+import { privacyPage } from '@/data/privacy';
 import { site } from '@/data/site';
 
 const groups = [
@@ -105,6 +106,19 @@ const smallLink = 'rounded-sm underline-offset-4 hover:text-primary hover:underl
       ))}
     </div>
     <div class="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-neutral-content/15 pt-6 text-sm text-neutral-content/70">
+      {/*
+        The analytics notice Microsoft recommends for Clarity (2026-11-26), on its own row above the
+        copyright line. Its link is worded as the policy's title, not "privacy policy", so the legal
+        link beside the copyright stays the one link of that name in the footer; and it sits in
+        running text, so it is underlined at rest, as the inquiry form's hint is.
+      */}
+      <p class="basis-full">
+        We use Microsoft Clarity and Google Analytics to see how visitors use this site. Read{' '}
+        <a href={privacyPage.href} class:list={['underline', smallLink, focusRing]}>
+          how we handle your information
+        </a>{' '}
+        for details.
+      </p>
       <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
         <p>
           © {new Date().getFullYear()} {site.name}. All rights reserved.

@@ -12,7 +12,8 @@ import { businessLocation, contactDetails, contactRoutes, site } from './site';
  * docs/architecture.md ("Booking and the contact tabs", "Analytics: Google Tag Manager"), and
  * the account settings checked on 2026-11-22; what only the owner could say is in the owner's
  * answers of that day (docs/content-strategy.md, "Verified facts"). When a practice changes,
- * change this copy and the effective date together.
+ * change this copy and the effective date together, as on 2026-11-26, when Microsoft Clarity was
+ * added to the head (src/layouts/BaseLayout.astro) and the lead signal (src/lib/lead-tracking.ts).
  */
 
 /** Where the page lives, and its name in navigation: the footer link and the hero's eyebrow. */
@@ -63,11 +64,11 @@ const based = `${businessLocation.region}, ${businessLocation.country}`;
 /** Read before the sections: when the policy applies, then the answer in brief. */
 export const privacyIntro: readonly PolicyBlock[] = [
   {
-    paragraph: ['Effective date: November 22, 2026.'],
+    paragraph: ['Effective date: November 26, 2026.'],
   },
   {
     paragraph: [
-      'In short: we collect what you send us through the contact form, what you give Calendly when you book a call, and how you use the site. We use it to reply to you, to run and improve the site, and to measure our advertising. Netlify, Calendly, Google, and Meta handle parts of it for us. We do not sell it for money. Email ',
+      'In short: we collect what you send us through the contact form, what you give Calendly when you book a call, and how you use the site. We use it to reply to you, to run and improve the site, and to measure our advertising. Netlify, Calendly, Google, Microsoft, and Meta handle parts of it for us. We do not sell it for money. Email ',
       email,
       ' to see, correct, or delete what we hold about you.',
     ],
@@ -135,7 +136,12 @@ export const privacySections: readonly PolicySection[] = [
           },
           {
             paragraph: [
-              'When you send the form or book a call, we tell Google Analytics and Meta which action occurred. The lead event does not include your name, email address, phone number, or message.',
+              "Microsoft Clarity records how visitors use our pages (clicks, taps, scrolling, and mouse movement) so we can see heatmaps and replays of visits and fix anything confusing. Clarity masks what you type into form fields, so it doesn't capture your message, email address, or phone number.",
+            ],
+          },
+          {
+            paragraph: [
+              'When you send the form or book a call, we tell Google Analytics, Meta, and Clarity which action occurred. The lead event does not include your name, email address, phone number, or message.',
             ],
           },
           {
@@ -213,6 +219,10 @@ export const privacySections: readonly PolicySection[] = [
             ' runs the Meta pixel, which measures visits and leads from our advertising on Facebook and Instagram.',
           ],
           [
+            { text: 'Microsoft', href: 'https://privacy.microsoft.com/privacystatement' },
+            ' runs Clarity, which records how visitors use our pages, and can also collect and use this data as described in the Microsoft Privacy Statement.',
+          ],
+          [
             'We also copy inquiry details, such as who got in touch and when, into a spreadsheet we use to keep track of inquiries.',
           ],
         ],
@@ -247,13 +257,16 @@ export const privacySections: readonly PolicySection[] = [
             'The Meta pixel sets _fbp, which recognizes your browser for advertising measurement and lasts about 90 days. Meta may also use its own cookies if you are logged in to Facebook or Instagram.',
           ],
           [
+            'Microsoft Clarity sets cookies that connect the pages of one visit and recognize a returning browser. Microsoft may set its own cookies too.',
+          ],
+          [
             'Calendly and Stripe set their own cookies when the booking calendar opens on the contact page. Calendly shows its own cookie notice there.',
           ],
         ],
       },
       {
         paragraph: [
-          'Google Analytics and the Meta pixel load when you visit our site. We do not currently ask for your permission before they load. Calendly displays its own cookie notice in the booking calendar.',
+          'Google Analytics, the Meta pixel, and Microsoft Clarity load when you visit our site. We do not currently ask for your permission before they load. Calendly displays its own cookie notice in the booking calendar.',
         ],
       },
       {
@@ -288,6 +301,7 @@ export const privacySections: readonly PolicySection[] = [
           [
             'Google Analytics keeps event-level data for 2 months. It keeps user-level data for 14 months, and that period restarts with new activity. Aggregated reports may remain available longer.',
           ],
+          ['Microsoft Clarity deletes its recordings after 30 days, unless we save one to review.'],
           ["Meta pixel data: as set out in Meta's own policies."],
           ["Netlify's server logs: as Netlify's own policies set out."],
           ['Cookies: as listed under Cookies and tracking, unless you delete them sooner.'],

@@ -1,7 +1,7 @@
 /**
- * Tells Google Tag Manager that a visitor has become a lead. The owner asked for conversion
- * tracking on 2026-11-21, once the GA4 tag and the Meta pixel were live in the container
- * (docs/architecture.md, "Analytics: Google Tag Manager").
+ * Tells Google Tag Manager, and Microsoft Clarity, that a visitor has become a lead. The owner
+ * asked for conversion tracking on 2026-11-21, once the GA4 tag and the Meta pixel were live in
+ * the container (docs/architecture.md, "Analytics: Google Tag Manager").
  *
  * The contact page has no thank-you page to watch for: the inquiry form confirms in its own card
  * (src/lib/inquiry-form.ts) and a booking stays inside Calendly's frame (src/lib/booking-embed.ts),
@@ -15,6 +15,12 @@
  *
  * `dataLayer` is created by the snippet in BaseLayout's head. When that script was blocked the
  * array is made here instead, and the push waits in it for nothing, harmlessly.
+ *
+ * Since 2026-11-26 the same call tells Microsoft Clarity, whose tag the same head script loads on
+ * the live site: the source is set as a custom tag on the session, `generate_lead` is sent as a
+ * custom event, and the session is upgraded so Clarity keeps its recording in full. `window.clarity`
+ * is the queue stub from that head script, so a call made before the tag loads waits in it; when
+ * the script was blocked there is no stub, and nothing is called.
  */
 
 /** Where the lead came from: the inquiry form, or a discovery call booked in Calendly. */
@@ -23,9 +29,14 @@ export type LeadSource = 'inquiry_form' | 'discovery_call';
 declare global {
   interface Window {
     dataLayer?: unknown[];
+    /** Microsoft Clarity's API, or, until its tag loads, the queue stub from BaseLayout's head. */
+    clarity?: { (method: string, ...args: unknown[]): void; q?: unknown[] };
   }
 }
 
 export function trackLead(source: LeadSource): void {
   (window.dataLayer ??= []).push({ event: 'generate_lead', lead_source: source });
+  window.clarity?.('set', 'lead_source', source);
+  window.clarity?.('event', 'generate_lead');
+  window.clarity?.('upgrade', 'generate_lead');
 }
