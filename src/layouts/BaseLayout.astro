@@ -4,17 +4,22 @@ import '../styles/global.css';
 import Navbar from '../components/sections/Navbar.astro';
 import ContactBanner from '../components/sections/ContactBanner.astro';
 import SiteFooter from '../components/sections/SiteFooter.astro';
-import { site } from '../data/site';
+import { site, socialImage } from '../data/site';
 
 interface Props {
-  /** Page title without the site name. Use the site name itself only on the home page. */
+  /** Page title without the site name, which is appended (a page titled with it alone gets it once). */
   title: string;
   /** 50-160 characters. Shown in search results and link previews. */
   description: string;
   /** Override the canonical URL only for intentional duplicates. */
   canonical?: string;
-  /** Absolute or root-relative path to a 1200x630 image. */
+  /**
+   * Absolute or root-relative path to a 1200x630 image for link previews. Every page gets the
+   * site's `socialImage` unless it passes its own; pass `ogImageAlt` with it.
+   */
   ogImage?: string;
+  /** What the preview image shows, for `og:image:alt` and `twitter:image:alt`. */
+  ogImageAlt?: string;
   ogType?: 'website' | 'article';
   /** Keep a page out of search engines (drafts, thank-you pages). */
   noindex?: boolean;
@@ -26,7 +31,8 @@ const {
   title,
   description,
   canonical,
-  ogImage,
+  ogImage = socialImage.path,
+  ogImageAlt = socialImage.alt,
   ogType = 'website',
   noindex = false,
   showContactBanner = true,
@@ -34,7 +40,7 @@ const {
 
 const fullTitle = title === site.name ? site.name : `${title} | ${site.name}`;
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site ?? site.url).href;
-const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : undefined;
+const ogImageUrl = new URL(ogImage, Astro.site ?? site.url).href;
 ---
 
 <!doctype html>
@@ -111,8 +117,13 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : und
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:locale" content={site.locale} />
-    {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
-    <meta name="twitter:card" content={ogImageUrl ? 'summary_large_image' : 'summary'} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content={String(socialImage.width)} />
+    <meta property="og:image:height" content={String(socialImage.height)} />
+    <meta property="og:image:alt" content={ogImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
     {/*
       Linked by path, not written in as a data URL as it was from 2026-11-22, so Google can crawl
       the icon at its own address (the owner's request, 2026-11-26).

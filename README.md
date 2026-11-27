@@ -16,6 +16,7 @@ All commands run from the project root.
 | `npm run test:e2e:chromium` | Routine browser suites on desktop and mobile Chromium against a fresh build                        |
 | `npm run test:e2e`          | Full matrix: Chromium, Firefox, WebKit, mobile Chromium, mobile WebKit                             |
 | `npm run perf:audit`        | Lighthouse mobile and desktop audit with budgets; reports in `reports/lighthouse/`                 |
+| `npm run og:image`          | Redraw the link-preview card `public/og-image.png` from `scripts/og-image/`; not run by the build  |
 | `npm run quality`           | Static checks plus the full browser matrix; the definition of done                                 |
 | `npm run quality:full`      | One build, static checks, full matrix, and performance audit (what CI runs)                        |
 

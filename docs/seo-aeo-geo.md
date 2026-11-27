@@ -8,7 +8,8 @@ Google's position on AI features (verified 2026-11-16, https://developers.google
 
 - `site` in `astro.config.mjs` is `https://auralinkstudio.com`; canonical URLs and the sitemap derive from it.
 - `@astrojs/sitemap` generates `sitemap-index.xml` on each build; `public/robots.txt` references it and allows crawling.
-- `BaseLayout.astro` emits title, description, canonical, Open Graph, Twitter card, `lang`, viewport, and favicon tags, and exposes a `head` slot for page-specific JSON-LD.
+- `BaseLayout.astro` emits title, description, canonical, Open Graph, Twitter card, `lang`, viewport, and favicon tags, and exposes a `head` slot for page-specific JSON-LD. The link-preview image is `socialImage` in `src/data/site.ts` (`public/og-image.png`, 1200x630, the owner's decision of 2026-11-27): `og:image` with its width, height, and alt, and `twitter:image` with its alt on a `summary_large_image` card, on every page; a page passes `ogImage` and `ogImageAlt` for an image of its own.
+- `netlify.toml` sends `/sitemap.xml` to `/sitemap-index.xml` (301), so the address crawlers try first reaches the index rather than the 404 page.
 - Directory-style URLs with trailing slashes; stable slugs; redirects in `netlify.toml` when a URL changes.
 - Static HTML carries all primary content; islands enhance it. Nothing important renders only on the client.
 - `noindex` only on thank-you and utility pages. Drafts are never built.
@@ -21,7 +22,7 @@ Google's position on AI features (verified 2026-11-16, https://developers.google
 | Title            | 10-70 characters including the appended site name; page-specific; the main topic first        |
 | Meta description | 50-160 characters; a genuine summary a person would click; no keyword lists                   |
 | Canonical        | Generated; override only for intentional duplicates                                           |
-| Open Graph       | Title, description, type, URL, locale from the layout; `ogImage` once a 1200x630 image exists |
+| Open Graph       | Title, description, type, URL, locale, and image from the layout; any page may pass `ogImage` |
 | Headings         | One `h1` equal to the page topic; `h2` and `h3` form a readable outline                       |
 | Images           | Descriptive `alt`; key messages never only in images                                          |
 | Links            | Descriptive anchor text; each page links to its hub, related pages, and contact               |
@@ -34,7 +35,7 @@ Use JSON-LD through typed components in `src/components/seo/`. Only describe wha
 
 | Page       | Types                                                                                                                                                | Required facts                                                                                                             |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Home       | `Organization`, `WebSite`                                                                                                                            | name, url; `logo` and `sameAs` only when real assets and profiles exist                                                    |
+| Home       | `Organization`, `WebSite`, one graph with `@id`s (`src/components/seo/HomePageSchema.astro`, rendered by the home page alone)                        | name, url, `logo`, `image`, email, telephone, city with no street or postal code, `areaServed`; real `sameAs` only         |
 | Service    | `Service` with `provider` (Organization), `BreadcrumbList`, `FAQPage` for the four visible questions (`src/components/seo/DetailPageSchema.astro`)   | name (the service card's title), description matching the meta description, `serviceType`, `areaServed` only once verified |
 | Industry   | `WebPage` with `audience` (`BusinessAudience`, the industry's name), `BreadcrumbList`, `FAQPage` (same component)                                    | name, description matching the meta description; no client, result, or area claim                                          |
 | Pricing    | `WebPage`, `BreadcrumbList`, `FAQPage`, and two `Service` nodes whose `Offer`s are the visible prices (`src/components/seo/PricingPageSchema.astro`) | prices as shown, from `src/data/pricing.ts`; the monthly plan a `UnitPriceSpecification`; no rating, review, or result     |
@@ -43,7 +44,7 @@ Use JSON-LD through typed components in `src/components/seo/`. Only describe wha
 | About      | `AboutPage` + `Organization` with the email, phone, and city the page shows (`src/components/seo/PageSchema.astro`)                                  | verified facts only; the city as a `PostalAddress` with no street or postal code                                           |
 | Contact    | `ContactPage`                                                                                                                                        | contact details only once verified                                                                                         |
 
-Example for the home page (values from `site`):
+The home page's graph, in outline (the component adds the description, logo, image, email, telephone, address, area served, and contact point from `src/data/site.ts`; Google's Rich Results Test read that graph, before `image` was added, as two valid items with no errors on 2026-11-27):
 
 ```json
 {

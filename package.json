@@ -27,6 +27,7 @@
     "test:e2e:chromium": "playwright test --project=desktop-chromium --project=mobile-chromium",
     "perf:audit": "node scripts/perf-audit.mjs",
     "perf:audit:quick": "node scripts/perf-audit.mjs --no-build --runs=1",
+    "og:image": "node scripts/og-image/render.mjs",
     "quality:full": "npm run quality:static && npm run build && PLAYWRIGHT_SKIP_BUILD=1 playwright test && node scripts/perf-audit.mjs --no-build --sample"
   },
   "dependencies": {

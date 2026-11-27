@@ -31,6 +31,11 @@ export interface ContactDetails {
     readonly display: string;
     /** As a `tel:` link, in international form. */
     readonly href: string;
+    /**
+     * In international form with hyphens, `+1-832-986-4695`: how the home page's structured data
+     * writes it, as the owner gave it to Google's Rich Results Test (2026-11-27).
+     */
+    readonly international: string;
   };
   /** The free discovery call, booked through the owner's Calendly event. */
   readonly booking: {
@@ -58,7 +63,11 @@ export interface ContactDetails {
 export const contactDetails: ContactDetails = {
   email: 'henry@auralinkstudio.com',
   emailHref: 'mailto:henry@auralinkstudio.com',
-  phone: { display: '(832) 986-4695', href: 'tel:+18329864695' },
+  phone: {
+    display: '(832) 986-4695',
+    href: 'tel:+18329864695',
+    international: '+1-832-986-4695',
+  },
   booking: {
     url: 'https://calendly.com/henry-auralinkstudio/discovery-call',
     duration: '20 minutes',
@@ -72,7 +81,10 @@ export const contactDetails: ContactDetails = {
  * privacy policy (src/data/privacy.ts), which keeps that wording, and the city the same day ("I
  * am based in Houston Texas"), for the About page and the home page introduction
  * (src/components/sections/AboutIntro.astro). `regionCode` and `countryCode` are the same place
- * as structured data writes it. No street address or service area is published.
+ * as structured data writes it. `areaServed` is the owner's statement of 2026-11-27 for the home
+ * page's structured data (src/components/seo/HomePageSchema.astro), the only place it appears. No
+ * street address is published: the studio is a service-area business, and the address stays
+ * private, so no markup carries a `streetAddress` or `postalCode`.
  */
 export const businessLocation = {
   locality: 'Houston',
@@ -80,10 +92,26 @@ export const businessLocation = {
   regionCode: 'TX',
   country: 'United States',
   countryCode: 'US',
+  areaServed: 'Greater Houston',
 } as const;
 
 /** The city and the state, as the pages show them. */
 export const basedIn = `${businessLocation.locality}, ${businessLocation.region}`;
+
+/**
+ * The link-preview image (Open Graph and Twitter cards), the owner's decision of 2026-11-27:
+ * `public/og-image.png`, 1200x630, served as-is at its own path. `BaseLayout` sends it for every
+ * page that passes no `ogImage` of its own, and the home page's Organization markup names it as
+ * the studio's `image`. `npm run og:image` (scripts/og-image/render.mjs) draws it after the home
+ * hero, from the navbar logo, the hero's mark, and the site's fonts (the owner's brief, the same
+ * day); the alt text says what it shows. Draw it again when any of those change.
+ */
+export const socialImage = {
+  path: '/og-image.png',
+  alt: 'Auralink Studio logo with the headline: Your business works hard. Your website should, too.',
+  width: 1200,
+  height: 630,
+} as const;
 
 /**
  * The contact page and its two tabs (ContactOptions.astro), as links. The page opens on the

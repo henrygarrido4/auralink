@@ -46,3 +46,22 @@ test('every built page has valid SEO basics', async ({ page }) => {
     });
   }
 });
+
+/**
+ * The home page's structured data (`src/components/seo/HomePageSchema.astro`): the studio as an
+ * `Organization` and the site as a `WebSite`, in one graph, in exactly one script. Google's Rich
+ * Results Test found "No items detected" on the page until 2026-11-27; one script, so the layout
+ * never doubles it.
+ */
+test('the home page carries the Organization and WebSite graph once', async ({ page }) => {
+  await page.goto('/');
+  const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+  expect(blocks, 'one JSON-LD block').toHaveLength(1);
+  const { '@graph': graph } = JSON.parse(blocks[0]) as { '@graph': Record<string, unknown>[] };
+  const organization = graph.find((node) => node['@type'] === 'Organization');
+  expect(organization?.['@id'], 'the Organization and its id').toBe(`${SITE}/#organization`);
+  expect(
+    graph.some((node) => node['@type'] === 'WebSite'),
+    'a WebSite node',
+  ).toBe(true);
+});

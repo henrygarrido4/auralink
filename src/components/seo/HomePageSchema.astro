@@ -1,0 +1,56 @@
+---
+import { businessLocation, contactDetails, site, socialImage } from '@/data/site';
+
+/**
+ * JSON-LD for the home page, and for no other page: the studio as an `Organization` and the site
+ * as the `WebSite` it publishes, in one graph, each with an `@id` other markup can refer to. The
+ * values are the verified ones in `src/data/site.ts`, as the pages show them: the name and the
+ * description, the address and the number the contact and About pages show (the owner's
+ * approval, 2026-11-20), the city as a `PostalAddress` with no street or postal code (the studio
+ * is a service-area business and its address stays private, so neither is ever added), the area
+ * served (the owner's, 2026-11-27), the favicon as the logo, and the link-preview image. Google's
+ * Rich Results Test read this graph, before `image` joined it, as two valid items with no errors
+ * (the owner's check, 2026-11-27); its two warnings ask for the street address and postal code,
+ * and are ignored on purpose. No rating, review, award, or social profile is stated.
+ */
+const url = `${site.url}/`;
+const organizationId = `${url}#organization`;
+
+const organization = {
+  '@type': 'Organization',
+  '@id': organizationId,
+  name: site.name,
+  url,
+  logo: `${site.url}/favicon.svg`,
+  image: new URL(socialImage.path, site.url).href,
+  description: site.description,
+  email: contactDetails.email,
+  telephone: contactDetails.phone.international,
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: businessLocation.locality,
+    addressRegion: businessLocation.regionCode,
+    addressCountry: businessLocation.countryCode,
+  },
+  areaServed: businessLocation.areaServed,
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'sales',
+    email: contactDetails.email,
+    telephone: contactDetails.phone.international,
+    availableLanguage: 'English',
+  },
+};
+
+const website = {
+  '@type': 'WebSite',
+  '@id': `${url}#website`,
+  name: site.name,
+  url,
+  publisher: { '@id': organizationId },
+};
+
+const schema = { '@context': 'https://schema.org', '@graph': [organization, website] };
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(schema)} />

@@ -1,0 +1,158 @@
+<!doctype html>
+<!--
+  The link-preview card, public/og-image.png, drawn after the home hero (the owner's brief,
+  2026-11-27). scripts/og-image/render.mjs fills the four placeholders with the repository's own
+  pieces and screenshots this page at 1200x630: the navbar logo (src/assets/aura.svg, its
+  wordmark in currentColor), the hero's mark (src/assets/aura-hero.svg, trimmed as the hero trims
+  it), and the Mukta 700 and Catamaran files the site serves. Edit the layout here; the script
+  checks that the logo, the text, and the mark keep the inset from every edge and never overlap.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Auralink Studio link preview</title>
+    <style>
+      @font-face {
+        font-family: 'Mukta';
+        font-weight: 700;
+        font-style: normal;
+        src: url({{font-headers}}) format('woff2');
+      }
+      @font-face {
+        font-family: 'Catamaran';
+        font-weight: 400;
+        font-style: normal;
+        src: url({{font-main}}) format('woff2');
+      }
+
+      :root {
+        /* daisyUI light's `neutral` and `neutral-content`, the hero band and its light text. */
+        --neutral: #09090b;
+        --neutral-content: oklch(92% 0.004 286.32);
+        /* The brand's primary yellow and the wordmark's white (`base-100`). */
+        --primary: #f7db15;
+        --white: #ffffff;
+        /* Space between every edge and the logo, the text, and the mark. */
+        --inset: 60px;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+      }
+
+      body {
+        display: flex;
+        gap: 40px;
+        padding: var(--inset);
+        background: var(--neutral);
+        color: var(--white);
+        font-family: 'Catamaran', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: geometricPrecision;
+      }
+
+      /*
+       * Logo at the top, the domain at the foot, the headline between them with equal gaps. Each
+       * block is as wide as its content, so the boxes the script measures are the pieces
+       * themselves, not the column.
+       */
+      .copy {
+        display: flex;
+        flex: none;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 520px;
+      }
+
+      .copy > *,
+      h1,
+      .tagline {
+        width: max-content;
+      }
+
+      .logo svg {
+        display: block;
+        width: 240px;
+        height: auto;
+        color: var(--white);
+      }
+
+      /* The hero's h1: Mukta bold, 1.05 line height, tight tracking, the last line in primary. */
+      h1 {
+        font-family: 'Mukta', sans-serif;
+        font-weight: 700;
+        font-size: 64px;
+        line-height: 1.05;
+        letter-spacing: -0.025em;
+        color: var(--white);
+      }
+
+      h1 span {
+        display: block;
+      }
+
+      .accent {
+        color: var(--primary);
+      }
+
+      /* The hero paragraph's colour: `neutral-content` at 80% over the band. */
+      .tagline,
+      .domain {
+        color: color-mix(in oklab, var(--neutral-content) 80%, transparent);
+      }
+
+      .tagline {
+        margin-top: 20px;
+        font-size: 26px;
+        line-height: 1.3;
+      }
+
+      .domain {
+        font-size: 22px;
+        line-height: 1.2;
+      }
+
+      /*
+       * The mark fills the remaining width, centred on the card's height. Its own svg carries
+       * data-box="mark" (render.mjs writes it), so the measured box is the artwork's band.
+       */
+      .art {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        min-width: 0;
+      }
+
+      .art svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="copy">
+      <div class="logo" data-box="logo">{{logo}}</div>
+      <div>
+        <h1 data-box="headline">
+          <span>Your business</span>
+          <span>works hard.</span>
+          <span>Your website</span>
+          <span class="accent">should, too.</span>
+        </h1>
+        <p class="tagline" data-box="tagline">Websites · SEO · Email marketing</p>
+      </div>
+      <p class="domain" data-box="domain">auralinkstudio.com</p>
+    </div>
+    <div class="art">{{mark}}</div>
+  </body>
+</html>

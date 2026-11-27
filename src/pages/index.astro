@@ -8,10 +8,20 @@ import WhyAuralink from '../components/sections/WhyAuralink.astro';
 import WhoWeWorkWith from '../components/sections/WhoWeWorkWith.astro';
 import Process from '../components/sections/Process.astro';
 import FeaturedWork from '../components/sections/FeaturedWork.astro';
+import HomePageSchema from '../components/seo/HomePageSchema.astro';
 import { site } from '../data/site';
+
+/*
+ * The title names what the studio does and where, before the site name BaseLayout appends (the
+ * owner's decision, 2026-11-27; it was the bare site name until then). The site name itself stays
+ * in `og:site_name` and the WebSite markup's `name`, which Google reads for the site name.
+ */
 ---
 
-<BaseLayout title={site.name} description={site.description}>
+<BaseLayout title="Houston Web Design, SEO & Email Marketing" description={site.description}>
+  <Fragment slot="head">
+    <HomePageSchema />
+  </Fragment>
   <Hero aboutHref="/about/" />
   <IndustryStrip />
   <Services id="services" />

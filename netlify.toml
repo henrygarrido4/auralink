@@ -31,3 +31,12 @@
   from = "/contact/thank-you/"
   to = "/contact/"
   status = 301
+
+# /sitemap.xml is the address crawlers and people try first, and it was a 404: @astrojs/sitemap
+# writes the index at /sitemap-index.xml, where robots.txt and the head's `rel="sitemap"` already
+# point, so the usual address leads there too (2026-11-27). A redirect, not a copy of the file, so
+# there is one sitemap address to submit and cache.
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/sitemap-index.xml"
+  status = 301

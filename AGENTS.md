@@ -22,7 +22,7 @@ Astro 7 (static output), TypeScript (strict), Tailwind CSS 4 via `@tailwindcss/v
 
 ## Repository layout
 
-`src/pages` routes, `src/layouts/BaseLayout.astro` (head, metadata, skip link, main landmark), `src/components/{ui,sections,seo,islands,inspira}`, `src/content` collections with `src/content.config.ts` schemas, `src/data/site.ts` verified facts, `src/data/service-pages` and `src/data/industry-pages` the typed, proposed copy of the service and industry detail pages, `src/data/pricing.ts` the pricing page's figures and copy, `src/styles/global.css` single stylesheet, `src/assets` optimised images (third-party ones credited in `src/assets/CREDITS.md`), `public` static files, `tests/e2e` Playwright suites, `scripts` executable checks, `design` editable source artwork for generated images (`design/hero-mockup` renders the device image the home hero showed until 2026-11-22, `design/process-lines` draws the lines behind the home steps, `design/favicon` draws the favicons from the owner's mark), `docs` references, `.cursor` rules, agents, and skills, `reports` generated screenshots and Lighthouse output (gitignored).
+`src/pages` routes, `src/layouts/BaseLayout.astro` (head, metadata, skip link, main landmark), `src/components/{ui,sections,seo,islands,inspira}`, `src/content` collections with `src/content.config.ts` schemas, `src/data/site.ts` verified facts, `src/data/service-pages` and `src/data/industry-pages` the typed, proposed copy of the service and industry detail pages, `src/data/pricing.ts` the pricing page's figures and copy, `src/styles/global.css` single stylesheet, `src/assets` optimised images (third-party ones credited in `src/assets/CREDITS.md`), `public` static files, `tests/e2e` Playwright suites, `scripts` executable checks and the link-preview card's template and render script (`scripts/og-image/`), `design` editable source artwork for generated images (`design/hero-mockup` renders the device image the home hero showed until 2026-11-22, `design/process-lines` draws the lines behind the home steps, `design/favicon` draws the favicons from the owner's mark), `docs` references, `.cursor` rules, agents, and skills, `reports` generated screenshots and Lighthouse output (gitignored).
 
 ## Development
 
@@ -47,6 +47,7 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 | `npm run test:e2e:chromium`                           | Routine browser run: desktop and mobile Chromium against a fresh build                                      |
 | `npm run test:e2e`                                    | Full matrix: desktop Chromium, Firefox, WebKit, plus mobile Chromium and WebKit                             |
 | `npm run perf:audit`                                  | Lighthouse mobile and desktop audit of the build with budgets (`reports/lighthouse/`)                       |
+| `npm run og:image`                                    | Draws `public/og-image.png`, the link-preview card, from `scripts/og-image/` (not part of the build)        |
 | `npm run quality`                                     | Static checks plus the full browser matrix; the definition of done                                          |
 | `npm run quality:full`                                | One build, then static checks, full matrix, and performance audit (the CI sequence)                         |
 
